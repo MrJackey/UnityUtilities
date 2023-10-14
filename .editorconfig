@@ -1,0 +1,40 @@
+[Assets/**.cs]
+
+# Naming styles
+dotnet_naming_style.member.capitalization = camel_case
+dotnet_naming_style.member.required_prefix = m_
+
+dotnet_naming_style.static.capitalization = camel_case
+dotnet_naming_style.static.required_prefix = s_
+
+dotnet_naming_style.constant.capitalization = all_upper
+
+dotnet_naming_style.public.capitalization = pascal_case
+
+# Non-public
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, protected, protected_internal
+dotnet_naming_rule.private_fields.symbols = private_fields
+dotnet_naming_rule.private_fields.style = member
+dotnet_naming_rule.private_fields.severity = warning
+
+# Public
+dotnet_naming_symbols.public_fields.applicable_kinds = field
+dotnet_naming_symbols.public_fields.applicable_accessibilities = public, internal
+dotnet_naming_rule.public_fields.symbols = public_fields
+dotnet_naming_rule.public_fields.style = public
+dotnet_naming_rule.public_fields.severity = warning
+
+# Static fields
+dotnet_naming_symbols.static_fields.applicable_kinds = field
+dotnet_naming_symbols.static_fields.required_modifiers = static
+dotnet_naming_symbols.static_fields.applicable_accessibilities = private, protected, protected_internal, internal
+dotnet_naming_rule.static_fields.symbols = static_fields
+dotnet_naming_rule.static_fields.style = static
+dotnet_naming_rule.static_fields.severity = warning
+
+dotnet_naming_symbols.const_fields.applicable_kinds = field
+dotnet_naming_symbols.const_fields.required_modifiers = const
+dotnet_naming_rule.const_fields.symbols = const_fields
+dotnet_naming_rule.const_fields.style = constant
+dotnet_naming_rule.const_fields.severity = warning
