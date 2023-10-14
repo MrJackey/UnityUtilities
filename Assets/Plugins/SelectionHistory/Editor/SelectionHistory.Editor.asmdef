@@ -1,0 +1,18 @@
+{
+    "name": "Jackey.SelectionHistory.Editor",
+    "rootNamespace": "Jackey",
+    "references": [
+        "GUID:690bb8d85a885c74c8b8516d47d1d667"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

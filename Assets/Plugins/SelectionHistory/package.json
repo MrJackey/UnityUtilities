@@ -1,0 +1,11 @@
+{
+	"name": "com.jackey.selection-history",
+	"version": "0.1.0",
+	"description": "",
+	"displayName": "Selection History",
+	"unity": "2021.1",
+	"keywords": [],
+	"author": {
+		"name": "Jacob Lundberg"
+	}
+}
