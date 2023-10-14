@@ -1,0 +1,18 @@
+{
+    "name": "Jackey.ObjectPool.Editor",
+    "rootNamespace": "Jackey",
+    "references": [
+        "GUID:59fc368014b2cfc42a84b170f4f9132e"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

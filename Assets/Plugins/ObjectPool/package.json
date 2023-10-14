@@ -1,0 +1,11 @@
+{
+	"name": "com.jackey.object-pool",
+	"version": "0.1.0",
+	"description": "Provides global and local object pooling to Unity game objects and C# objects",
+	"displayName": "Object Pool",
+	"unity": "2021.1",
+	"keywords": [],
+	"author": {
+		"name": "Jacob Lundberg"
+	}
+}
