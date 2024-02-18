@@ -1,0 +1,53 @@
+ValidationPanel {
+	flex-direction: column;
+	align-items: center;
+}
+
+ValidationPanel #Header {
+	font-size: 26px;
+	-unity-font-style: bold;
+	color: red;
+	margin-bottom: 5px;
+}
+
+ValidationPanel #ListHeader {
+	font-size: 16px;
+	-unity-font-style: bold;
+	margin-bottom: 5px;
+}
+
+ValidationPanel ListView {
+	min-width: 400px;
+	background-color: rgb(45, 45, 45);
+	border-radius: 10px;
+	padding: 5px;
+}
+
+ValidationPanel ListView .unity-list-view__empty-label {
+	-unity-text-align: middle-center;
+}
+
+ValidationPanel #MissingTypeRoot {
+	justify-content: space-around;
+	align-items: flex-start;
+}
+
+ValidationPanel #MissingTypeRoot #TypeRoot {
+	flex-direction: row;
+}
+
+ValidationPanel #MissingTypeRoot #TypeDeliminator {
+	padding: 0;
+	width: 1px;
+	-unity-text-align: lower-center;
+}
+
+ValidationPanel #Controls {
+	flex-direction: row;
+	margin: 10px 0;
+	min-height: 30px;
+}
+
+ValidationPanel Button {
+	min-width: 60px;
+}

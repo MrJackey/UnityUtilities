@@ -1,0 +1,146 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Editor.Graph;
+using UnityEditor;
+using UnityEditor.UIElements;
+using UnityEngine;
+using UnityEngine.UIElements;
+
+namespace Jackey.Behaviours.Editor.PropertyDrawers {
+	[CustomPropertyDrawer(typeof(BlackboardRef<>))]
+	public class BlackboardRefPropertyDrawer : PropertyDrawer {
+		private static Texture s_fieldIcon = EditorGUIUtility.IconContent("InputField Icon").image;
+		private static Texture s_blackboardIcon = EditorGUIUtility.IconContent("d_VerticalLayoutGroup Icon").image;
+
+		private static List<string> s_dropdownOptions = new();
+		private static List<string> s_dropdownValues = new();
+
+		private bool m_blackboardOnly;
+
+		private VisualElement m_root;
+
+		private SerializedProperty m_fieldProperty;
+		private PropertyField m_propertyField;
+
+		private DropdownField m_dropdownField;
+		private SerializedProperty m_variableGuidProperty;
+
+		private SerializedProperty m_modeProperty;
+		private Image m_modeImage;
+
+		public override VisualElement CreatePropertyGUI(SerializedProperty property) {
+			if (!EditorWindow.HasOpenInstances<BehaviourEditorWindow>())
+				return null;
+
+			m_root = new VisualElement() {
+				name = "BlackboardRef",
+				style = { flexDirection = FlexDirection.Row },
+			};
+
+			m_blackboardOnly = fieldInfo.GetCustomAttribute(typeof(BlackboardOnlyAttribute)) != null;
+
+			SerializedProperty behaviourProperty = property.FindPropertyRelative("m_behaviour");
+			behaviourProperty.objectReferenceValue = EditorWindow.GetWindow<BehaviourEditorWindow>().OpenBehaviour;
+			property.serializedObject.ApplyModifiedProperties();
+
+			m_modeProperty = property.FindPropertyRelative("m_mode");
+
+			if (m_blackboardOnly)
+				m_modeProperty.enumValueIndex = 1;
+
+			int mode = m_modeProperty.enumValueIndex;
+
+			m_fieldProperty = property.FindPropertyRelative("m_fieldValue");
+			m_propertyField = new PropertyField(m_fieldProperty, property.displayName);
+
+			m_variableGuidProperty = property.FindPropertyRelative("m_variableGuid");
+			BlackboardVar referencedVariable = BlackboardInspector.Blackboard.FindVariable(m_variableGuidProperty.stringValue);
+
+			m_dropdownField = new DropdownField() {
+				label = property.displayName,
+				choices = s_dropdownOptions,
+				value = string.Empty,
+			};
+
+			if (referencedVariable != null) {
+				RefreshDropdownOptions();
+
+				if (referencedVariable.IsAssignableTo(fieldInfo.FieldType.GenericTypeArguments[0]))
+					m_dropdownField.value = referencedVariable.Name;
+			}
+
+			// Trickle down to catch the event before the dropdown field does
+			m_dropdownField.RegisterCallback<PointerDownEvent>(OnDropdownPointerDown, TrickleDown.TrickleDown);
+			m_dropdownField.RegisterValueChangedCallback(OnDropdownValueChanged);
+
+			if (mode == 0 && !m_blackboardOnly)
+				m_root.Add(m_propertyField);
+			else
+				m_root.Add(m_dropdownField);
+
+			if (!m_blackboardOnly) {
+				Button modeButton = new Button(ToggleMode) { name = "ModeButton" };
+				modeButton.Add(m_modeImage = new Image() {
+					image = mode == 0 ? s_fieldIcon : s_blackboardIcon,
+					scaleMode = ScaleMode.ScaleAndCrop,
+				});
+				m_root.Add(modeButton);
+			}
+
+			return m_root;
+		}
+
+		private void RefreshDropdownOptions() {
+			s_dropdownOptions.Clear();
+			s_dropdownValues.Clear();
+
+			string referencedGuid = m_variableGuidProperty.stringValue;
+			bool missingReference = string.IsNullOrEmpty(referencedGuid);
+
+			Type myType = fieldInfo.FieldType.GenericTypeArguments[0];
+			foreach (BlackboardVar variable in BlackboardInspector.Blackboard.m_variables) {
+				if (!variable.IsAssignableTo(myType)) continue;
+
+				if (referencedGuid == variable.Guid)
+					missingReference = false;
+
+				s_dropdownOptions.Add(variable.Name);
+				s_dropdownValues.Add(variable.Guid);
+			}
+
+			if (missingReference) {
+				m_dropdownField.value = string.Empty;
+			}
+		}
+
+		private void OnDropdownPointerDown(PointerDownEvent evt) => RefreshDropdownOptions();
+		private void OnDropdownValueChanged(ChangeEvent<string> _) {
+			if (s_dropdownValues.Count == 0) return;
+
+			m_variableGuidProperty.stringValue = s_dropdownValues[m_dropdownField.index];
+			m_variableGuidProperty.serializedObject.ApplyModifiedProperties();
+		}
+
+		private void ToggleMode() {
+			int oldValue = m_modeProperty.enumValueIndex;
+			int newValue = oldValue == 0 ? 1 : 0;
+
+			m_modeImage.image = newValue == 0 ? s_fieldIcon : s_blackboardIcon;
+			m_modeProperty.enumValueIndex = newValue;
+			m_modeProperty.serializedObject.ApplyModifiedProperties();
+
+			if (newValue == 0) {
+				m_dropdownField.RemoveFromHierarchy();
+				m_propertyField.BindProperty(m_fieldProperty);
+				m_root.Insert(0, m_propertyField);
+			}
+			else {
+				m_propertyField.RemoveFromHierarchy();
+				m_propertyField.Unbind();
+				m_root.Insert(0, m_dropdownField);
+			}
+		}
+	}
+}
