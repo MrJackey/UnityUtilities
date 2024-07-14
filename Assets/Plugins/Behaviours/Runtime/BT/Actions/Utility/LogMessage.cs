@@ -4,6 +4,7 @@ using Jackey.Behaviours.Core.Blackboard;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Actions.Utility {
+	[SearchPath("Utilities/Log Message")]
 	public class LogMessage : BehaviourAction {
 		public LogType Type;
 		public BlackboardRef<string> Message;

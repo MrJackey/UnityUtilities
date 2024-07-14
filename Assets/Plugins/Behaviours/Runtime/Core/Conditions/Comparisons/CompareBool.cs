@@ -1,6 +1,7 @@
 ﻿using Jackey.Behaviours.Core.Blackboard;
 
 namespace Jackey.Behaviours.Core.Conditions.Comparisons {
+	[SearchPath("Blackboard/Compare Bool")]
 	public class CompareBool : BehaviourCondition {
 		[BlackboardOnly]
 		public BlackboardRef<bool> Comparand;

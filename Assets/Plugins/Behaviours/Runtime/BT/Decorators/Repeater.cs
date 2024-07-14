@@ -1,10 +1,12 @@
 ﻿using System;
 using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Core.Conditions;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {
 	[GraphIcon("Repeater")]
+	[SearchPath("Decorators/Repeater")]
 	public class Repeater : Decorator {
 		[SerializeField] private Policy m_policy;
 		[Min(0f)]

@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
+using System.Reflection;
+using Jackey.Behaviours.Core;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace Jackey.Behaviours.Editor.TypeSearch {
 	public class TypeProvider : ScriptableObject, ISearchWindowProvider {
-		public static Type[] StandardTypes = {
-			typeof(bool), typeof(string), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(float), typeof(double), typeof(Enum),
-			typeof(Vector2), typeof(Vector2Int), typeof(Vector3), typeof(Vector3Int), typeof(Vector4), typeof(Quaternion),
-			typeof(Rect), typeof(RectInt), typeof(Bounds), typeof(BoundsInt),
-			typeof(Color), typeof(Gradient), typeof(AnimationCurve), typeof(Hash128), typeof(LayerMask), typeof(Space),
-			typeof(GameObject), typeof(Transform),
+		public static SearchEntry[] StandardTypes = {
+			Type2Search("System/Bool", typeof(bool)), Type2Search("System/String", typeof(string)),
+			Type2Search("System/Int", typeof(int)), Type2Search("System/uInt", typeof(uint)), Type2Search("System/Long", typeof(long)), Type2Search("System/uLong", typeof(ulong)),
+			Type2Search("System/Float", typeof(float)), Type2Search("System/Double", typeof(double)),
+			Type2Search("UnityEngine/Vector2", typeof(Vector2)), Type2Search("UnityEngine/Vector2Int", typeof(Vector2Int)), Type2Search("UnityEngine/Vector3", typeof(Vector3)), Type2Search("UnityEngine/Vector3Int", typeof(Vector3Int)), Type2Search("UnityEngine/Vector4", typeof(Vector4)), Type2Search("UnityEngine/Quaternion", typeof(Quaternion)),
+			Type2Search("UnityEngine/Rect", typeof(Rect)), Type2Search("UnityEngine/RectInt", typeof(RectInt)), Type2Search("UnityEngine/Bounds", typeof(Bounds)), Type2Search("UnityEngine/BoundsInt", typeof(BoundsInt)),
+			Type2Search("UnityEngine/Color", typeof(Color)), Type2Search("UnityEngine/Gradient", typeof(Gradient)), Type2Search("UnityEngine/AnimationCurve", typeof(AnimationCurve)), Type2Search("UnityEngine/Hash128", typeof(Hash128)), Type2Search("UnityEngine/LayerMask", typeof(LayerMask)), Type2Search("UnityEngine/Space", typeof(Space)),
+			Type2Search("UnityEngine/GameObject", typeof(GameObject)), Type2Search("UnityEngine/Transform", typeof(Transform)),
 		};
 
 		private static TypeProvider s_instance;
@@ -28,32 +31,36 @@ namespace Jackey.Behaviours.Editor.TypeSearch {
 		private static GUIContent s_headerContent = new GUIContent("Type");
 
 		private List<SearchTreeEntry> m_tree = new();
-		private List<SearchEntry> m_entries = new();
 		private HashSet<string> m_groups = new();
 
-		private TypeCache.TypeCollection m_collection;
-		private IList<Type> m_list;
+		private IEnumerable<SearchEntry> m_entries;
 		private Action<Type> m_callback;
 
-		public void AskForType(TypeCache.TypeCollection types, Action<Type> callback) {
-			m_collection = types;
-			m_list = null;
-			m_callback = callback;
+		public static IEnumerable<SearchEntry> TypesToSearch(IEnumerable<Type> types) {
+			IEnumerable<SearchEntry> results = types
+				.Where(type => !type.IsAbstract)
+				.Select(type => {
+					string path;
 
-			SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), this);
+					SearchPathAttribute pathAttribute = type.GetCustomAttribute<SearchPathAttribute>();
+					if (pathAttribute != null)
+						path = pathAttribute.Path;
+					else
+						path = type.FullName.Replace('.', '/');
+
+					return new SearchEntry() {
+						Type = type,
+						Path = path,
+					};
+				});
+
+			return results;
 		}
 
-		public void AskForType(IList<Type> list, Action<Type> callback) {
-			m_collection = default;
-			m_list = list;
-			m_callback = callback;
+		public void AskForType(IEnumerable<Type> types, Action<Type> callback) => AskForType(TypesToSearch(types), callback);
 
-			SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), this);
-		}
-
-		public void AskForType(IList<Type> list, TypeCache.TypeCollection collection, Action<Type> callback) {
-			m_collection = collection;
-			m_list = list;
+		public void AskForType(IEnumerable<SearchEntry> entries, Action<Type> callback) {
+			m_entries = entries;
 			m_callback = callback;
 
 			SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), this);
@@ -63,40 +70,28 @@ namespace Jackey.Behaviours.Editor.TypeSearch {
 			m_tree.Clear();
 			m_tree.Add(new SearchTreeGroupEntry(s_headerContent));
 
-			m_entries.Clear();
-			m_entries.AddRange(m_collection
-				.Where(type => !type.IsAbstract)
-				.Select(type => new SearchEntry() {
-					Type = type,
-					Path = type.FullName.Replace('.', '/'), // TODO: Check user category attribute
-				}));
+			List<SearchEntry> entryList = m_entries.ToList();
 
-			if (m_list != null) {
-				m_entries.AddRange(m_list
-					.Where(type => !type.IsAbstract)
-					.Select(type => new SearchEntry() {
-						Type = type,
-						Path = type.FullName.Replace('.', '/'), // TODO: Check user category attribute
-					}));
-			}
-
-			m_entries.Sort((lhs, rhs) => {
+			entryList.Sort((lhs, rhs) => {
 				string[] lhsPath = lhs.Path?.Split('/') ?? Array.Empty<string>();
 				string[] rhsPath = rhs.Path?.Split('/') ?? Array.Empty<string>();
 
+				// Ensure groups go first
+				if (lhsPath.Length == 1 && rhsPath.Length > 1)
+					return 1;
+
+				if (rhsPath.Length == 1 && lhsPath.Length > 1)
+					return -1;
+
 				for (int i = 0; i < lhsPath.Length; i++) {
+					// Equal path until now with lhs still having another group whilst rhs does not one
 					if (i >= rhsPath.Length)
-						return 1;
+						return -1;
 
-					int comparison = lhsPath[i].CompareTo(rhsPath[i]);
+					int comparison = string.Compare(lhsPath[i], rhsPath[i], StringComparison.Ordinal);
 
-					if (comparison != 0) {
-						// Groups go first
-						if (lhsPath.Length > rhsPath.Length)
-							return -1;
-
+					if (comparison != 0)
 						return comparison;
-					}
 				}
 
 				return 0;
@@ -104,7 +99,7 @@ namespace Jackey.Behaviours.Editor.TypeSearch {
 
 			m_groups.Clear();
 
-			foreach (SearchEntry entry in m_entries) {
+			foreach (SearchEntry entry in entryList) {
 				string[] path = entry.Path.Split('/');
 				string groupPath = string.Empty;
 
@@ -131,7 +126,14 @@ namespace Jackey.Behaviours.Editor.TypeSearch {
 			return true;
 		}
 
-		private struct SearchEntry {
+		private static SearchEntry Type2Search(string path, Type type) {
+			return new SearchEntry() {
+				Type = type,
+				Path = path,
+			};
+		}
+
+		public struct SearchEntry {
 			public Type Type;
 			public string Path;
 		}

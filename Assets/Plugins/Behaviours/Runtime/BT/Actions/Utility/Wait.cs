@@ -3,6 +3,7 @@ using Jackey.Behaviours.Core.Blackboard;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Actions.Utility {
+	[SearchPath("Utilities/Wait")]
 	public class Wait : BehaviourAction {
 		public BlackboardRef<float> Duration;
 

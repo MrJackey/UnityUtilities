@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Editor.TypeSearch;
@@ -130,7 +131,10 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		private void CreateVariable() {
-			TypeProvider.Instance.AskForType(TypeProvider.StandardTypes, TypeCache.GetTypesWithAttribute(typeof(BehaviourTypeAttribute)), type => {
+			TypeCache.TypeCollection userTypes = TypeCache.GetTypesWithAttribute(typeof(BehaviourTypeAttribute));
+			IEnumerable<TypeProvider.SearchEntry> blackboardSearchTypes = TypeProvider.StandardTypes.Concat(TypeProvider.TypesToSearch(userTypes));
+
+			TypeProvider.Instance.AskForType(blackboardSearchTypes, type => {
 				int nextIndex = m_variableProperties.Count;
 
 				m_variablesProperty.InsertArrayElementAtIndex(nextIndex);

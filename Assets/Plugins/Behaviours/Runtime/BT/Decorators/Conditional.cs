@@ -1,9 +1,11 @@
 ﻿using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Core.Conditions;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {
 	[GraphIcon("Conditional")]
+	[SearchPath("Decorators/Conditional")]
 	public class Conditional : Decorator {
 		[SerializeField] private BehaviourConditionGroup m_conditions;
 

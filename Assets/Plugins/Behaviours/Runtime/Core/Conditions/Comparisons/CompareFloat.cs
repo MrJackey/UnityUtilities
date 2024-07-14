@@ -2,6 +2,7 @@
 using Jackey.Behaviours.Utilities;
 
 namespace Jackey.Behaviours.Core.Conditions.Comparisons {
+	[SearchPath("Blackboard/Compare Float")]
 	public class CompareFloat : BehaviourCondition {
 		[BlackboardOnly]
 		public BlackboardRef<float> Comparand;
