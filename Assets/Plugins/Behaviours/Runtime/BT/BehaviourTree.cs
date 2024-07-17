@@ -81,9 +81,11 @@ namespace Jackey.Behaviours.BT {
 			for (int i = 0; i < m_tickingActions.Count; i++) {
 				if (m_tickingActions[i].Index > action.Index) {
 					m_tickingActions.Insert(i, action);
-					break;
+					return;
 				}
 			}
+
+			m_tickingActions.Add(action);
 		}
 
 		public void DisableTicking(BehaviourAction action) {
