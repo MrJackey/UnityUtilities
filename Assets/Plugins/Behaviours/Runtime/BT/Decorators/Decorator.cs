@@ -29,6 +29,12 @@ namespace Jackey.Behaviours.BT.Decorators {
 			m_child.Initialize(behaviour, parent, ref index);
 		}
 
+		internal override void InterruptChildren() {
+			if (m_child.Status == ActionStatus.Running) return;
+
+			m_child.Interrupt();
+		}
+
 		internal override void ResetChildren() {
 			if (m_child.Status == ActionStatus.Inactive) return;
 

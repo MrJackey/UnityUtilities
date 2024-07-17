@@ -68,10 +68,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 			if (m_child.IsFinished)
 				m_child.Reset();
 
-			ExecutionStatus enterStatus = m_child.Enter();
-
-			if (enterStatus == ExecutionStatus.Running)
-				m_child.Tick();
+			m_child.EnterSequence();
 		}
 
 		private enum Policy {

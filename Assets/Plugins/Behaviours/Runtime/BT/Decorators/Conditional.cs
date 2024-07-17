@@ -23,13 +23,9 @@ namespace Jackey.Behaviours.BT.Decorators {
 				return (ExecutionStatus)m_child.Status;
 
 			Debug.Assert(m_child.Status == ActionStatus.Inactive);
-			ExecutionStatus enterStatus = m_child.Enter();
+			ExecutionStatus enterStatus = m_child.EnterSequence();
 
-			if (m_child.IsFinished)
-				return enterStatus;
-
-			m_child.Tick();
-			return (ExecutionStatus)m_child.Status;
+			return enterStatus;
 		}
 	}
 }

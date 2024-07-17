@@ -27,7 +27,7 @@ namespace Jackey.Behaviours.BT.Actions.Utility {
 			return ExecutionStatus.Running;
 		}
 
-		protected override void OnExit(ActionResult result) {
+		protected override void OnExit() {
 			DisableTicking();
 		}
 	}

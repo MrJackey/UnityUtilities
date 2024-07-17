@@ -7,7 +7,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 	public class Inverter : Decorator {
 		protected override ExecutionStatus OnTick() {
 			if (!m_child.IsFinished)
-				m_child.Tick();
+				m_child.EnterSequence();
 
 			return m_child.Status switch {
 				ActionStatus.Success => ExecutionStatus.Failure,

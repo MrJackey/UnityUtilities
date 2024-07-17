@@ -33,22 +33,17 @@ namespace Jackey.Behaviours.BT {
 
 			Status = ActionStatus.Running;
 
-			ExecutionStatus enterStatus = m_entry.Enter();
-
-			if (enterStatus == ExecutionStatus.Running)
-				m_entry.Tick();
+			m_entry.EnterSequence();
 		}
 
 		internal override ExecutionStatus Tick() {
 			for (int i = 0; i < m_tickingActions.Count; i++) {
 				BehaviourAction action = m_tickingActions[i];
 
-				ExecutionStatus actionStatus = action.Tick();
+				ExecutionStatus actionStatus = action.TickSequence();
 
 				if (actionStatus == ExecutionStatus.Running)
 					continue;
-
-				action.Exit((ActionResult)actionStatus);
 
 				BehaviourAction parent = action.Parent;
 
@@ -57,7 +52,7 @@ namespace Jackey.Behaviours.BT {
 					return actionStatus;
 
 				while (true) {
-					ExecutionStatus parentStatus = parent.Tick();
+					ExecutionStatus parentStatus = parent.TickSequence();
 
 					if (parentStatus == ExecutionStatus.Running)
 						break;

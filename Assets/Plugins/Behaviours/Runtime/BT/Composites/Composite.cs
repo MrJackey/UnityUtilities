@@ -31,14 +31,25 @@ namespace Jackey.Behaviours.BT.Composites {
 		internal override void Initialize(BehaviourTree behaviour, BehaviourAction parent, ref int index) {
 			base.Initialize(behaviour, parent, ref index);
 
-			for (int i = 0; i < m_children.Count; i++) {
+			int childCount = m_children.Count;
+			for (int i = 0; i < childCount; i++) {
 				index++;
 				m_children[i].Initialize(behaviour, this, ref index);
 			}
 		}
 
+		internal override void InterruptChildren() {
+			int childCount = m_children.Count;
+			for (int i = 0; i < childCount; i++) {
+				if (m_children[i].Status != ActionStatus.Running) continue;
+
+				m_children[i].Interrupt();
+			}
+		}
+
 		internal override void ResetChildren() {
-			for (int i = 0; i < m_children.Count; i++) {
+			int childCount = m_children.Count;
+			for (int i = 0; i < childCount; i++) {
 				if (m_children[i].Status == ActionStatus.Inactive) continue;
 
 				m_children[i].Reset();

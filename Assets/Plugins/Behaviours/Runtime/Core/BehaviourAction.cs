@@ -46,16 +46,11 @@ namespace Jackey.Behaviours.Core {
 		protected virtual ExecutionStatus OnEnter() => ExecutionStatus.Running;
 
 		internal ExecutionStatus Tick() {
-			if (IsFinished) {
-				Exit((ActionResult)Status);
+			if (IsFinished)
 				return (ExecutionStatus)Status;
-			}
 
 			ExecutionStatus tickStatus = OnTick();
 			Status = (ActionStatus)tickStatus;
-
-			if (IsFinished)
-				Exit((ActionResult)Status);
 
 			return tickStatus;
 		}
@@ -67,11 +62,42 @@ namespace Jackey.Behaviours.Core {
 		/// <returns></returns>
 		protected virtual ExecutionStatus OnTick() => ExecutionStatus.Running;
 
-		internal void Exit(ActionResult result) {
-			OnExit(result);
+		internal void Interrupt() {
+			InterruptChildren();
+			Status = ActionStatus.Inactive;
+
+			OnInterrupt();
+			Exit();
+		}
+		internal virtual void InterruptChildren() { }
+
+		/// <summary>
+		/// Actions are interrupted when an action with higher earlier in the tree finishes with still running actions.
+		/// <see cref="OnExit"/> is invoked directly afterwards
+		/// </summary>
+		protected virtual void OnInterrupt() { }
+
+		internal void Result(ActionResult result) {
+			OnResult(result);
+			Exit();
 		}
 
-		protected virtual void OnExit(ActionResult result) { }
+		/// <summary>
+		/// This is invoked when an action is finishes OnEnter or OnTick with a result.
+		/// <see cref="OnExit"/> is invoked directly afterwards
+		/// </summary>
+		/// <param name="result">The result of the action execution</param>
+		protected virtual void OnResult(ActionResult result) { }
+
+		internal void Exit() {
+			OnExit();
+		}
+
+		/// <summary>
+		/// Invoked whenever the action is exited, either by finishing its execution or by being interrupted.
+		/// See <see cref="OnInterrupt"/> and <see cref="OnResult"/> for callbacks to these events
+		/// </summary>
+		protected virtual void OnExit() { }
 
 		protected void EnableTicking() {
 			m_behaviour.EnableTicking(this);
@@ -89,6 +115,33 @@ namespace Jackey.Behaviours.Core {
 		}
 		internal virtual void ResetChildren() { }
 		protected virtual void OnReset() { }
+
+		public ExecutionStatus EnterSequence() {
+			ExecutionStatus enterStatus = Enter();
+
+			if (IsFinished) {
+				Result((ActionResult)enterStatus);
+				return enterStatus;
+			}
+
+			ExecutionStatus tickStatus = Tick();
+
+			if (IsFinished) {
+				Result((ActionResult)tickStatus);
+			}
+
+			return tickStatus;
+		}
+
+		public ExecutionStatus TickSequence() {
+			ExecutionStatus tickStatus = Tick();
+
+			if (IsFinished) {
+				Result((ActionResult)tickStatus);
+			}
+
+			return tickStatus;
+		}
 
 #if UNITY_EDITOR
 		[Serializable]

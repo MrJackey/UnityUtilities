@@ -27,20 +27,12 @@ namespace Jackey.Behaviours.BT.Composites {
 			while (m_runningIndex < m_children.Count - 1) {
 				m_runningIndex++;
 
-				ExecutionStatus enterStatus = m_children[m_runningIndex].Enter();
+				ExecutionStatus enterStatus = m_children[m_runningIndex].EnterSequence();
 
 				if (enterStatus == ExecutionStatus.Failure)
 					return ExecutionStatus.Failure;
 
 				if (enterStatus == ExecutionStatus.Success)
-					continue;
-
-				ExecutionStatus tickStatus = m_children[m_runningIndex].Tick();
-
-				if (tickStatus == ExecutionStatus.Failure)
-					return ExecutionStatus.Failure;
-
-				if (tickStatus == ExecutionStatus.Success)
 					continue;
 
 				return ExecutionStatus.Running;
