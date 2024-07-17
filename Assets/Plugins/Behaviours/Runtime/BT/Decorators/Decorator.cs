@@ -6,6 +6,10 @@ namespace Jackey.Behaviours.BT.Decorators {
 		[HideInInspector]
 		[SerializeReference] protected BehaviourAction m_child;
 
+#if UNITY_EDITOR
+		protected internal override int Editor_MaxChildCount => 1;
+#endif
+
 		// TODO: Remove
 		public override string Editor_Info {
 			get {

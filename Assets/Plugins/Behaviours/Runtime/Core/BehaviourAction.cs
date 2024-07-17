@@ -20,6 +20,7 @@ namespace Jackey.Behaviours.Core {
 		[SerializeField] internal EditorData Editor_Data = new();
 #endif
 		public virtual string Editor_Info => string.Empty;
+		protected internal virtual int Editor_MaxChildCount => 0;
 
 		protected BehaviourTree m_behaviour;
 

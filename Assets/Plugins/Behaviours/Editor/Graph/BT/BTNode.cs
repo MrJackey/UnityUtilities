@@ -80,19 +80,10 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 			RefreshInfo();
 
-			switch (action) {
-				case Composite:
-					m_outSocket.MaxOutgoingConnections = -1;
-					m_outSocket.style.display = DisplayStyle.Flex;
-					break;
-				case Decorator:
-					m_outSocket.MaxOutgoingConnections = 1;
-					m_outSocket.style.display = DisplayStyle.Flex;
-					break;
-				default:
-					m_outSocket.style.display = DisplayStyle.None;
-					break;
-			}
+			m_outSocket.MaxOutgoingConnections = action.Editor_MaxChildCount;
+			m_outSocket.style.display = action is Composite or Decorator
+				? DisplayStyle.Flex
+				: DisplayStyle.None;
 
 			m_outSocket.MaxIncomingConnections = 0;
 		}

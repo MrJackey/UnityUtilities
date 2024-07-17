@@ -7,6 +7,10 @@ namespace Jackey.Behaviours.BT.Composites {
 		[HideInInspector]
 		[SerializeReference] protected List<BehaviourAction> m_children = new();
 
+#if UNITY_EDITOR
+		protected internal override int Editor_MaxChildCount => -1;
+#endif
+
 		internal List<BehaviourAction> Children => m_children;
 
 		// TODO: Remove
