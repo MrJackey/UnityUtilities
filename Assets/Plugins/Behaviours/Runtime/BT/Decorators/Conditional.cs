@@ -12,6 +12,8 @@ namespace Jackey.Behaviours.BT.Decorators {
 		public override string Editor_Info => m_conditions?.Editor_Info;
 
 		protected override ExecutionStatus OnEnter() {
+			m_conditions.Enable(Owner);
+
 			if (!m_conditions.Evaluate())
 				return ExecutionStatus.Failure;
 
@@ -26,6 +28,10 @@ namespace Jackey.Behaviours.BT.Decorators {
 			ExecutionStatus enterStatus = m_child.EnterSequence();
 
 			return enterStatus;
+		}
+
+		protected override void OnExit() {
+			m_conditions.Disable();
 		}
 	}
 }

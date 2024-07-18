@@ -29,6 +29,9 @@ namespace Jackey.Behaviours.BT.Decorators {
 		protected override ExecutionStatus OnEnter() {
 			m_completedIterations = -1;
 
+			if (m_policy == Policy.WhileConditions)
+				m_conditions.Enable(Owner);
+
 			return ExecutionStatus.Running;
 		}
 
@@ -69,6 +72,11 @@ namespace Jackey.Behaviours.BT.Decorators {
 				m_child.Reset();
 
 			m_child.EnterSequence();
+		}
+
+		protected override void OnExit() {
+			if (m_policy == Policy.WhileConditions)
+				m_conditions.Disable();
 		}
 
 		private enum Policy {
