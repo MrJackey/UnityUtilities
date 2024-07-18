@@ -1,5 +1,7 @@
-﻿using Jackey.Behaviours.BT;
+﻿using System.Collections.Generic;
+using Jackey.Behaviours.BT;
 using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Core.Events;
 using UnityEngine;
 
 namespace Jackey.Behaviours {
@@ -11,6 +13,8 @@ namespace Jackey.Behaviours {
 		[SerializeField] private StartMode m_startMode;
 		[SerializeField] private UpdateMode m_updateMode;
 		[SerializeField] private RepeatMode m_repeatMode;
+
+		private List<IBehaviourEventListener> m_eventListeners = new();
 
 		public ObjectBehaviour Behaviour => m_behaviour;
 
@@ -70,6 +74,21 @@ namespace Jackey.Behaviours {
 
 		public void StopBehaviour() {
 			m_behaviour.Stop();
+		}
+
+		public void AddEventListener(IBehaviourEventListener listener) {
+			m_eventListeners.Add(listener);
+		}
+
+		public void RemoveEventListener(IBehaviourEventListener listener) {
+			m_eventListeners.Remove(listener);
+		}
+
+		public void SendEvent(BehaviourEvent evt) {
+			int listenerCount = m_eventListeners.Count;
+			for (int i = 0; i < listenerCount; i++) {
+				m_eventListeners[i].OnEvent(evt);
+			}
 		}
 
 		private enum StartMode {
