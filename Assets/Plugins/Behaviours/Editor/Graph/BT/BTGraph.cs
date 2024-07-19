@@ -64,8 +64,10 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		public override void BeginNodeCreation() {
 			base.BeginNodeCreation();
 
-			TypeCache.TypeCollection types = TypeCache.GetTypesDerivedFrom<BehaviourAction>();
-			TypeProvider.Instance.AskForType(types, type => CreateNode(type));
+			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
+			TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>();
+
+			TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => CreateNode(type));
 		}
 
 		private BTNode CreateNode(Type type) {
@@ -176,9 +178,10 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		private void OnConnectionVoided(Connection connection, Action<Connection, IConnectionSocket> restore) {
 			SaveCreatePosition();
 
-			TypeCache.TypeCollection types = TypeCache.GetTypesDerivedFrom<BehaviourAction>();
+			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
+			TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>();
 
-			TypeProvider.Instance.AskForType(types, type => {
+			TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => {
 				BTNode toNode = CreateNode(type);
 				restore.Invoke(connection, toNode);
 			});

@@ -57,13 +57,12 @@ namespace Jackey.Behaviours.Editor.TypeSearch {
 			return results;
 		}
 
-		public void AskForType(IEnumerable<Type> types, Action<Type> callback) => AskForType(TypesToSearch(types), callback);
-
-		public void AskForType(IEnumerable<SearchEntry> entries, Action<Type> callback) {
+		public void AskForType(Vector2 screenPosition, IEnumerable<Type> types, Action<Type> callback) => AskForType(screenPosition, TypesToSearch(types), callback);
+		public void AskForType(Vector2 screenPosition, IEnumerable<SearchEntry> entries, Action<Type> callback) {
 			m_entries = entries;
 			m_callback = callback;
 
-			SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), this);
+			SearchWindow.Open(new SearchWindowContext(screenPosition), this);
 		}
 
 		List<SearchTreeEntry> ISearchWindowProvider.CreateSearchTree(SearchWindowContext context) {

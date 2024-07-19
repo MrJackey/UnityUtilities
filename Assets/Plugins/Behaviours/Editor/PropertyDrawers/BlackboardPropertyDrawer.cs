@@ -131,10 +131,12 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		private void CreateVariable() {
+			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
+
 			TypeCache.TypeCollection userTypes = TypeCache.GetTypesWithAttribute(typeof(BehaviourTypeAttribute));
 			IEnumerable<TypeProvider.SearchEntry> blackboardSearchTypes = TypeProvider.StandardTypes.Concat(TypeProvider.TypesToSearch(userTypes));
 
-			TypeProvider.Instance.AskForType(blackboardSearchTypes, type => {
+			TypeProvider.Instance.AskForType(mouseScreenPosition, blackboardSearchTypes, type => {
 				int nextIndex = m_variableProperties.Count;
 
 				m_variablesProperty.InsertArrayElementAtIndex(nextIndex);

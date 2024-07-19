@@ -4,6 +4,7 @@ using Jackey.Behaviours.Core.Conditions;
 using Jackey.Behaviours.Editor.TypeSearch;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.PropertyDrawers {
@@ -89,8 +90,10 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		private void CreateCondition() {
-			TypeProvider.Instance.AskForType(TypeCache.GetTypesDerivedFrom(typeof(BehaviourCondition)), type => {
+			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
+			TypeCache.TypeCollection conditionTypes = TypeCache.GetTypesDerivedFrom(typeof(BehaviourCondition));
 
+			TypeProvider.Instance.AskForType(mouseScreenPosition, conditionTypes, type => {
 				int nextIndex = m_conditionProperties.Count;
 
 				m_conditionsProperty.InsertArrayElementAtIndex(nextIndex);
