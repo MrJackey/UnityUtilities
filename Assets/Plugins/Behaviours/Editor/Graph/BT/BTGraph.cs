@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Jackey.Behaviours.BT;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
@@ -60,6 +61,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				}
 			}
 		}
+
+		#region Node CRUD
 
 		public override void BeginNodeCreation() {
 			base.BeginNodeCreation();
@@ -145,6 +148,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_serializedBehaviour.Update();
 		}
 
+		#endregion
+
 		private void ShowNodeContext(ContextualMenuPopulateEvent evt) {
 			BTNode btNode = (BTNode)evt.target;
 
@@ -153,6 +158,14 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				_ => { SetEntry(btNode); },
 				m_behaviour.m_entry == btNode.Action ? DropdownMenuAction.Status.Checked | DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal
 			);
+			evt.menu.AppendAction(
+				"Decorate",
+				menuAction => {
+					Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(menuAction.eventInfo.mousePosition);
+					TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<Decorator>();
+
+					TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => DecorateNode(btNode, type));
+				});
 			evt.menu.AppendAction(
 				"Breakpoint",
 				_ => { ToggleBreakpoint(btNode); },
@@ -174,6 +187,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 			m_connectionManipulator.CreateConnection(socket);
 		}
+
+		#region Connection Callbacks
 
 		private void OnConnectionVoided(Connection connection, Action<Connection, IConnectionSocket> restore) {
 			SaveCreatePosition();
@@ -280,8 +295,12 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_connections.Remove(connection);
 		}
 
-		private void SetEntry(BTNode btNode) {
-			if (m_behaviour.m_entry == btNode.Action)
+		#endregion
+
+		#region Context Actions
+
+		private void SetEntry(BTNode node) {
+			if (m_behaviour.m_entry == node.Action)
 				return;
 
 			if (m_behaviour.m_entry != null) {
@@ -291,15 +310,51 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				oldStartNode.SetEntry(false);
 			}
 
-			m_behaviour.m_entry = btNode.Action;
-			btNode.SetEntry(true);
+			m_behaviour.m_entry = node.Action;
+			node.SetEntry(true);
 			m_serializedBehaviour.Update();
 		}
 
-		private void ToggleBreakpoint(BTNode btNode) {
-			btNode.ToggleBreakpoint();
+		private void DecorateNode(BTNode node, Type type) {
+			m_createNodePosition = node.ChangeCoordinatesTo(this, new Vector2(Node.DEFAULT_WIDTH / 2f, -Node.DEFAULT_HEIGHT * 2.5f));
+
+			BTNode decoratorNode = CreateNode(type);
+			Decorator decorator = (Decorator)decoratorNode.Action;
+
+			Connection toConnection = GetConnectionToNode(node);
+
+			if (toConnection != null) {
+				BTNode parentNode = toConnection.Start.Element.GetFirstOfType<BTNode>();
+
+				Debug.Assert(parentNode.Action is Composite or Decorator);
+				switch (parentNode.Action) {
+					case Composite parentComposite:
+						parentComposite.Children.Remove(node.Action);
+						parentComposite.Children.Add(decorator);
+						break;
+					case Decorator parentDecorator:
+						parentDecorator.Child = decorator;
+						break;
+
+				}
+
+				toConnection.End = decoratorNode;
+				((IConnectionSocket)node).IncomingConnections--;
+				((IConnectionSocket)decoratorNode).IncomingConnections++;
+			}
+
+			decorator.Child = node.Action;
+			AddConnection(new Connection(decoratorNode.OutSocket, node));
+
+			m_serializedBehaviour.Update();
+		}
+
+		private void ToggleBreakpoint(BTNode node) {
+			node.ToggleBreakpoint();
 			m_serializedBehaviour.ApplyModifiedProperties();
 		}
+
+		#endregion
 
 		[CanBeNull]
 		private BTNode GetNodeOfAction(BehaviourAction action) {
@@ -309,6 +364,29 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			}
 
 			return null;
+		}
+
+		[CanBeNull]
+		private Connection GetConnectionToNode(BTNode node) {
+			foreach (Connection connection in m_connections) {
+				if (connection.End.Element == node)
+					return connection;
+			}
+
+			return null;
+		}
+
+		private IList<Connection> GetConnectionsFromNode(BTNode node) {
+			List<Connection> connections = null;
+
+			foreach (Connection connection in m_connections) {
+				if (connection.Start.Element == node.OutSocket) {
+					connections ??= new List<Connection>();
+					connection.Add(connection);
+				}
+			}
+
+			return connections != null ? connections : Array.Empty<Connection>();
 		}
 
 		protected override void InspectElement(VisualElement element) {

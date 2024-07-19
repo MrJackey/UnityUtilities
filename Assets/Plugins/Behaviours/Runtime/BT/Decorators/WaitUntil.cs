@@ -8,7 +8,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 		[SerializeField] private BehaviourConditionGroup m_conditions;
 
 #if UNITY_EDITOR
-		public override string Editor_Info => $"Wait until\n{m_conditions.Editor_Info}";
+		public override string Editor_Info => $"Wait until\n{m_conditions?.Editor_Info}";
 #endif
 
 		protected override ExecutionStatus OnEnter() {

@@ -12,7 +12,7 @@ namespace Jackey.Behaviours.BT.Composites {
 		private int m_finishedChildren;
 
 #if UNITY_EDITOR
-		public override string Editor_Info => m_policy.ToString();
+		public override string Editor_Info => UnityEditor.ObjectNames.NicifyVariableName(m_policy.ToString());
 		protected internal override int Editor_MaxChildCount => 32;
 #endif
 
