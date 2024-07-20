@@ -6,6 +6,11 @@ using UnityEngine;
 namespace Jackey.Behaviours.Core.Blackboard {
 	[Serializable]
 	public class Blackboard {
+#if UNITY_EDITOR
+		[ItemCanBeNull]
+		public static Blackboard[] Available = new Blackboard[2];
+#endif
+
 		[SerializeField] internal List<BlackboardVar> m_variables = new();
 
 		internal void MergeInto(Blackboard other) {

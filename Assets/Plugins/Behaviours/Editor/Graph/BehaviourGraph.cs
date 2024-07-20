@@ -24,6 +24,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public SerializedObject SerializedBehaviour => m_serializedBehaviour;
 		public virtual ObjectBehaviour Behaviour => null;
 
+		public BlackboardInspector BlackboardInspector => m_blackboardInspector;
+
 		VisualElement ISelectionManager.Element => this;
 		public List<ISelectableElement> SelectedElements { get; } = new();
 

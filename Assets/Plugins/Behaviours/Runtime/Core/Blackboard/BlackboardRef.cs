@@ -86,12 +86,19 @@ namespace Jackey.Behaviours.Core.Blackboard {
 
 		[CanBeNull]
 		private BlackboardVar FindReferencedVariable() {
-			foreach (BlackboardVar variable in m_behaviour.m_blackboard.m_variables) {
-				if (variable.Guid == m_variableGuid)
+#if UNITY_EDITOR
+			foreach (Blackboard blackboard in Blackboard.Available) {
+				if (blackboard == null) continue;
+
+				BlackboardVar variable = blackboard.FindVariable(m_variableGuid);
+				if (variable != null)
 					return variable;
 			}
 
 			return null;
+#else
+			return m_behaviour.m_blackboard.FindVariable(m_variableGuid);
+#endif
 		}
 
 		internal enum Mode {

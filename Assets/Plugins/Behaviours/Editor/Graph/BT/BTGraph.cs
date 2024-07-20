@@ -32,7 +32,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_graphHeader.Bind(m_serializedBehaviour);
 			m_graphInstanceInfo.text = EditorUtility.IsPersistent(m_behaviour) ? "(Asset)" : "(Instance)";
 
-			m_blackboardInspector.SetBlackboard(behaviour.Blackboard, m_serializedBehaviour.FindProperty(nameof(ObjectBehaviour.m_blackboard)));
+			m_blackboardInspector.SetSecondaryBlackboard(behaviour.Blackboard, m_serializedBehaviour.FindProperty(nameof(ObjectBehaviour.m_blackboard)));
 		}
 
 		private void BuildGraph() {

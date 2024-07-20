@@ -142,6 +142,9 @@ namespace Jackey.Behaviours.Editor {
 					return;
 
 				EditBehaviour(owner.Behaviour);
+
+				SerializedProperty blackboardProperty = new SerializedObject(owner).FindProperty("m_blackboard");
+				m_graph.BlackboardInspector.SetPrimaryBlackboard(owner.Blackboard, blackboardProperty);
 			}
 		}
 
@@ -221,6 +224,7 @@ namespace Jackey.Behaviours.Editor {
 				m_graph.RemoveFromHierarchy();
 
 			m_graph = m_btGraph;
+			m_graph.BlackboardInspector.ClearBlackboards();
 
 			if (m_graph.parent == null)
 				rootVisualElement.Add(m_graph);

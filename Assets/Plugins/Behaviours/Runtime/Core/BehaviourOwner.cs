@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Jackey.Behaviours {
 	public class BehaviourOwner : MonoBehaviour {
 		[SerializeField] private ObjectBehaviour m_behaviour;
-		[SerializeField] private Blackboard m_blackBoard;
+		[SerializeField] private Blackboard m_blackboard;
 
 		[Space]
 		[SerializeField] private StartMode m_startMode;
@@ -17,6 +17,7 @@ namespace Jackey.Behaviours {
 		private List<IBehaviourEventListener> m_eventListeners = new();
 
 		public ObjectBehaviour Behaviour => m_behaviour;
+		public Blackboard Blackboard => m_blackboard;
 
 		private void Awake() {
 			if (m_behaviour == null && m_updateMode != UpdateMode.Manual) {
@@ -53,7 +54,7 @@ namespace Jackey.Behaviours {
 		public void SetBehaviourInstance(ObjectBehaviour instance) {
 			m_behaviour = instance;
 
-			m_blackBoard.MergeInto(m_behaviour.Blackboard);
+			m_blackboard.MergeInto(m_behaviour.Blackboard);
 			m_behaviour.Initialize(this);
 		}
 

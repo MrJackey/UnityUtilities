@@ -22,6 +22,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		public override VisualElement CreatePropertyGUI(SerializedProperty property) {
 			VisualElement rootVisualElement = new VisualElement();
+			rootVisualElement.AddToClassList("BlackboardDrawer");
 
 			VisualElement rowHeaderContainer = new VisualElement() { name = "RowHeader" };
 			rowHeaderContainer.Add(new Label("Name"));

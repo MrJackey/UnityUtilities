@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Jackey.Behaviours.Core.Blackboard;
-using Jackey.Behaviours.Editor.Graph;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -56,7 +56,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_propertyField = new PropertyField(m_fieldProperty, property.displayName);
 
 			m_variableGuidProperty = property.FindPropertyRelative("m_variableGuid");
-			BlackboardVar referencedVariable = BlackboardInspector.Blackboard.FindVariable(m_variableGuidProperty.stringValue);
+			BlackboardVar referencedVariable = FindVariable(m_variableGuidProperty.stringValue);
 
 			m_dropdownField = new DropdownField() {
 				label = property.displayName,
@@ -92,6 +92,19 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			return m_root;
 		}
 
+		[CanBeNull]
+		private BlackboardVar FindVariable(string guid) {
+			foreach (Blackboard blackboard in Blackboard.Available) {
+				if (blackboard == null) continue;
+
+				BlackboardVar variable = blackboard.FindVariable(guid);
+				if (variable != null)
+					return variable;
+			}
+
+			return null;
+		}
+
 		private void RefreshDropdownOptions() {
 			s_dropdownOptions.Clear();
 			s_dropdownValues.Clear();
@@ -100,14 +113,18 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			bool missingReference = string.IsNullOrEmpty(referencedGuid);
 
 			Type myType = fieldInfo.FieldType.GenericTypeArguments[0];
-			foreach (BlackboardVar variable in BlackboardInspector.Blackboard.m_variables) {
-				if (!variable.IsAssignableTo(myType)) continue;
+			foreach (Blackboard blackboard in Blackboard.Available) {
+				if (blackboard == null) continue;
 
-				if (referencedGuid == variable.Guid)
-					missingReference = false;
+				foreach (BlackboardVar variable in blackboard.m_variables) {
+					if (!variable.IsAssignableTo(myType)) continue;
 
-				s_dropdownOptions.Add(variable.Name);
-				s_dropdownValues.Add(variable.Guid);
+					if (referencedGuid == variable.Guid)
+						missingReference = false;
+
+					s_dropdownOptions.Add(variable.Name);
+					s_dropdownValues.Add(variable.Guid);
+				}
 			}
 
 			if (missingReference) {
