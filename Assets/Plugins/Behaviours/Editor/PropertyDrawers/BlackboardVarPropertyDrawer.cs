@@ -43,7 +43,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				ObjectField field = new ObjectField() {
 					objectType = valueType,
 					value = unityObjectProperty.objectReferenceValue,
-					allowSceneObjects = false,
+					allowSceneObjects = true,
 				};
 				field.BindProperty(unityObjectProperty);
 

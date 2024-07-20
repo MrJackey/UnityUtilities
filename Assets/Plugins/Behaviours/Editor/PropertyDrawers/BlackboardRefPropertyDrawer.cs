@@ -56,7 +56,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_propertyField = new PropertyField(m_fieldProperty, property.displayName);
 
 			m_variableGuidProperty = property.FindPropertyRelative("m_variableGuid");
-			BlackboardVar referencedVariable = FindVariable(m_variableGuidProperty.stringValue);
+			string variableName = property.FindPropertyRelative("m_variableName").stringValue;
+
+			BlackboardVar referencedVariable = FindVariable(m_variableGuidProperty.stringValue, variableName);
 
 			m_dropdownField = new DropdownField() {
 				label = property.displayName,
@@ -69,6 +71,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 				if (referencedVariable.IsAssignableTo(fieldInfo.FieldType.GenericTypeArguments[0]))
 					m_dropdownField.value = referencedVariable.Name;
+			}
+			else {
+				m_dropdownField.value = string.IsNullOrEmpty(m_variableGuidProperty.stringValue) ? "" : variableName;
 			}
 
 			// Trickle down to catch the event before the dropdown field does
@@ -93,11 +98,11 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		[CanBeNull]
-		private BlackboardVar FindVariable(string guid) {
+		private BlackboardVar FindVariable(string guid, string name) {
 			foreach (Blackboard blackboard in Blackboard.Available) {
 				if (blackboard == null) continue;
 
-				BlackboardVar variable = blackboard.FindVariable(guid);
+				BlackboardVar variable = blackboard.FindVariableWithGuidOrName(guid, name);
 				if (variable != null)
 					return variable;
 			}

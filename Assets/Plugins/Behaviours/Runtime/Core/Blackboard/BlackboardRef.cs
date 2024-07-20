@@ -4,12 +4,13 @@ using UnityEngine;
 
 namespace Jackey.Behaviours.Core.Blackboard {
 	[Serializable]
-	public struct BlackboardRef<T> {
+	public struct BlackboardRef<T> : ISerializationCallbackReceiver {
 		[SerializeField] private Mode m_mode;
 		[SerializeField] private T m_fieldValue;
 
 		[SerializeField] private ObjectBehaviour m_behaviour;
 		[SerializeField] private string m_variableGuid;
+		[SerializeField] private string m_variableName;
 
 		[UsedImplicitly] // #if !UNITY_EDITOR
 		private BlackboardVar m_cachedVariable;
@@ -23,8 +24,12 @@ namespace Jackey.Behaviours.Core.Blackboard {
 					case Mode.Field:
 						return $"{m_fieldValue?.ToString() ?? string.Empty}";
 					case Mode.Variable:
-						BlackboardVar variable = GetReferencedVariable();
-						return variable != null ? $"<b>({variable.Name})</b>" : "<b>NONE</b>";
+						if (!string.IsNullOrEmpty(m_variableGuid)) {
+							BlackboardVar variable = GetReferencedVariable();
+							return variable != null ? $"<b>({variable.Name})</b>" : $"<color=red><b>({m_variableName})</b></color>";
+						}
+
+						return "<b>NONE</b>";
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -87,19 +92,34 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		[CanBeNull]
 		private BlackboardVar FindReferencedVariable() {
 #if UNITY_EDITOR
-			foreach (Blackboard blackboard in Blackboard.Available) {
-				if (blackboard == null) continue;
+			if (!Application.IsPlaying(m_behaviour)) {
+				foreach (Blackboard blackboard in Blackboard.Available) {
+					if (blackboard == null) continue;
 
-				BlackboardVar variable = blackboard.FindVariable(m_variableGuid);
-				if (variable != null)
-					return variable;
+					BlackboardVar availableVariable = blackboard.FindVariableWithGuidOrName(m_variableGuid, m_variableName);
+					if (availableVariable != null && availableVariable.IsAssignableTo(typeof(T)))
+						return availableVariable;
+				}
 			}
+#endif
+			BlackboardVar variable = m_behaviour.m_blackboard.FindVariableWithGuidOrName(m_variableGuid, m_variableName);
+			if (variable != null && variable.IsAssignableTo(typeof(T)))
+				return variable;
 
 			return null;
-#else
-			return m_behaviour.m_blackboard.FindVariable(m_variableGuid);
-#endif
 		}
+
+		void ISerializationCallbackReceiver.OnBeforeSerialize() {
+			if (string.IsNullOrEmpty(m_variableGuid)) {
+				m_variableName = null;
+				return;
+			}
+
+			BlackboardVar variable = FindReferencedVariable();
+			if (variable != null && variable.IsAssignableTo(typeof(T)))
+				m_variableName = variable.Name;
+		}
+		void ISerializationCallbackReceiver.OnAfterDeserialize() { }
 
 		internal enum Mode {
 			Field,

@@ -83,7 +83,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 			m_value = (BlackboardValue)Activator.CreateInstance(valueType);
 
 			if (typeof(Object).IsAssignableFrom(serializedType))
-				m_value.SetValueBoxed(m_unityObjectValue);
+				m_value.SetValueBoxed(m_unityObjectValue != null ? m_unityObjectValue : null); // Ensure Unity's fake null isn't set as value
 			else if (!string.IsNullOrEmpty(m_primitiveValue) && (serializedType == typeof(string) || serializedType.IsPrimitive))
 				m_value.SetValueBoxed(Convert.ChangeType(m_primitiveValue, serializedType));
 			else if (m_boxedValue != null && serializedType.IsInstanceOfType(m_boxedValue))

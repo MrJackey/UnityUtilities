@@ -45,9 +45,20 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		}
 
 		[CanBeNull]
-		internal BlackboardVar FindVariable(string guid) {
-			foreach (BlackboardVar variable in m_variables) {
+		internal BlackboardVar FindVariableWithGuidOrName(string guid, string name) {
+			int variableCount = m_variables.Count;
+
+			// Prioritize the guid
+			for (int i = 0; i < variableCount; i++) {
+				BlackboardVar variable = m_variables[i];
 				if (variable.Guid == guid)
+					return variable;
+			}
+
+			// Then the name
+			for (int i = 0; i < variableCount; i++) {
+				BlackboardVar variable = m_variables[i];
+				if (variable.Name == name)
 					return variable;
 			}
 
