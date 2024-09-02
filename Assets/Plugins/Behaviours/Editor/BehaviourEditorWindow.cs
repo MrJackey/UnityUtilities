@@ -143,8 +143,10 @@ namespace Jackey.Behaviours.Editor {
 
 				EditBehaviour(owner.Behaviour);
 
-				SerializedProperty blackboardProperty = new SerializedObject(owner).FindProperty("m_blackboard");
-				m_graph.BlackboardInspector.SetPrimaryBlackboard(owner.Blackboard, blackboardProperty);
+				if (m_graph != null) {
+					SerializedProperty blackboardProperty = new SerializedObject(owner).FindProperty("m_blackboard");
+					m_graph.BlackboardInspector.SetPrimaryBlackboard(owner.Blackboard, blackboardProperty);
+				}
 			}
 		}
 
