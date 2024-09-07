@@ -2,10 +2,10 @@
 
 namespace Jackey.Behaviours.Attributes {
 	[AttributeUsage(AttributeTargets.Class)]
-	public class ActionNameAttribute : Attribute {
+	public class DisplayNameAttribute : Attribute {
 		public string Name { get; private set; }
 
-		public ActionNameAttribute(string name) {
+		public DisplayNameAttribute(string name) {
 			Name = name;
 		}
 	}

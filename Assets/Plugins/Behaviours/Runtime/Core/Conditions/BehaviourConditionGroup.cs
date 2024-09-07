@@ -1,4 +1,5 @@
 ﻿using System;
+using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
 namespace Jackey.Behaviours.Core.Conditions {
@@ -19,7 +20,7 @@ namespace Jackey.Behaviours.Core.Conditions {
 						string conditionInfo = m_conditions[i].Editor_Info;
 
 						if (string.IsNullOrEmpty(conditionInfo))
-							conditionInfo = m_conditions[i].GetType().Name;
+							conditionInfo = m_conditions[i].GetType().GetDisplayOrTypeName();
 
 						if (i < m_conditions.Length - 1)
 							output += $"{conditionInfo}\n";

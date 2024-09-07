@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Jackey.Behaviours.Core.Conditions;
 using Jackey.Behaviours.Editor.TypeSearch;
+using Jackey.Behaviours.Utilities;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -81,7 +82,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			if (m_removeActions.Count < index + 1)
 				m_removeActions.Add(() => RemoveCondition(index));
 
-			element.Q<Label>().text = ObjectNames.NicifyVariableName(m_conditionProperties[index].managedReferenceValue.GetType().Name);
+			element.Q<Label>().text = m_conditionProperties[index].managedReferenceValue.GetType().GetDisplayOrTypeName();
 			element.Q<Button>().clickable.clicked += m_removeActions[index];
 		}
 
@@ -147,7 +148,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			SerializedProperty property = m_conditionProperties[index].Copy();
 
-			m_conditionInspectorLabel.text = ObjectNames.NicifyVariableName(property.managedReferenceValue.GetType().Name);
+			m_conditionInspectorLabel.text = property.managedReferenceValue.GetType().GetDisplayOrTypeName();
 
 			int startDepth = property.depth;
 			for (bool enterChildren = true; property.NextVisible(enterChildren) && property.depth > startDepth; enterChildren = false)
