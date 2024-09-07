@@ -14,7 +14,7 @@ namespace Jackey.Behaviours.Core.Conditions {
 		public override string Editor_Info => m_event != null ? $"Event: {m_event.name}" : "Event: Missing Event";
 #endif
 
-		public override void OnEnable(BehaviourOwner owner) {
+		protected override void OnEnable(BehaviourOwner owner) {
 			m_owner = owner;
 			m_owner.AddEventListener(this);
 		}

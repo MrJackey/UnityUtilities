@@ -36,7 +36,7 @@ namespace Jackey.Behaviours.Core.Conditions {
 	public void Enable(BehaviourOwner owner) {
 		int conditionCount = m_conditions.Length;
 		for (int i = 0; i < conditionCount; i++) {
-			m_conditions[i].OnEnable(owner);
+			m_conditions[i].Enable(owner);
 		}
 	}
 
