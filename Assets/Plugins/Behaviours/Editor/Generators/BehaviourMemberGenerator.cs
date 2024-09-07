@@ -1,16 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
+using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.BT.Actions;
 using UnityEditor;
 using UnityEngine;
 
 namespace Jackey.Behaviours.Editor.Generators {
-	public static class ActionGenerator {
-		private const string GENERATED_FILE_NAME = "BehaviourActions_Generated";
+	public static class BehaviourMemberGenerator {
+		private const string GENERATED_FILE_NAME = "BehaviourMembers_Generated";
 
 		private const string CLASS_TEMPLATE = @"using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Core.Conditions;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Generated {{
@@ -45,7 +50,25 @@ namespace Jackey.Behaviours.BT.Generated {{
 		}}
 ";
 
-		[MenuItem("Tools/Jackey/Behaviours/Generate Actions")]
+		private const string BASE_CONDITION_TEMPLATE = @"
+		[ActionName(""{0}"")]
+		[SearchPath(""Generated/{0}"")]
+		public class {1} : BehaviourCondition<{2}> {{ 
+			public override bool Evaluate() => GetTarget().{3};
+		}}
+";
+
+		private const string ARGS_CONDITION_TEMPLATE = @"
+		[ActionName(""{0}"")]
+		[SearchPath(""Generated/{0}"")]
+		public class {1} : BehaviourCondition<{2}> {{ 
+			[SerializeField] protected {3} m_args;
+
+			public override bool Evaluate() => GetTarget().{4};
+		}}
+";
+
+		[MenuItem("Tools/Jackey/Behaviours/Generate Members")]
 		public static void Regenerate() {
 			string assetPath;
 
@@ -76,20 +99,34 @@ namespace Jackey.Behaviours.BT.Generated {{
 		}
 
 		private static void Generate(string assetPath) {
+			StringBuilder baseBuilder = GenerateBaseActions();
+			StringBuilder argsBuilder = GenerateArgActions();
+			StringBuilder conditionsBuilder = GenerateConditions();
+
+			string output = string.Format(CLASS_TEMPLATE, baseBuilder.Append(argsBuilder.ToString()).Append(conditionsBuilder.ToString()));
+			File.WriteAllText(assetPath, output);
+		}
+
+		private static StringBuilder GenerateBaseActions() {
+			StringBuilder builder = new StringBuilder();
 			TypeCache.TypeCollection baseTypes = TypeCache.GetTypesDerivedFrom(typeof(IComponentAction));
-			StringBuilder baseBuilder = new StringBuilder();
 
 			foreach (Type type in baseTypes) {
-				baseBuilder.AppendFormat(
+				builder.AppendFormat(
 					BASE_ACTION_TEMPLATE,
-					type.Name,
-					$"{type.FullName.Replace('.', '_')}_Generated",
-					type.FullName
+					type.Name, // Action Name
+					$"{type.FullName.Replace('.', '_')}_Generated", // Class Name
+					type.FullName // Target Arg
 				);
 			}
 
+			return builder;
+		}
+
+		private static StringBuilder GenerateArgActions() {
+			StringBuilder builder = new StringBuilder();
 			TypeCache.TypeCollection argTypes = TypeCache.GetTypesDerivedFrom(typeof(IComponentAction<>));
-			StringBuilder argsBuilder = new StringBuilder();
+
 			foreach (Type type in argTypes) {
 				foreach (Type @interface in type.GetInterfaces()) {
 					if (!@interface.IsGenericType)
@@ -100,18 +137,49 @@ namespace Jackey.Behaviours.BT.Generated {{
 						continue;
 
 					Type typeArgs = @interface.GetGenericArguments()[0];
-					argsBuilder.AppendFormat(
+					builder.AppendFormat(
 						ARGS_ACTION_TEMPLATE,
-						$"{type.Name}<{typeArgs.Name}>",
-						$"{type.FullName.Replace('.', '_')}_{typeArgs.FullName.Replace('.', '_')}_Generated",
-						type.FullName,
-						typeArgs.FullName
+						$"{type.Name}<{typeArgs.Name}>", // Action Name
+						$"{type.FullName.Replace('.', '_')}_{typeArgs.FullName.Replace('.', '_')}_Generated", // Class Name
+						type.FullName, // Target Arg
+						typeArgs.FullName // Serialized Arg Type
 					);
 				}
 			}
 
-			string output = string.Format(CLASS_TEMPLATE, baseBuilder.AppendLine(argsBuilder.ToString()));
-			File.WriteAllText(assetPath, output);
+			return builder;
+		}
+
+		private static StringBuilder GenerateConditions() {
+			StringBuilder builder = new StringBuilder();
+			IEnumerable<MethodInfo> methods = TypeCache.GetMethodsWithAttribute<BehaviourConditionAttribute>()
+				.Where(methodInfo => methodInfo.IsPublic && methodInfo.ReturnType == typeof(bool) && methodInfo.GetParameters().Length <= 1);
+
+			foreach (MethodInfo method in methods) {
+				ParameterInfo[] parameters = method.GetParameters();
+
+				if (parameters.Length == 0) {
+					builder.AppendFormat(
+						BASE_CONDITION_TEMPLATE,
+						$"{method.DeclaringType.Name}.{method.Name}", // Condition Name
+						$"{method.DeclaringType.FullName.Replace('.', '_')}_{method.Name}_Generated", // Class Name
+						method.DeclaringType.FullName, // Type Arg
+						$"{method.Name}()" // Method Call
+					);
+				}
+				else {
+					builder.AppendFormat(
+						ARGS_CONDITION_TEMPLATE,
+						$"{method.DeclaringType.Name}.{method.Name}({parameters[0].ParameterType.Name})", // Name
+						$"{method.DeclaringType.FullName.Replace('.', '_')}_{method.Name}_{parameters[0].ParameterType.Name}_Generated", // ClassName
+						method.DeclaringType.FullName, // Target Arg
+						parameters[0].ParameterType.FullName, // Serialized Arg Type
+						$"{method.Name}(m_args)" // Method Call
+					);
+				}
+			}
+
+			return builder;
 		}
 	}
 }
