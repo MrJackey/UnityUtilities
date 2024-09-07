@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.BT;
@@ -104,7 +105,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 					m_label.style.display = DisplayStyle.None;
 				}
 				else {
-					m_label.text = ObjectNames.NicifyVariableName(m_action.GetType().Name);
+					m_label.text = GetDefaultLabel();
 					m_label.style.display = DisplayStyle.Flex;
 				}
 			}
@@ -114,6 +115,15 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			}
 
 			m_breakpointElement.visible = m_action.Editor_Data.Breakpoint;
+		}
+
+		private string GetDefaultLabel() {
+			Type type = m_action.GetType();
+			Attribute nameAttribute = type.GetCustomAttribute(typeof(ActionNameAttribute));
+
+			return nameAttribute != null
+				? ((ActionNameAttribute)nameAttribute).Name
+				: ObjectNames.NicifyVariableName(type.Name);
 		}
 
 		private void RuntimeTick() {

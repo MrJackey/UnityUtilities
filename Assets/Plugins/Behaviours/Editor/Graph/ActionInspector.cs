@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
-using Jackey.Behaviours.Core;
+using System.Reflection;
+using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.Editor.Manipulators;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Graph {
@@ -39,7 +39,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public void Inspect(Type type, SerializedProperty property) {
 			Clear();
 
-			m_header.text = ObjectNames.NicifyVariableName(type.Name);
+			m_header.text = GetActionHeader(type);
 
 			SerializedProperty targetProperty = property.FindPropertyRelative("m_target");
 			if (targetProperty != null) {
@@ -56,6 +56,14 @@ namespace Jackey.Behaviours.Editor.Graph {
 			this.Bind(property.serializedObject);
 
 			contentContainer.style.display = contentContainer.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+		}
+
+		private string GetActionHeader(Type type) {
+			Attribute nameAttribute = type.GetCustomAttribute(typeof(ActionNameAttribute));
+
+			return nameAttribute != null
+				? ((ActionNameAttribute)nameAttribute).Name
+				: ObjectNames.NicifyVariableName(type.Name);
 		}
 	}
 }

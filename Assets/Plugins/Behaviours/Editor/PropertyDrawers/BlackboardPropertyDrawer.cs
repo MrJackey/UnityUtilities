@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Editor.TypeSearch;
 using UnityEditor;

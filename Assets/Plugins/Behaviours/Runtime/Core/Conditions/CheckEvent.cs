@@ -1,4 +1,5 @@
-﻿using Jackey.Behaviours.Core.Events;
+﻿using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Core.Events;
 using UnityEngine;
 
 namespace Jackey.Behaviours.Core.Conditions {

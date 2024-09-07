@@ -10,6 +10,7 @@ namespace Jackey.Behaviours.Editor.Generators {
 		private const string GENERATED_FILE_NAME = "BehaviourActions_Generated";
 
 		private const string CLASS_TEMPLATE = @"using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Attributes;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Generated {{

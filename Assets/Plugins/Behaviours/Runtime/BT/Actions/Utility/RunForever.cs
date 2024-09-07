@@ -1,4 +1,5 @@
-﻿using Jackey.Behaviours.Core;
+﻿using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Core;
 
 namespace Jackey.Behaviours.BT.Actions.Utility {
 	[SearchPath("Utilities/Run Forever")]

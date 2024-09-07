@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Attributes;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 

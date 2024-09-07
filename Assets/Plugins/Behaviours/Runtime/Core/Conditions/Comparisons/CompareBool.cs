@@ -1,4 +1,5 @@
-﻿using Jackey.Behaviours.Core.Blackboard;
+﻿using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Core.Blackboard;
 
 namespace Jackey.Behaviours.Core.Conditions.Comparisons {
 	[SearchPath("Blackboard/Compare Bool")]
