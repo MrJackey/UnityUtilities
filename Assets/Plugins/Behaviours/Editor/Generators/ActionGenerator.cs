@@ -20,6 +20,7 @@ namespace Jackey.Behaviours.BT.Generated {{
 }}";
 
 		private const string BASE_ACTION_TEMPLATE = @"
+		[ActionName(""{0}"")]
 		[SearchPath(""Generated/{0}"")]
 		public class {1} : BehaviourAction<{2}> {{
 			protected override ExecutionStatus OnEnter() => GetTarget().OnEnter();
@@ -31,6 +32,7 @@ namespace Jackey.Behaviours.BT.Generated {{
 ";
 
 		private const string ARGS_ACTION_TEMPLATE = @"
+		[ActionName(""{0}"")]
 		[SearchPath(""Generated/{0}"")]
 		public class {1} : BehaviourAction<{2}> {{
 			[SerializeField] private {3} m_args;
