@@ -1,0 +1,44 @@
+﻿<#@ template language="C#" #>
+
+<#
+	(string name, string type)[] types =
+	{
+		("Bool", "bool"),
+		("String", "string"),
+		("Int", "int"),
+		("uInt", "uint"),
+		("Long", "long"),
+		("uLong", "ulong"),
+		("Float", "float"),
+		("Double", "double"),
+		("GameObject", "GameObject"),
+		("MonoBehaviour", "MonoBehaviour"),
+	};
+#>
+
+using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Core.Operations;
+using UnityEngine;
+
+namespace Jackey.Behaviours.BT.Operations {<#
+	foreach ((string name, string type) in types) {
+		Write($@"
+	[DisplayName(""Set {name}"")]
+	[SearchPath(""Blackboard/Set {name}"")]
+	public class Set{name} : Operation {{
+		[BlackboardOnly]
+		[SerializeField] private BlackboardRef<{type}> m_variable;
+		[SerializeField] private BlackboardRef<{type}> m_value;
+
+		public override string Editor_Info => $""Set {{m_variable.Editor_Info}} to {{m_value.Editor_Info}}"";
+
+		public override void Execute() {{
+			m_variable.SetValue(m_value.GetValue());
+		}}
+	}}
+"
+			);
+	}
+#>
+}
