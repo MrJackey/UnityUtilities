@@ -15,19 +15,20 @@ namespace Jackey.Behaviours.Editor.Generators {
 
 		private const string CLASS_TEMPLATE = @"using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Core.Conditions;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Generated {{
-	public class BehaviourActions_Generated {{
+	public sealed class BehaviourMembers_Generated {{
 {0}
 	}}
 }}";
 
 		private const string BASE_ACTION_TEMPLATE = @"
-		[ActionName(""{0}"")]
+		[DisplayName(""{0}"")]
 		[SearchPath(""Generated/{0}"")]
-		public class {1} : BehaviourAction<{2}> {{
+		public sealed class {1} : BehaviourAction<{2}> {{
 			protected override ExecutionStatus OnEnter() => GetTarget().OnEnter();
 			protected override ExecutionStatus OnTick() => GetTarget().OnTick();
 			protected override void OnInterrupt() => GetTarget().OnInterrupt();
@@ -37,34 +38,34 @@ namespace Jackey.Behaviours.BT.Generated {{
 ";
 
 		private const string ARGS_ACTION_TEMPLATE = @"
-		[ActionName(""{0}"")]
+		[DisplayName(""{0}"")]
 		[SearchPath(""Generated/{0}"")]
-		public class {1} : BehaviourAction<{2}> {{
-			[SerializeField] private {3} m_args;
+		public sealed class {1} : BehaviourAction<{2}> {{
+			[SerializeField] private BlackboardRef<{3}> m_args;
 
-			protected override ExecutionStatus OnEnter() => GetTarget().OnEnter(m_args);
-			protected override ExecutionStatus OnTick() => GetTarget().OnTick(m_args);
-			protected override void OnInterrupt() => GetTarget().OnInterrupt(m_args);
-			protected override void OnResult(ActionResult result) => GetTarget().OnResult(m_args, result);
-			protected override void OnExit() => GetTarget().OnExit(m_args);
+			protected override ExecutionStatus OnEnter() => GetTarget().OnEnter(m_args.GetValue());
+			protected override ExecutionStatus OnTick() => GetTarget().OnTick(m_args.GetValue());
+			protected override void OnInterrupt() => GetTarget().OnInterrupt(m_args.GetValue());
+			protected override void OnResult(ActionResult result) => GetTarget().OnResult(m_args.GetValue(), result);
+			protected override void OnExit() => GetTarget().OnExit(m_args.GetValue());
 		}}
 ";
 
 		private const string BASE_CONDITION_TEMPLATE = @"
-		[ActionName(""{0}"")]
+		[DisplayName(""{0}"")]
 		[SearchPath(""Generated/{0}"")]
-		public class {1} : BehaviourCondition<{2}> {{ 
-			public override bool Evaluate() => GetTarget().{3};
+		public sealed class {1} : BehaviourCondition<{2}> {{ 
+			public override bool Evaluate() => GetTarget().{3}();
 		}}
 ";
 
 		private const string ARGS_CONDITION_TEMPLATE = @"
-		[ActionName(""{0}"")]
+		[DisplayName(""{0}"")]
 		[SearchPath(""Generated/{0}"")]
-		public class {1} : BehaviourCondition<{2}> {{ 
-			[SerializeField] protected {3} m_args;
+		public sealed class {1} : BehaviourCondition<{2}> {{ 
+			[SerializeField] private BlackboardRef<{3}> m_args;
 
-			public override bool Evaluate() => GetTarget().{4};
+			public override bool Evaluate() => GetTarget().{4}(m_args.GetValue());
 		}}
 ";
 
@@ -164,7 +165,7 @@ namespace Jackey.Behaviours.BT.Generated {{
 						$"{method.DeclaringType.Name}.{method.Name}", // Condition Name
 						$"{method.DeclaringType.FullName.Replace('.', '_')}_{method.Name}_Generated", // Class Name
 						method.DeclaringType.FullName, // Type Arg
-						$"{method.Name}()" // Method Call
+						$"{method.Name}" // Method Call
 					);
 				}
 				else {
@@ -174,7 +175,7 @@ namespace Jackey.Behaviours.BT.Generated {{
 						$"{method.DeclaringType.FullName.Replace('.', '_')}_{method.Name}_{parameters[0].ParameterType.Name}_Generated", // ClassName
 						method.DeclaringType.FullName, // Target Arg
 						parameters[0].ParameterType.FullName, // Serialized Arg Type
-						$"{method.Name}(m_args)" // Method Call
+						$"{method.Name}" // Method Call
 					);
 				}
 			}
