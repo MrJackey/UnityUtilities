@@ -13,7 +13,7 @@ namespace Jackey.Behaviours.Core.Conditions {
 		public string Editor_Info {
 			get {
 				string policyString = UnityEditor.ObjectNames.NicifyVariableName(m_policy.ToString());
-				string output = m_invert ? $"if not {policyString}\n" : $"if {policyString}\n";
+				string output = m_invert ? $"<b>not {policyString}</b>\n" : $"<b>{policyString}</b>\n";
 
 				if (m_conditions != null) {
 					for (int i = 0; i < m_conditions.Length; i++) {
@@ -23,9 +23,9 @@ namespace Jackey.Behaviours.Core.Conditions {
 							conditionInfo = m_conditions[i].GetType().GetDisplayOrTypeName();
 
 						if (i < m_conditions.Length - 1)
-							output += $"{conditionInfo}\n";
+							output += $"-{conditionInfo}\n";
 						else
-							output += $"{conditionInfo}";
+							output += $"-{conditionInfo}";
 					}
 				}
 
