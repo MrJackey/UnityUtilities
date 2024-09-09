@@ -15,9 +15,13 @@ namespace Jackey.Behaviours.BT.Decorators {
 		public override string Editor_Info => $"<b>On Enter</b>\n{m_enterOperations?.Editor_Info}\n\n<b>On Exit</b>\n{m_exitOperations?.Editor_Info}";
 #endif
 
-		protected override ExecutionStatus OnEnter() {
-			m_enterOperations.Execute(Owner);
-			return ExecutionStatus.Running;
+		protected override ExecutionStatus OnTick() {
+			if (!m_child.IsFinished) {
+				m_enterOperations.Execute(Owner);
+				return m_child.EnterSequence();
+			}
+
+			return (ExecutionStatus)m_child.Status;
 		}
 
 		protected override void OnExit() {
