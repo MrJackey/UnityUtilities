@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Jackey.Behaviours.Editor.Utilities {
 	public static class SerializationUtilities {
-		private const string SERIALIZED_MANAGED_TYPE_FORMAT = "{{class: ({0}), ns: ({1}), asm: ({2})}}";
+		private const string SERIALIZED_MANAGED_TYPE_FORMAT = @"{{class: ({0}),\s+ns: ({1}),\s+asm: ({2})}}";
 
 		public static void RepairMissingManagedTypes(Object asset, ManagedReferenceMissingType missingType, string asm, string ns, string type) {
 			string assetPath = AssetDatabase.GetAssetPath(asset);
