@@ -17,6 +17,7 @@ namespace Jackey.Behaviours.Editor.Generators {
 using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Core.Conditions;
+using Jackey.Behaviours.Core.Operations;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Generated {{
@@ -69,6 +70,28 @@ namespace Jackey.Behaviours.BT.Generated {{
 		}}
 ";
 
+		private const string BASE_OPERATION_TEMPLATE = @"
+		[DisplayName(""{0}"")]
+		[SearchPath(""Generated/{0}"")]
+		public sealed class {1} : Operation<{2}> {{
+			protected override void OnExecute() {{
+				GetTarget().{3}();
+			}}
+		}}
+";
+
+		private const string ARGS_OPERATION_TEMPLATE = @"
+		[DisplayName(""{0}"")]
+		[SearchPath(""Generated/{0}"")]
+		public sealed class {1} : Operation<{2}> {{
+			[SerializeField] private BlackboardRef<{3}> m_args;
+			
+			protected override void OnExecute() {{
+				GetTarget().{4}(m_args.GetValue());
+			}}
+		}}
+";
+
 		[MenuItem("Tools/Jackey/Behaviours/Generate Members")]
 		public static void Regenerate() {
 			string assetPath;
@@ -103,8 +126,14 @@ namespace Jackey.Behaviours.BT.Generated {{
 			StringBuilder baseBuilder = GenerateBaseActions();
 			StringBuilder argsBuilder = GenerateArgActions();
 			StringBuilder conditionsBuilder = GenerateConditions();
+			StringBuilder operationsBuilder = GenerateOperations();
 
-			string output = string.Format(CLASS_TEMPLATE, baseBuilder.Append(argsBuilder.ToString()).Append(conditionsBuilder.ToString()));
+			string output = string.Format(
+				CLASS_TEMPLATE,
+				baseBuilder.Append(argsBuilder.ToString())
+					.Append(conditionsBuilder.ToString())
+					.Append(operationsBuilder.ToString())
+			);
 			File.WriteAllText(assetPath, output);
 		}
 
@@ -171,6 +200,38 @@ namespace Jackey.Behaviours.BT.Generated {{
 				else {
 					builder.AppendFormat(
 						ARGS_CONDITION_TEMPLATE,
+						$"{method.DeclaringType.Name}.{method.Name}({parameters[0].ParameterType.Name})", // Name
+						$"{method.DeclaringType.FullName.Replace('.', '_')}_{method.Name}_{parameters[0].ParameterType.Name}_Generated", // ClassName
+						method.DeclaringType.FullName, // Target Arg
+						parameters[0].ParameterType.FullName, // Serialized Arg Type
+						$"{method.Name}" // Method Call
+					);
+				}
+			}
+
+			return builder;
+		}
+
+		private static StringBuilder GenerateOperations() {
+			StringBuilder builder = new StringBuilder();
+			IEnumerable<MethodInfo> methods = TypeCache.GetMethodsWithAttribute<BehaviourOperationAttribute>()
+				.Where(methodInfo => methodInfo.IsPublic && methodInfo.ReturnType == typeof(void) && methodInfo.GetParameters().Length <= 1);
+
+			foreach (MethodInfo method in methods) {
+				ParameterInfo[] parameters = method.GetParameters();
+
+				if (parameters.Length == 0) {
+					builder.AppendFormat(
+						BASE_OPERATION_TEMPLATE,
+						$"{method.DeclaringType.Name}.{method.Name}", // Condition Name
+						$"{method.DeclaringType.FullName.Replace('.', '_')}_{method.Name}_Generated", // Class Name
+						method.DeclaringType.FullName, // Type Arg
+						$"{method.Name}" // Method Call
+					);
+				}
+				else {
+					builder.AppendFormat(
+						ARGS_OPERATION_TEMPLATE,
 						$"{method.DeclaringType.Name}.{method.Name}({parameters[0].ParameterType.Name})", // Name
 						$"{method.DeclaringType.FullName.Replace('.', '_')}_{method.Name}_{parameters[0].ParameterType.Name}_Generated", // ClassName
 						method.DeclaringType.FullName, // Target Arg
