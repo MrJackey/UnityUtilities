@@ -16,12 +16,12 @@ namespace Jackey.Behaviours.BT.Decorators {
 #endif
 
 		protected override ExecutionStatus OnEnter() {
-			m_enterOperations.Execute();
+			m_enterOperations.Execute(Owner);
 			return ExecutionStatus.Running;
 		}
 
 		protected override void OnExit() {
-			m_exitOperations.Execute();
+			m_exitOperations.Execute(Owner);
 		}
 	}
 }

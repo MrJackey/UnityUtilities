@@ -15,7 +15,7 @@ namespace Jackey.Behaviours.BT.Operations {
 
 		public override string Editor_Info => $"Set {m_variable.Editor_Info} to {m_value.Editor_Info}";
 
-		public override void Execute() {
+		protected override void OnExecute() {
 			m_variable.SetValue(m_value.GetValue());
 		}
 	}
@@ -29,7 +29,7 @@ namespace Jackey.Behaviours.BT.Operations {
 
 		public override string Editor_Info => $"Set {m_variable.Editor_Info} to {m_value.Editor_Info}";
 
-		public override void Execute() {
+		protected override void OnExecute() {
 			m_variable.SetValue(m_value.GetValue());
 		}
 	}
@@ -43,7 +43,7 @@ namespace Jackey.Behaviours.BT.Operations {
 
 		public override string Editor_Info => $"Set {m_variable.Editor_Info} to {m_value.Editor_Info}";
 
-		public override void Execute() {
+		protected override void OnExecute() {
 			m_variable.SetValue(m_value.GetValue());
 		}
 	}
@@ -57,7 +57,7 @@ namespace Jackey.Behaviours.BT.Operations {
 
 		public override string Editor_Info => $"Set {m_variable.Editor_Info} to {m_value.Editor_Info}";
 
-		public override void Execute() {
+		protected override void OnExecute() {
 			m_variable.SetValue(m_value.GetValue());
 		}
 	}
@@ -71,7 +71,7 @@ namespace Jackey.Behaviours.BT.Operations {
 
 		public override string Editor_Info => $"Set {m_variable.Editor_Info} to {m_value.Editor_Info}";
 
-		public override void Execute() {
+		protected override void OnExecute() {
 			m_variable.SetValue(m_value.GetValue());
 		}
 	}
@@ -85,7 +85,7 @@ namespace Jackey.Behaviours.BT.Operations {
 
 		public override string Editor_Info => $"Set {m_variable.Editor_Info} to {m_value.Editor_Info}";
 
-		public override void Execute() {
+		protected override void OnExecute() {
 			m_variable.SetValue(m_value.GetValue());
 		}
 	}
@@ -99,7 +99,7 @@ namespace Jackey.Behaviours.BT.Operations {
 
 		public override string Editor_Info => $"Set {m_variable.Editor_Info} to {m_value.Editor_Info}";
 
-		public override void Execute() {
+		protected override void OnExecute() {
 			m_variable.SetValue(m_value.GetValue());
 		}
 	}
@@ -113,7 +113,7 @@ namespace Jackey.Behaviours.BT.Operations {
 
 		public override string Editor_Info => $"Set {m_variable.Editor_Info} to {m_value.Editor_Info}";
 
-		public override void Execute() {
+		protected override void OnExecute() {
 			m_variable.SetValue(m_value.GetValue());
 		}
 	}
@@ -127,7 +127,7 @@ namespace Jackey.Behaviours.BT.Operations {
 
 		public override string Editor_Info => $"Set {m_variable.Editor_Info} to {m_value.Editor_Info}";
 
-		public override void Execute() {
+		protected override void OnExecute() {
 			m_variable.SetValue(m_value.GetValue());
 		}
 	}
@@ -141,7 +141,7 @@ namespace Jackey.Behaviours.BT.Operations {
 
 		public override string Editor_Info => $"Set {m_variable.Editor_Info} to {m_value.Editor_Info}";
 
-		public override void Execute() {
+		protected override void OnExecute() {
 			m_variable.SetValue(m_value.GetValue());
 		}
 	}

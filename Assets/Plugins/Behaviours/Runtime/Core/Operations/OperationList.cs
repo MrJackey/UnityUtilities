@@ -31,9 +31,9 @@ namespace Jackey.Behaviours.Core.Operations {
 		}
 #endif
 
-		public void Execute() {
+		public void Execute(BehaviourOwner owner) {
 			foreach (Operation operation in m_operations) {
-				operation.Execute();
+				operation.Execute(owner);
 			}
 		}
 	}
