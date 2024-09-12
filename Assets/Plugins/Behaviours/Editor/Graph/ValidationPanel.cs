@@ -66,34 +66,18 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		private void Purge() {
 			SerializationUtility.ClearAllManagedReferencesWithMissingTypes(m_behaviour);
-			AssetDatabase.Refresh();
 
-			if (m_behaviour is BehaviourTree bt)
-				CleanBehaviourTree(bt);
+			EditorUtility.SetDirty(m_behaviour);
+			AssetDatabase.SaveAssetIfDirty(m_behaviour);
+
+			SerializationUtilities.RemoveNullManagedTypes(LoadBehaviourAsset());
 
 			AssetDatabase.Refresh();
-			m_window.EditBehaviour(AssetDatabase.LoadAssetAtPath<ObjectBehaviour>(AssetDatabase.GetAssetPath(m_behaviour)));
+			m_window.EditBehaviour(LoadBehaviourAsset());
 		}
 
-		private void CleanBehaviourTree(BehaviourTree bt) {
-			for (int i = bt.m_allActions.Count - 1; i >= 0; i--) {
-				BehaviourAction action = bt.m_allActions[i];
-
-				switch (action) {
-					case Composite composite:
-						for (int childIndex = composite.Children.Count - 1; childIndex >= 0; childIndex--) {
-							BehaviourAction child = composite.Children[childIndex];
-
-							if (child == null)
-								composite.Children.RemoveAt(childIndex);
-						}
-
-						break;
-					case null:
-						bt.m_allActions.RemoveAt(i);
-						break;
-				}
-			}
+		private ObjectBehaviour LoadBehaviourAsset() {
+			return AssetDatabase.LoadAssetAtPath<ObjectBehaviour>(AssetDatabase.GetAssetPath(m_behaviour));
 		}
 
 		private void Repair() {
@@ -110,7 +94,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			}
 
 			AssetDatabase.Refresh();
-			m_window.EditBehaviour(AssetDatabase.LoadAssetAtPath<ObjectBehaviour>(AssetDatabase.GetAssetPath(m_behaviour)));
+			m_window.EditBehaviour(LoadBehaviourAsset());
 		}
 	}
 }
