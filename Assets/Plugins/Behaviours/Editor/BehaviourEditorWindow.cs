@@ -3,6 +3,7 @@ using Jackey.Behaviours.BT;
 using Jackey.Behaviours.Editor.Graph;
 using Jackey.Behaviours.Editor.Graph.BT;
 using Jackey.Behaviours.Editor.Graph.FSM;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -17,14 +18,15 @@ namespace Jackey.Behaviours.Editor {
 
 		private ValidationPanel m_validationPanel;
 
-		private BehaviourGraph m_graph;
+		[CanBeNull]
+		private BehaviourGraph m_activeGraph;
 		private BTGraph m_btGraph;
 		private FSMGraph m_fsmGraph;
 
 		private bool m_isLocked;
 		private bool m_isKeyUsed;
 
-		public ObjectBehaviour OpenBehaviour => m_graph.Behaviour;
+		public ObjectBehaviour OpenBehaviour => m_activeGraph?.Behaviour;
 
 		[OnOpenAsset]
 		private static bool OnOpenAsset(int instanceID) {
@@ -72,7 +74,7 @@ namespace Jackey.Behaviours.Editor {
 		}
 
 		private void Update() {
-			m_graph?.Tick();
+			m_activeGraph?.Tick();
 		}
 
 		private void OnGUI() {
@@ -87,7 +89,7 @@ namespace Jackey.Behaviours.Editor {
 		private void CheckInput() {
 			Event evt = Event.current;
 
-			if (evt == null || m_graph?.SerializedBehaviour == null)
+			if (evt == null || m_activeGraph?.SerializedBehaviour == null)
 				return;
 
 			if (evt.type == EventType.KeyUp)
@@ -97,7 +99,7 @@ namespace Jackey.Behaviours.Editor {
 				switch (evt.keyCode) {
 					case KeyCode.Space:
 						m_isKeyUsed = true;
-						m_graph.BeginNodeCreation();
+						m_activeGraph.BeginNodeCreation();
 						break;
 					case KeyCode.Delete:
 						m_isKeyUsed = true;
@@ -106,13 +108,13 @@ namespace Jackey.Behaviours.Editor {
 					// TODO: Remove this
 					case KeyCode.R when evt.shift:
 						m_isKeyUsed = true;
-						m_graph = null;
+						m_activeGraph = null;
 						rootVisualElement.Clear();
 						CreateGUI();
 						break;
 					case KeyCode.F:
 						m_isKeyUsed = true;
-						if (m_graph.SelectedElements.Count > 0)
+						if (m_activeGraph.SelectedElements.Count > 0)
 							FrameSelection();
 						else
 							FrameContent();
@@ -143,20 +145,20 @@ namespace Jackey.Behaviours.Editor {
 
 				EditBehaviour(owner.Behaviour);
 
-				if (m_graph != null) {
+				if (m_activeGraph != null) {
 					SerializedProperty blackboardProperty = new SerializedObject(owner).FindProperty("m_blackboard");
-					m_graph.BlackboardInspector.SetPrimaryBlackboard(owner.Blackboard, blackboardProperty);
+					m_activeGraph.BlackboardInspector.SetPrimaryBlackboard(owner.Blackboard, blackboardProperty);
 				}
 			}
 		}
 
 		public void EditBehaviour(ObjectBehaviour behaviour) {
-			if (behaviour == m_graph?.SerializedBehaviour?.targetObject)
+			if (behaviour == m_activeGraph?.SerializedBehaviour?.targetObject)
 				return;
 
 			if (!IsBehaviourValid(behaviour)) {
-				m_graph?.RemoveFromHierarchy();
-				m_graph = null;
+				m_activeGraph?.RemoveFromHierarchy();
+				m_activeGraph = null;
 
 				if (m_validationPanel.parent == null)
 					rootVisualElement.Add(m_validationPanel);
@@ -194,7 +196,7 @@ namespace Jackey.Behaviours.Editor {
 		}
 
 		private bool OnSelectedAsset(Object selectedObject) {
-			if (selectedObject == m_graph?.SerializedBehaviour?.targetObject)
+			if (selectedObject == m_activeGraph?.SerializedBehaviour?.targetObject)
 				return false;
 
 			switch (selectedObject) {
@@ -207,7 +209,7 @@ namespace Jackey.Behaviours.Editor {
 		}
 
 		private bool OnSelectedInstance(Object selectedObject) {
-			if (selectedObject == m_graph?.SerializedBehaviour?.targetObject)
+			if (selectedObject == m_activeGraph?.SerializedBehaviour?.targetObject)
 				return false;
 
 			switch (selectedObject) {
@@ -222,45 +224,47 @@ namespace Jackey.Behaviours.Editor {
 		// TODO: Implement
 		// private void ChangeGraph(StateMachine fsm) { }
 		private void ChangeGraph(BehaviourTree bt) {
-			if (m_graph != null && m_graph != m_btGraph)
-				m_graph.RemoveFromHierarchy();
+			if (m_activeGraph != null && m_activeGraph != m_btGraph)
+				m_activeGraph.RemoveFromHierarchy();
 
-			m_graph = m_btGraph;
-			m_graph.BlackboardInspector.ClearBlackboards();
+			m_activeGraph = m_btGraph;
+			m_activeGraph.BlackboardInspector.ClearBlackboards();
 
-			if (m_graph.parent == null)
-				rootVisualElement.Add(m_graph);
+			if (m_activeGraph.parent == null)
+				rootVisualElement.Add(m_activeGraph);
 
 			m_btGraph.UpdateBehaviour(bt);
 		}
 
 		private void DeleteSelectedElements() {
-			if (m_graph.SelectedElements.Count == 0)
+			Debug.Assert(m_activeGraph != null);
+
+			if (m_activeGraph.SelectedElements.Count == 0)
 				return;
 
 			// TODO: Add undo
-			m_graph.ClearInspection();
+			m_activeGraph.ClearInspection();
 
-			foreach (ISelectableElement selectedElement in m_graph.SelectedElements) {
+			foreach (ISelectableElement selectedElement in m_activeGraph.SelectedElements) {
 				if (selectedElement.Element is Node node)
-					m_graph.RemoveNode(node);
+					m_activeGraph.RemoveNode(node);
 			}
 
-			m_graph.SerializedBehaviour.Update();
+			m_activeGraph.SerializedBehaviour.Update();
 
-			m_graph.SelectedElements.Clear();
-			((ISelectionManager)m_graph).OnSelectionChange();
+			m_activeGraph.SelectedElements.Clear();
+			((ISelectionManager)m_activeGraph).OnSelectionChange();
 		}
 
 		#region Frame
 
 		private void FrameSelection() {
-			Debug.Assert(m_graph.SelectedElements.Count > 0);
+			Debug.Assert(m_activeGraph?.SelectedElements.Count > 0);
 
-			Rect frame = m_graph.SelectedElements[0].Element.worldBound;
+			Rect frame = m_activeGraph.SelectedElements[0].Element.worldBound;
 
-			for (int i = 1; i < m_graph.SelectedElements.Count; i++) {
-				ISelectableElement selectedElement = m_graph.SelectedElements[i];
+			for (int i = 1; i < m_activeGraph.SelectedElements.Count; i++) {
+				ISelectableElement selectedElement = m_activeGraph.SelectedElements[i];
 				Rect selectedBound = selectedElement.Element.worldBound;
 
 				frame.xMin = Mathf.Min(frame.xMin, selectedBound.xMin);
@@ -269,24 +273,26 @@ namespace Jackey.Behaviours.Editor {
 				frame.yMax = Mathf.Max(frame.yMax, selectedBound.yMax);
 			}
 
-			Vector2 graphSize = m_graph.localBound.size;
+			Vector2 graphSize = m_activeGraph.localBound.size;
 			Vector2 centerOffset = graphSize / 2f - frame.center;
 
-			m_graph.contentContainer.transform.position += (Vector3)centerOffset;
+			m_activeGraph.contentContainer.transform.position += (Vector3)centerOffset;
 
 			// TODO: Add zoom
 		}
 
 		private void FrameContent() {
-			if (m_graph.childCount == 0) {
-				m_graph.contentContainer.transform.position = m_graph.localBound.size / 2f;
-				m_graph.contentContainer.transform.scale = Vector3.one;
+			Debug.Assert(m_activeGraph != null);
+
+			if (m_activeGraph.childCount == 0) {
+				m_activeGraph.contentContainer.transform.position = m_activeGraph.localBound.size / 2f;
+				m_activeGraph.contentContainer.transform.scale = Vector3.one;
 				return;
 			}
 
 			Rect? frame = null;
 
-			foreach (VisualElement child in m_graph.Children()) {
+			foreach (VisualElement child in m_activeGraph.Children()) {
 				Rect childBound = child.worldBound;
 				frame ??= childBound;
 
@@ -300,10 +306,10 @@ namespace Jackey.Behaviours.Editor {
 
 			Debug.Assert(frame.HasValue);
 
-			Vector2 graphSize = m_graph.localBound.size;
+			Vector2 graphSize = m_activeGraph.localBound.size;
 			Vector2 centerOffset = graphSize / 2f - frame.Value.center;
 
-			m_graph.contentContainer.transform.position += (Vector3)centerOffset;
+			m_activeGraph.contentContainer.transform.position += (Vector3)centerOffset;
 
 			// TODO: Add zoom
 		}
