@@ -26,7 +26,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_behaviour = behaviour;
 			m_serializedBehaviour = new SerializedObject(behaviour);
 
-			Clear();
+			ClearGraph();
 			BuildGraph();
 
 			m_graphHeader.Bind(m_serializedBehaviour);

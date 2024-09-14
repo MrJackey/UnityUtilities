@@ -68,6 +68,12 @@ namespace Jackey.Behaviours.Editor.Graph {
 			}
 		}
 
+		protected void ClearGraph() {
+			Clear();
+			m_nodes.Clear();
+			m_connections.Clear();
+		}
+
 		public virtual void BeginNodeCreation() {
 			SaveCreatePosition();
 		}
