@@ -16,11 +16,11 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		public ActionInspector() {
 			style.position = Position.Absolute;
+			style.display = DisplayStyle.None;
 
 			hierarchy.Add(m_header = new Label("Inspector"));
 			hierarchy.Add(contentContainer = new VisualElement() {
 				name = "Content",
-				style = { display = DisplayStyle.None },
 			});
 
 			this.AddManipulator(new Dragger() { ConstrainToParent = true });
@@ -32,7 +32,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			Clear();
 
 			m_header.text = "Inspector";
-			contentContainer.style.display = DisplayStyle.None;
+			style.display = DisplayStyle.None;
 		}
 
 		public void Inspect(Type type, SerializedProperty property) {
@@ -54,6 +54,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 			this.Bind(property.serializedObject);
 
+			style.display = DisplayStyle.Flex;
 			contentContainer.style.display = contentContainer.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
 		}
 	}
