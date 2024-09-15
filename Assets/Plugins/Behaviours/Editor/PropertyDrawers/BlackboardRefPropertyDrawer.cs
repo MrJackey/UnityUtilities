@@ -47,8 +47,10 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			m_modeProperty = property.FindPropertyRelative("m_mode");
 
-			if (m_blackboardOnly)
+			if (m_blackboardOnly && m_modeProperty.enumValueIndex != 1) {
 				m_modeProperty.enumValueIndex = 1;
+				m_modeProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+			}
 
 			int mode = m_modeProperty.enumValueIndex;
 
