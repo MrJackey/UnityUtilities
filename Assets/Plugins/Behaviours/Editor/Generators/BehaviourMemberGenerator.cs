@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.BT.Actions;
 using UnityEditor;
@@ -145,8 +146,8 @@ namespace Jackey.Behaviours.BT.Generated {{
 				builder.AppendFormat(
 					BASE_ACTION_TEMPLATE,
 					type.Name, // Action Name
-					$"{type.FullName.Replace('.', '_')}_Generated", // Class Name
-					type.FullName // Target Arg
+					$"{FullNameToClassName(type.FullName)}_Generated", // Class Name
+					FullNameToMemberType(type.FullName) // Target Arg
 				);
 			}
 
@@ -170,9 +171,9 @@ namespace Jackey.Behaviours.BT.Generated {{
 					builder.AppendFormat(
 						ARGS_ACTION_TEMPLATE,
 						$"{type.Name}<{typeArgs.Name}>", // Action Name
-						$"{type.FullName.Replace('.', '_')}_{typeArgs.FullName.Replace('.', '_')}_Generated", // Class Name
-						type.FullName, // Target Arg
-						typeArgs.FullName // Serialized Arg Type
+						$"{FullNameToClassName(type.FullName)}_{FullNameToClassName(typeArgs.FullName)}_Generated", // Class Name
+						FullNameToMemberType(type.FullName), // Target Arg
+						FullNameToMemberType(typeArgs.FullName) // Serialized Arg Type
 					);
 				}
 			}
@@ -191,9 +192,9 @@ namespace Jackey.Behaviours.BT.Generated {{
 				if (parameters.Length == 0) {
 					builder.AppendFormat(
 						BASE_CONDITION_TEMPLATE,
-						$"{method.DeclaringType.Name}.{method.Name}", // Condition Name
-						$"{method.DeclaringType.FullName.Replace('.', '_')}_{method.Name}_Generated", // Class Name
-						method.DeclaringType.FullName, // Type Arg
+						$"{method.DeclaringType.Name}.{method.Name}()", // Condition Name
+						$"{FullNameToClassName(method.DeclaringType.FullName)}_{method.Name}_Generated", // Class Name
+						FullNameToMemberType(method.DeclaringType.FullName), // Target Arg
 						$"{method.Name}" // Method Call
 					);
 				}
@@ -201,9 +202,9 @@ namespace Jackey.Behaviours.BT.Generated {{
 					builder.AppendFormat(
 						ARGS_CONDITION_TEMPLATE,
 						$"{method.DeclaringType.Name}.{method.Name}({parameters[0].ParameterType.Name})", // Name
-						$"{method.DeclaringType.FullName.Replace('.', '_')}_{method.Name}_{parameters[0].ParameterType.Name}_Generated", // ClassName
-						method.DeclaringType.FullName, // Target Arg
-						parameters[0].ParameterType.FullName, // Serialized Arg Type
+						$"{FullNameToClassName(method.DeclaringType.FullName)}_{method.Name}_{parameters[0].ParameterType.Name}_Generated", // ClassName
+						FullNameToMemberType(method.DeclaringType.FullName), // Target Arg
+						FullNameToMemberType(parameters[0].ParameterType.FullName), // Serialized Arg Type
 						$"{method.Name}" // Method Call
 					);
 				}
@@ -223,9 +224,9 @@ namespace Jackey.Behaviours.BT.Generated {{
 				if (parameters.Length == 0) {
 					builder.AppendFormat(
 						BASE_OPERATION_TEMPLATE,
-						$"{method.DeclaringType.Name}.{method.Name}", // Condition Name
-						$"{method.DeclaringType.FullName.Replace('.', '_')}_{method.Name}_Generated", // Class Name
-						method.DeclaringType.FullName, // Type Arg
+						$"{method.DeclaringType.Name}.{method.Name}()", // Name
+						$"{FullNameToClassName(method.DeclaringType.FullName)}_{method.Name}_Generated", // Class Name
+						FullNameToMemberType(method.DeclaringType.FullName), // Target Arg
 						$"{method.Name}" // Method Call
 					);
 				}
@@ -233,15 +234,23 @@ namespace Jackey.Behaviours.BT.Generated {{
 					builder.AppendFormat(
 						ARGS_OPERATION_TEMPLATE,
 						$"{method.DeclaringType.Name}.{method.Name}({parameters[0].ParameterType.Name})", // Name
-						$"{method.DeclaringType.FullName.Replace('.', '_')}_{method.Name}_{parameters[0].ParameterType.Name}_Generated", // ClassName
-						method.DeclaringType.FullName, // Target Arg
-						parameters[0].ParameterType.FullName, // Serialized Arg Type
+						$"{FullNameToClassName(method.DeclaringType.FullName)}_{method.Name}_{parameters[0].ParameterType.Name}_Generated", // Class Name
+						FullNameToMemberType(method.DeclaringType.FullName), // Target Arg
+						FullNameToMemberType(parameters[0].ParameterType.FullName), // Serialized Arg Type
 						$"{method.Name}" // Method Call
 					);
 				}
 			}
 
 			return builder;
+		}
+
+		private static string FullNameToClassName(string fullName) {
+			return Regex.Replace(fullName, @"\.|\+", "_");
+		}
+
+		private static string FullNameToMemberType(string fullName) {
+			return Regex.Replace(fullName, @"\+", ".");
 		}
 	}
 }
