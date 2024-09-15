@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Jackey.Behaviours.BT {
 	[CreateAssetMenu(fileName = "new BehaviourTree", menuName = "Jackey/Behaviour/Behaviour Tree", order = 0)]
 	public class BehaviourTree : ObjectBehaviour {
-		[SerializeReference] internal List<BehaviourAction> m_allActions;
+		[SerializeReference] internal List<BehaviourAction> m_allActions = new();
 		[SerializeReference] internal BehaviourAction m_entry;
 
 		private List<BehaviourAction> m_tickingActions = new();
@@ -123,8 +123,10 @@ namespace Jackey.Behaviours.BT {
 
 						break;
 					case Decorator decorator:
+						if (decorator.Child != null)
 							Inner(decorator.Child);
-					break;
+
+						break;
 				}
 			}
 
