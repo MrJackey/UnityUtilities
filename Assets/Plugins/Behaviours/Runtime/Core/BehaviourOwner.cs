@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
+using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.BT;
 using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Core.Events;
 using UnityEngine;
 
 namespace Jackey.Behaviours {
+	[BehaviourType]
 	public class BehaviourOwner : MonoBehaviour {
 		[SerializeField] private ObjectBehaviour m_behaviour;
 		[SerializeField] private Blackboard m_blackboard;
