@@ -15,7 +15,7 @@ namespace Jackey.Behaviours.Editor.TypeSearch {
 			Type2Search("UnityEngine/Vector2", typeof(Vector2)), Type2Search("UnityEngine/Vector2Int", typeof(Vector2Int)), Type2Search("UnityEngine/Vector3", typeof(Vector3)), Type2Search("UnityEngine/Vector3Int", typeof(Vector3Int)), Type2Search("UnityEngine/Vector4", typeof(Vector4)), Type2Search("UnityEngine/Quaternion", typeof(Quaternion)),
 			Type2Search("UnityEngine/Rect", typeof(Rect)), Type2Search("UnityEngine/RectInt", typeof(RectInt)), Type2Search("UnityEngine/Bounds", typeof(Bounds)), Type2Search("UnityEngine/BoundsInt", typeof(BoundsInt)),
 			Type2Search("UnityEngine/Color", typeof(Color)), Type2Search("UnityEngine/Gradient", typeof(Gradient)), Type2Search("UnityEngine/AnimationCurve", typeof(AnimationCurve)), Type2Search("UnityEngine/Hash128", typeof(Hash128)), Type2Search("UnityEngine/LayerMask", typeof(LayerMask)), Type2Search("UnityEngine/Space", typeof(Space)),
-			Type2Search("UnityEngine/GameObject", typeof(GameObject)), Type2Search("UnityEngine/Transform", typeof(Transform)),
+			Type2Search("UnityEngine/GameObject", typeof(GameObject)), Type2Search("UnityEngine/Transform", typeof(Transform)), Type2Search("UnityEngine/Component", typeof(Component)),
 		};
 
 		private static TypeProvider s_instance;

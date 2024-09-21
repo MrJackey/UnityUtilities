@@ -37,31 +37,45 @@ namespace Jackey.Behaviours.Core.Blackboard {
 			if (m_value is BlackboardValue<T> val)
 				return val.Value;
 
-			// TODO: Check conversion
-
-			return default;
+			return m_value.ConvertTo<T>();
 		}
 
 		public void SetValue<T>(T value) {
 			if (m_value is BlackboardValue<T> val)
 				val.Value = value;
-
-			// TODO: Check conversion
+			else if (!m_value.TrySetValue(value))
+				Debug.LogError($"Unable to set value of type {typeof(T)} to blackboard variable {m_variableName}");
 		}
 
 		internal bool IsAssignableTo(Type type) {
-			return type == GetSerializedType();
-			// TODO: Check conversion
+			Type serializedType = GetSerializedType();
+
+			return type == serializedType || BlackboardConverter.IsConvertible(serializedType, type);
 		}
 
 		internal abstract class BlackboardValue {
+			public abstract TResult ConvertTo<TResult>();
+			public abstract bool TrySetValue<T>(T value);
 			public abstract void SetValueBoxed(object value);
 		}
 
 		internal class BlackboardValue<T> : BlackboardValue {
 			public T Value;
 
+			public override bool TrySetValue<TValue>(TValue value) {
+				if (value is T val) {
+					Value = val;
+					return true;
+				}
+
+				return false;
+			}
+
 			public override void SetValueBoxed(object value) => Value = (T)value;
+
+			[CanBeNull]
+			[Pure]
+			public override TResult ConvertTo<TResult>() => BlackboardConverter.Convert<T, TResult>(Value);
 		}
 
 		#region Serialization
@@ -83,7 +97,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 			m_value = (BlackboardValue)Activator.CreateInstance(valueType);
 
 			if (typeof(Object).IsAssignableFrom(serializedType))
-				m_value.SetValueBoxed(m_unityObjectValue != null ? m_unityObjectValue : null); // Ensure Unity's fake null isn't set as value
+				m_value.SetValueBoxed(m_unityObjectValue != null ? m_unityObjectValue : null); // Ensure Unity's fake null isn't set as value. If it is, the cast when setting boxed value fails
 			else if (!string.IsNullOrEmpty(m_primitiveValue) && (serializedType == typeof(string) || serializedType.IsPrimitive))
 				m_value.SetValueBoxed(Convert.ChangeType(m_primitiveValue, serializedType));
 			else if (m_boxedValue != null && serializedType.IsInstanceOfType(m_boxedValue))
