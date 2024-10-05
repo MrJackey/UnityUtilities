@@ -26,11 +26,14 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_behaviour = behaviour;
 			m_serializedBehaviour = new SerializedObject(behaviour);
 
+			bool isPersistent = EditorUtility.IsPersistent(m_behaviour);
+			m_graphInstanceInfo.text = isPersistent ? "(Asset)" : "(Instance)";
+			m_isEditable = isPersistent;
+
 			ClearGraph();
 			BuildGraph();
 
 			m_graphHeader.Bind(m_serializedBehaviour);
-			m_graphInstanceInfo.text = EditorUtility.IsPersistent(m_behaviour) ? "(Asset)" : "(Instance)";
 
 			m_blackboardInspector.SetSecondaryBlackboard(behaviour.Blackboard, m_serializedBehaviour.FindProperty(nameof(ObjectBehaviour.m_blackboard)));
 		}

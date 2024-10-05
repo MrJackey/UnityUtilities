@@ -18,6 +18,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		protected List<Node> m_nodes = new();
 		protected List<Connection> m_connections = new();
 
+		protected bool m_isEditable;
 		protected Vector2 m_createNodePosition;
 
 		public override VisualElement contentContainer { get; }
@@ -28,6 +29,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		VisualElement ISelectionManager.Element => this;
 		public List<ISelectableElement> SelectedElements { get; } = new();
+
+		public bool IsEditable => m_isEditable;
 
 		public BehaviourGraph() {
 			usageHints = UsageHints.GroupTransform;
@@ -83,9 +86,14 @@ namespace Jackey.Behaviours.Editor.Graph {
 		}
 
 		public void AddNode(Node node) {
-			node.AddManipulator(new SelectionDragger(this));
-			node.AddManipulator(new Dragger());
+			if (m_isEditable) {
+				node.AddManipulator(new SelectionDragger(this));
+				node.AddManipulator(new Dragger());
+			}
+
 			node.AddManipulator(new ClickSelector(this));
+
+			node.SetEnabled(m_isEditable);
 
 			Add(node);
 			m_nodes.Add(node);
@@ -133,6 +141,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		private void OnConnectionMouseDown(MouseDownEvent evt) {
 			if (evt.button != 0) return;
+			if (!m_isEditable) return;
 
 			foreach (Connection connection in m_connections) {
 				if (!connection.CheckClick(evt))

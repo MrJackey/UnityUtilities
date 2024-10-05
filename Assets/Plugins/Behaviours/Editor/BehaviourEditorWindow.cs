@@ -99,25 +99,35 @@ namespace Jackey.Behaviours.Editor {
 				switch (evt.keyCode) {
 					case KeyCode.Space:
 						m_isKeyUsed = true;
-						m_activeGraph.BeginNodeCreation();
+
+						if (m_activeGraph.IsEditable)
+							m_activeGraph.BeginNodeCreation();
+
 						break;
 					case KeyCode.Delete:
 						m_isKeyUsed = true;
-						DeleteSelectedElements();
+
+						if (m_activeGraph.IsEditable)
+							DeleteSelectedElements();
+
 						break;
 					// TODO: Remove this
 					case KeyCode.R when evt.shift:
 						m_isKeyUsed = true;
+
 						m_activeGraph = null;
 						rootVisualElement.Clear();
 						CreateGUI();
+
 						break;
 					case KeyCode.F:
 						m_isKeyUsed = true;
+
 						if (m_activeGraph.SelectedElements.Count > 0)
 							FrameSelection();
 						else
 							FrameContent();
+
 						break;
 				}
 			}
