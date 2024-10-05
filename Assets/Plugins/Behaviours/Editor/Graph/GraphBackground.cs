@@ -41,7 +41,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 			}
 
 			float yStep = Spacing * scale.y;
-			for (float y = start.y; y < bound.height; y += yStep) {
+			float startY = start.y > 0f ? start.y : start.y + yStep; // < 0 draws on the tab itself. It should only draw inside the actual window
+			for (float y = startY; y < bound.height; y += yStep) {
 				GL.Vertex3(0f, y, 0f);
 				GL.Vertex3(bound.width, y, 0f);
 			}
