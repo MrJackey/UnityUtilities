@@ -19,6 +19,9 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		}
 
 		public static bool IsConvertible(Type from, Type to) {
+			if (to.IsAssignableFrom(from))
+				return false;
+
 			foreach ((Type keyFrom, Type keyTo) in s_conversions.Keys) {
 				if (to.IsAssignableFrom(keyTo) && keyFrom.IsAssignableFrom(from))
 					return true;

@@ -153,10 +153,26 @@ ActionInspector #ActionTarget {
 	margin-bottom: 4px;
 }
 
+#BlackboardRef {
+	flex-direction: column;
+}
+
+#BlackboardRef #FieldRow {
+	flex-direction: row;
+}
+
+#BlackboardRef PropertyField {
+	justify-content: center;
+}
+
 #BlackboardRef .unity-property-field,.unity-base-field__input,DropdownField {
 	flex-grow: 1;
 	flex-shrink: 1;
 	margin-bottom: 0;
+}
+
+#BlackboardRef Toggle {
+	margin-bottom: 1px;
 }
 
 #BlackboardRef #ModeButton {
@@ -167,12 +183,12 @@ ActionInspector #ActionTarget {
 	padding: 2px;
 }
 
-#BlackboardRef Toggle {
-	margin-bottom: 1px;
-}
-
-#BlackboardRef PropertyField {
-	justify-content: center;
+#BlackboardRef #ConvertLabel {
+	background-color: rgb(61, 61, 61);
+	border-radius: 0 0 5px 5px;
+	margin: 2px 0;
+	padding: 3px 0;
+	-unity-text-align: middle-center;
 }
 
 #ManagedListView {

@@ -80,16 +80,16 @@ namespace Jackey.Behaviours.Core.Blackboard {
 
 		#region Serialization
 
-		public void OnBeforeSerialize() { }
+		void ISerializationCallbackReceiver.OnBeforeSerialize() { }
 
-		public void OnAfterDeserialize() {
+		void ISerializationCallbackReceiver.OnAfterDeserialize() {
 			Type serializedType = Type.GetType(m_serializedTypeName);
 
 			if (serializedType == null)
 				return;
 
 			if (serializedType.ContainsGenericParameters) {
-				Debug.LogError($"Blackboard variable {m_variableName }has generic parameters. This is not supported! Ensure the type itself does not have generics and that it is not nested in a generic type");
+				Debug.LogError($"Blackboard variable {m_variableName} has generic parameters. This is not supported! Ensure the type itself does not have generics and that it is not nested in a generic type");
 				return;
 			}
 
