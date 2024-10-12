@@ -42,6 +42,10 @@ BlackboardInspector #SecondaryBlackboard {
 	flex-direction: row;
 }
 
+.BlackboardDrawer #VariableRoot PropertyField {
+	width: 100%;
+}
+
 .BlackboardDrawer #VariableRoot > PropertyField > VisualElement > * {
 	flex-grow: 1;
 	margin: 0 3px;
