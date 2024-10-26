@@ -1,4 +1,6 @@
-﻿using Jackey.Behaviours.Core.Conditions;
+﻿using System.Reflection;
+using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Core.Conditions;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -17,6 +19,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			rootVisualElement.Add(new PropertyField(policyProperty, string.Empty));
 
 			CreateListGUI(rootVisualElement, property.FindPropertyRelative("m_conditions"), "Add Condition");
+
+			fieldInfo.GetCustomAttribute<CustomShowIfAttribute>()?.Bind(rootVisualElement, property);
+			fieldInfo.GetCustomAttribute<CustomEnableIfAttribute>()?.Bind(rootVisualElement, property);
 
 			return rootVisualElement;
 		}

@@ -8,9 +8,14 @@ namespace Jackey.Behaviours.BT.Decorators {
 	[SearchPath("Decorators/Repeater")]
 	public class Repeater : Decorator {
 		[SerializeField] private Policy m_policy;
-		[Min(0f)]
+
+		[Min(0f), ShowIf(nameof(m_policy), IfAttribute.Comparison.Equal, (int)Policy.Times, order = -1)]
 		[SerializeField] private int m_iterations = 1;
+
+		[ShowIf(nameof(m_policy), IfAttribute.Comparison.Equal, (int)Policy.UntilStatus)]
 		[SerializeField] private ActionResult m_result = ActionResult.Success;
+
+		[CustomShowIf(nameof(m_policy), IfAttribute.Comparison.Equal, (int)Policy.WhileConditions)]
 		[SerializeField] private BehaviourConditionGroup m_conditions;
 
 		private int m_completedIterations;
