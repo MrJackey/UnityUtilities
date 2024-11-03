@@ -12,6 +12,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 			s_conversions.Add((typeof(GameObject), typeof(Transform)), new Func<GameObject, Transform>(go => go.transform));
 
 			s_conversions.Add((typeof(Component), typeof(Vector3)), new Func<Component, Vector3>(comp => comp.transform.position));
+			s_conversions.Add((typeof(Component), typeof(Vector2)), new Func<Component, Vector2>(comp => comp.transform.position));
 			s_conversions.Add((typeof(Component), typeof(Transform)), new Func<Component, Transform>(comp => comp.transform));
 			s_conversions.Add((typeof(Component), typeof(GameObject)), new Func<Component, GameObject>(comp => comp.gameObject));
 
