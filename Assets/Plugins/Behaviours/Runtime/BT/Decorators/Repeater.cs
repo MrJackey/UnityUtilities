@@ -18,6 +18,8 @@ namespace Jackey.Behaviours.BT.Decorators {
 		[CustomShowIf(nameof(m_policy), IfAttribute.Comparison.Equal, (int)Policy.WhileConditions)]
 		[SerializeField] private BehaviourConditionGroup m_conditions;
 
+		private bool m_isTicking;
+
 		private int m_completedIterations;
 
 #if UNITY_EDITOR
@@ -40,6 +42,13 @@ namespace Jackey.Behaviours.BT.Decorators {
 		}
 
 		protected override ExecutionStatus OnTick() {
+			if (m_isTicking) {
+				DisableTicking();
+				m_isTicking = false;
+			}
+
+			ExecutionStatus repeatStatus;
+
 			switch (m_policy) {
 				case Policy.Times:
 					m_completedIterations++;
@@ -47,35 +56,63 @@ namespace Jackey.Behaviours.BT.Decorators {
 					if (m_completedIterations >= m_iterations)
 						return ExecutionStatus.Success;
 
-					RepeatOnce();
+					repeatStatus = RepeatOnce();
+
+					if (repeatStatus != ExecutionStatus.Running && m_completedIterations + 1 >= m_iterations) {
+#if UNITY_EDITOR
+						m_completedIterations++; // Not needed to function since the action is completed but ensures the Editor_Info is up-to-date
+#endif
+						return ExecutionStatus.Success;
+					}
+
 					break;
 				case Policy.UntilStatus:
 					if ((ActionResult)m_child.Status == m_result)
 						return ExecutionStatus.Success;
 
-					RepeatOnce();
+					repeatStatus = RepeatOnce();
+
+					if ((ActionResult)repeatStatus == m_result)
+						return ExecutionStatus.Success;
+
 					break;
 				case Policy.WhileConditions:
 					if (!m_conditions.Evaluate())
 						return ExecutionStatus.Success;
 
-					RepeatOnce();
+					repeatStatus = RepeatOnce();
+
+					if (repeatStatus != ExecutionStatus.Running && !m_conditions.Evaluate())
+						return ExecutionStatus.Success;
+
 					break;
 				case Policy.Forever:
-					RepeatOnce();
+					repeatStatus = RepeatOnce();
 					break;
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 
+			if (repeatStatus != ExecutionStatus.Running) {
+				EnableTicking();
+				m_isTicking = true;
+			}
+
 			return ExecutionStatus.Running;
 		}
 
-		private void RepeatOnce() {
+		private ExecutionStatus RepeatOnce() {
 			if (m_child.IsFinished)
 				m_child.Reset();
 
-			m_child.EnterSequence();
+			return m_child.EnterSequence();
+		}
+
+		protected override void OnInterrupt() {
+			if (m_isTicking) {
+				DisableTicking();
+				m_isTicking = false;
+			}
 		}
 
 		protected override void OnExit() {
