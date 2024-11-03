@@ -11,6 +11,9 @@ namespace Jackey.Behaviours.BT {
 		[SerializeReference] internal BehaviourAction m_entry;
 
 		private List<BehaviourAction> m_tickingActions = new();
+		private List<BehaviourAction> m_pendingTickingActions = new();
+
+		private int m_tickIndex;
 
 		public ActionStatus Status { get; private set; } = ActionStatus.Inactive;
 
@@ -24,6 +27,7 @@ namespace Jackey.Behaviours.BT {
 
 			int index = 0;
 			m_entry.Initialize(this, null, ref index);
+			// TODO: Remove
 			Debug.Log($"Initialized BehaviourTree with {index + 1} nodes");
 		}
 
@@ -37,7 +41,9 @@ namespace Jackey.Behaviours.BT {
 		}
 
 		internal override ExecutionStatus Tick() {
-			for (int i = 0; i < m_tickingActions.Count; i++) {
+			for (m_tickIndex = 0; m_tickIndex < m_tickingActions.Count; m_tickIndex++) {
+				int i = m_tickIndex;
+
 				BehaviourAction action = m_tickingActions[i];
 
 				ExecutionStatus actionStatus = action.TickSequence();
@@ -48,9 +54,12 @@ namespace Jackey.Behaviours.BT {
 				BehaviourAction parent = action.Parent;
 
 				// The entire tree has finished
-				if (parent == null)
+				if (parent == null) {
+					m_tickIndex = -1;
 					return actionStatus;
+				}
 
+				// Traverse the tree upwards to find the next branch
 				while (true) {
 					ExecutionStatus parentStatus = parent.TickSequence();
 
@@ -59,9 +68,21 @@ namespace Jackey.Behaviours.BT {
 
 					parent = parent.Parent;
 
-					if (parent == null)
+					// The entire tree has finished
+					if (parent == null) {
+						m_tickIndex = -1;
 						return parentStatus;
+					}
 				}
+			}
+
+			m_tickIndex = -1;
+
+			if (m_pendingTickingActions.Count > 0) {
+				foreach (BehaviourAction action in m_pendingTickingActions)
+					InsertTickingAction(action);
+
+				m_pendingTickingActions.Clear();
 			}
 
 			return ExecutionStatus.Running;
@@ -73,6 +94,15 @@ namespace Jackey.Behaviours.BT {
 		}
 
 		public void EnableTicking(BehaviourAction action) {
+			if (m_tickIndex != -1) {
+				m_pendingTickingActions.Add(action);
+				return;
+			}
+
+			InsertTickingAction(action);
+		}
+
+		private void InsertTickingAction(BehaviourAction action) {
 			if (m_tickingActions.Count == 0) {
 				m_tickingActions.Add(action);
 				return;
@@ -89,7 +119,16 @@ namespace Jackey.Behaviours.BT {
 		}
 
 		public void DisableTicking(BehaviourAction action) {
-			m_tickingActions.Remove(action);
+			int tickingIndex = m_tickingActions.IndexOf(action);
+
+			// Ensure that any currently ticking or just ticked actions does not skip any actions within the tick loop
+			if (m_tickIndex != -1 && tickingIndex < m_tickIndex)
+				m_tickIndex--;
+
+			m_pendingTickingActions.Remove(action);
+
+			if (tickingIndex != -1)
+				m_tickingActions.RemoveAt(tickingIndex);
 		}
 
 		private void Reset() {
