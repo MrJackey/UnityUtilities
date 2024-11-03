@@ -7,6 +7,7 @@ namespace Jackey.Behaviours.BT.Actions.Utility {
 	[SearchPath("Utilities/Wait")]
 	public class Wait : BehaviourAction {
 		public BlackboardRef<float> Duration;
+		public bool UnscaledTime;
 
 		private float m_enterTime;
 
@@ -15,14 +16,16 @@ namespace Jackey.Behaviours.BT.Actions.Utility {
 #endif
 
 		protected override ExecutionStatus OnEnter() {
-			m_enterTime = Time.time;
+			m_enterTime = UnscaledTime ? Time.unscaledTime : Time.time;
 			EnableTicking();
 
 			return ExecutionStatus.Running;
 		}
 
 		protected override ExecutionStatus OnTick() {
-			if (Time.time >= m_enterTime + Duration.GetValue())
+			float time = UnscaledTime ? Time.unscaledTime : Time.time;
+
+			if (time >= m_enterTime + Duration.GetValue())
 				return ExecutionStatus.Success;
 
 			return ExecutionStatus.Running;
