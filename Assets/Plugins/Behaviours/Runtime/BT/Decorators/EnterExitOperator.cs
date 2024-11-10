@@ -3,8 +3,8 @@ using Jackey.Behaviours.Core.Operations;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {
-	[SearchPath("Decorators/Operator")]
-	public class Operator : Decorator {
+	[SearchPath("Decorators/EnterExit Operator")]
+	public class EnterExitOperator : Decorator {
 		[Header("On Enter")]
 		[SerializeField] private OperationList m_enterOperations;
 
