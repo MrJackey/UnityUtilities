@@ -1,19 +1,21 @@
-﻿namespace Jackey.Behaviours.BT.Actions {
-	public interface IComponentAction {
-		ExecutionStatus OnEnter();
-		ExecutionStatus OnTick();
+﻿using Jackey.Behaviours.Core;
 
-		void OnInterrupt();
-		void OnResult(ActionResult result);
-		void OnExit();
+namespace Jackey.Behaviours.BT.Actions {
+	public interface IComponentAction {
+		ExecutionStatus OnEnter(BehaviourAction action);
+		ExecutionStatus OnTick(BehaviourAction action);
+
+		void OnInterrupt(BehaviourAction action);
+		void OnResult(BehaviourAction action, ActionResult result);
+		void OnExit(BehaviourAction action);
 	}
 
 	public interface IComponentAction<T> {
-		ExecutionStatus OnEnter(T args);
-		ExecutionStatus OnTick(T args);
+		ExecutionStatus OnEnter(BehaviourAction action, T args);
+		ExecutionStatus OnTick(BehaviourAction action, T args);
 
-		void OnInterrupt(T args);
-		void OnResult(T args, ActionResult result);
-		void OnExit(T args);
+		void OnInterrupt(BehaviourAction action, T args);
+		void OnResult(BehaviourAction action, T args, ActionResult result);
+		void OnExit(BehaviourAction action, T args);
 	}
 }

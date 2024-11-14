@@ -100,11 +100,11 @@ namespace Jackey.Behaviours.Core {
 		/// </summary>
 		protected virtual void OnExit() { }
 
-		protected void EnableTicking() {
+		public void EnableTicking() {
 			m_behaviour.EnableTicking(this);
 		}
 
-		protected void DisableTicking() {
+		public void DisableTicking() {
 			m_behaviour.DisableTicking(this);
 		}
 

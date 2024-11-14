@@ -6,12 +6,12 @@ using UnityEngine;
 namespace Jackey.Behaviours.BT.Actions {
 	[SearchPath("Utilities/Tick Component")]
 	public class TickComponent : BehaviourAction<MonoBehaviour> {
-		protected override ExecutionStatus OnEnter() => GetInterfaceTarget().OnEnter();
-		protected override ExecutionStatus OnTick() => GetInterfaceTarget().OnTick();
+		protected override ExecutionStatus OnEnter() => GetInterfaceTarget().OnEnter(this);
+		protected override ExecutionStatus OnTick() => GetInterfaceTarget().OnTick(this);
 
-		protected override void OnInterrupt() => GetInterfaceTarget().OnInterrupt();
-		protected override void OnResult(ActionResult result) => GetInterfaceTarget().OnResult(result);
-		protected override void OnExit() => GetInterfaceTarget().OnExit();
+		protected override void OnInterrupt() => GetInterfaceTarget().OnInterrupt(this);
+		protected override void OnResult(ActionResult result) => GetInterfaceTarget().OnResult(this, result);
+		protected override void OnExit() => GetInterfaceTarget().OnExit(this);
 
 		private IComponentAction GetInterfaceTarget() {
 			MonoBehaviour component = GetTarget();

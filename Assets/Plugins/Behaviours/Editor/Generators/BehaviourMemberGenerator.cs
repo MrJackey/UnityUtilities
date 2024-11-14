@@ -31,11 +31,11 @@ namespace Jackey.Behaviours.BT.Generated {{
 		[DisplayName(""{0}"")]
 		[SearchPath(""Generated/{0}"")]
 		public sealed class {1} : BehaviourAction<{2}> {{
-			protected override ExecutionStatus OnEnter() => GetTarget().OnEnter();
-			protected override ExecutionStatus OnTick() => GetTarget().OnTick();
-			protected override void OnInterrupt() => GetTarget().OnInterrupt();
-			protected override void OnResult(ActionResult result) => GetTarget().OnResult(result);
-			protected override void OnExit() => GetTarget().OnExit();
+			protected override ExecutionStatus OnEnter() => GetTarget().OnEnter(this);
+			protected override ExecutionStatus OnTick() => GetTarget().OnTick(this);
+			protected override void OnInterrupt() => GetTarget().OnInterrupt(this);
+			protected override void OnResult(ActionResult result) => GetTarget().OnResult(this, result);
+			protected override void OnExit() => GetTarget().OnExit(this);
 		}}
 ";
 
@@ -45,11 +45,11 @@ namespace Jackey.Behaviours.BT.Generated {{
 		public sealed class {1} : BehaviourAction<{2}> {{
 			[SerializeField] private BlackboardRef<{3}> m_args;
 
-			protected override ExecutionStatus OnEnter() => GetTarget().OnEnter(m_args.GetValue());
-			protected override ExecutionStatus OnTick() => GetTarget().OnTick(m_args.GetValue());
-			protected override void OnInterrupt() => GetTarget().OnInterrupt(m_args.GetValue());
-			protected override void OnResult(ActionResult result) => GetTarget().OnResult(m_args.GetValue(), result);
-			protected override void OnExit() => GetTarget().OnExit(m_args.GetValue());
+			protected override ExecutionStatus OnEnter() => GetTarget().OnEnter(this, m_args.GetValue());
+			protected override ExecutionStatus OnTick() => GetTarget().OnTick(this, m_args.GetValue());
+			protected override void OnInterrupt() => GetTarget().OnInterrupt(this, m_args.GetValue());
+			protected override void OnResult(ActionResult result) => GetTarget().OnResult(this, m_args.GetValue(), result);
+			protected override void OnExit() => GetTarget().OnExit(this, m_args.GetValue());
 		}}
 ";
 
