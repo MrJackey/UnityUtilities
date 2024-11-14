@@ -29,8 +29,11 @@ namespace Jackey.Behaviours.BT.Decorators {
 			base.Initialize(behaviour, parent, ref index);
 
 			index++;
-			m_child.Parent = this;
-			m_child.Initialize(behaviour, this, ref index);
+
+			if (m_child != null) {
+				m_child.Parent = this;
+				m_child.Initialize(behaviour, this, ref index);
+			}
 		}
 
 		internal override void InterruptChildren() {

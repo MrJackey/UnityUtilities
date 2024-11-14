@@ -19,12 +19,12 @@ namespace Jackey.Behaviours.BT.Decorators {
 		}
 
 		protected override ExecutionStatus OnTick() {
-			if (m_child.IsFinished)
+			if (m_child?.IsFinished ?? false)
 				return (ExecutionStatus)m_child.Status;
 
 			if (m_conditions.Evaluate()) {
 				DisableTicking();
-				return m_child.EnterSequence();
+				return m_child?.EnterSequence() ?? ExecutionStatus.Success;
 			}
 
 			return ExecutionStatus.Running;
