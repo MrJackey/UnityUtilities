@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 namespace Jackey.Behaviours.Editor.PropertyDrawers {
 	[CustomPropertyDrawer(typeof(BlackboardVar))]
@@ -177,36 +178,87 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		private void TrackPrimitiveValueChanges<T>(BaseField<T> field, SerializedProperty valueProperty) {
-			field.RegisterValueChangedCallback(evt => {
-				valueProperty.serializedObject.Update();
-				valueProperty.stringValue = evt.newValue.ToString();
-				valueProperty.serializedObject.ApplyModifiedProperties();
+			if (Application.IsPlaying(valueProperty.serializedObject.targetObject)) { // Runtime
+				SetupRuntimeField(field, valueProperty);
+			}
+			else { // Edit
+				field.RegisterValueChangedCallback(evt => {
+					SerializedObject serializedObject = valueProperty.serializedObject;
 
-				EditorUtility.SetDirty(valueProperty.serializedObject.targetObject);
-			});
-			// field.TrackPropertyValue(valueProperty, _ => field.value = (TType)(valueProperty.managedReferenceValue ?? default(TType)));
+					serializedObject.Update();
+					valueProperty.stringValue = evt.newValue.ToString();
+					serializedObject.ApplyModifiedProperties();
+
+					EditorUtility.SetDirty(serializedObject.targetObject);
+				});
+			}
 		}
 
 		private void TrackEnumValueChanges<T>(BaseField<T> field, SerializedProperty valueProperty) where T : Enum {
-			field.RegisterValueChangedCallback(evt => {
-				valueProperty.serializedObject.Update();
-				valueProperty.stringValue = Convert.ToInt32(evt.newValue).ToString();
-				valueProperty.serializedObject.ApplyModifiedProperties();
+			if (Application.IsPlaying(valueProperty.serializedObject.targetObject)) { // Runtime
+				SetupRuntimeField(field, valueProperty);
+			}
+			else { // Edit
+				field.RegisterValueChangedCallback(evt => {
+					SerializedObject serializedObject = valueProperty.serializedObject;
 
-				EditorUtility.SetDirty(valueProperty.serializedObject.targetObject);
-			});
-			// field.TrackPropertyValue(valueProperty, _ => field.value = (TType)(valueProperty.managedReferenceValue ?? default(TType)));
+					serializedObject.Update();
+					valueProperty.stringValue = Convert.ToInt32(evt.newValue).ToString();
+					serializedObject.ApplyModifiedProperties();
+
+					EditorUtility.SetDirty(serializedObject.targetObject);
+				});
+			}
 		}
 
 		private void TrackValueChanges<T>(BaseField<T> field, SerializedProperty valueProperty) {
-			field.RegisterValueChangedCallback(evt => {
-				valueProperty.serializedObject.Update();
-				valueProperty.managedReferenceValue = evt.newValue;
-				valueProperty.serializedObject.ApplyModifiedProperties();
+			if (Application.IsPlaying(valueProperty.serializedObject.targetObject)) { // Runtime
+				SetupRuntimeField(field, valueProperty);
+			}
+			else { // Edit
+				field.RegisterValueChangedCallback(evt => {
+					SerializedObject serializedObject = valueProperty.serializedObject;
 
-				EditorUtility.SetDirty(valueProperty.serializedObject.targetObject);
+					serializedObject.Update();
+					valueProperty.managedReferenceValue = evt.newValue;
+					serializedObject.ApplyModifiedProperties();
+
+					EditorUtility.SetDirty(serializedObject.targetObject);
+				});
+			}
+		}
+
+		private void SetupRuntimeField<T>(BaseField<T> field, SerializedProperty property) {
+			BlackboardVar variable = GetBlackboardVariable(property);
+
+			if (variable == null)
+				return;
+
+			field.schedule.Execute(() => {
+				field.value = variable.GetValue<T>();
+			}).Every(1/60L);
+
+			field.RegisterValueChangedCallback(evt => {
+				variable.SetValue(evt.newValue);
 			});
-			// field.TrackPropertyValue(valueProperty, _ => field.value = (TType)(valueProperty.managedReferenceValue ?? default(TType)));
+		}
+
+		private BlackboardVar GetBlackboardVariable(SerializedProperty property) {
+			Object targetObject = property.serializedObject.targetObject;
+
+			Blackboard blackboard = null;
+			if (targetObject is ObjectBehaviour behaviour)
+				blackboard = behaviour.Blackboard;
+			else if (targetObject is BehaviourOwner owner)
+				blackboard = owner.Blackboard;
+
+			if (blackboard == null)
+				return null;
+
+			string propertyPath = property.propertyPath;
+			int varIndex = Convert.ToInt32(propertyPath[(propertyPath.LastIndexOf('[') + 1)..propertyPath.LastIndexOf(']')]);
+
+			return blackboard.m_variables[varIndex];
 		}
 	}
 }
