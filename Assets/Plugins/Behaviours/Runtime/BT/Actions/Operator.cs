@@ -9,7 +9,7 @@ namespace Jackey.Behaviours.BT.Actions {
 		[SerializeField] private OperationList m_operations;
 
 #if UNITY_EDITOR
-		public override string Editor_Info => m_operations.Editor_Info;
+		public override string Editor_Info => m_operations?.Editor_Info;
 #endif
 
 		protected override ExecutionStatus OnEnter() {

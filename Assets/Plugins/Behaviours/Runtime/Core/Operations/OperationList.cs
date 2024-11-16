@@ -20,9 +20,9 @@ namespace Jackey.Behaviours.Core.Operations {
 							operationInfo = m_operations[i].GetType().GetDisplayOrTypeName();
 
 						if (i < m_operations.Length - 1)
-							output += $"-{operationInfo}\n";
+							output += $"{Constants.MULTI_INFO_SEPARATOR} {operationInfo}\n";
 						else
-							output += $"-{operationInfo}";
+							output += $"{Constants.MULTI_INFO_SEPARATOR} {operationInfo}";
 					}
 				}
 

@@ -41,6 +41,7 @@
 	margin: 0;
 	padding: 5px 0;
 	width: 100%;
+	-unity-text-align: middle-center;
 }
 
 .Node > #Content {
@@ -86,7 +87,7 @@ BTNode Label {
 	margin: 5px;
 	border-radius: 5px;
 	font-size: 16px;
-	-unity-text-align: middle-center;
+	-unity-text-align: middle-left;
 }
 
 .SelectionRect {

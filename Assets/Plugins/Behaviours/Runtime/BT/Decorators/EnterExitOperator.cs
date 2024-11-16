@@ -12,7 +12,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 		[SerializeField] private OperationList m_exitOperations;
 
 #if UNITY_EDITOR
-		public override string Editor_Info => $"<b>On Enter</b>\n{m_enterOperations?.Editor_Info}\n\n<b>On Exit</b>\n{m_exitOperations?.Editor_Info}";
+		public override string Editor_Info => $"<align=\"center\"><b>On Enter</b></align>\n{m_enterOperations?.Editor_Info}\n\n<align=\"center\"><b>On Exit</b></align>\n{m_exitOperations?.Editor_Info}";
 #endif
 
 		protected override ExecutionStatus OnTick() {
