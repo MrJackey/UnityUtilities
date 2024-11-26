@@ -11,7 +11,7 @@ namespace Jackey.Behaviours.Core.Conditions.Comparisons {
 		public Arithmetic.Comparison Comparison;
 		public BlackboardRef<float> Comparand;
 
-		public override string Editor_Info => $"{From.Editor_Info} => {To.Editor_Info} {Arithmetic.GetComparisonString(Comparison)} {Comparand.Editor_Info}";
+		public override string Editor_Info => $"{From.Editor_Info} --> {To.Editor_Info} {Arithmetic.GetComparisonString(Comparison)} {Comparand.Editor_Info}";
 
 		public override bool Evaluate() {
 			float comparand = Comparand.GetValue();
