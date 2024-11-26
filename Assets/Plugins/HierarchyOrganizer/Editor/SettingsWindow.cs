@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using Jackey.HierarchyOrganizer.Runtime;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -12,7 +13,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 		}
 
 		private void CreateGUI() {
-			titleContent.text = "Hierarchy Organizer Settings";
+			titleContent.text = $"{PluginInfo.NAME} Settings";
 
 			CreateFolderGUI();
 

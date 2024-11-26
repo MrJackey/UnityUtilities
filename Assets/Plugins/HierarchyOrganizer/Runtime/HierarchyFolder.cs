@@ -56,7 +56,7 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 					bool stageIsDirty = prefabStage.scene.isDirty;
 
 					EditorUtility.DisplayDialog(
-						"Hierarchy Organizer",
+						PluginInfo.NAME,
 						"A folder should not be included in a prefab. They are only meant to be used within scenes",
 						"Ok"
 					);
@@ -94,7 +94,7 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 				Undo.RevertAllInCurrentGroup();
 
 				EditorUtility.DisplayDialog(
-					"Hierarchy Organizer",
+					PluginInfo.NAME,
 					"A folder should not be in a prefab. They are only meant to be used in scenes",
 					"Ok"
 				);

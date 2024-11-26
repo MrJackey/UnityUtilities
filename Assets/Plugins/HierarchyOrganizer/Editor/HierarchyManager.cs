@@ -27,7 +27,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 		private static void OnComponentAdded(Component component) {
 			if (s_folders.Contains(component.gameObject.GetInstanceID())) {
 				bool dialogResult = EditorUtility.DisplayDialog(
-					"Hierarchy Organizer",
+					PluginInfo.NAME,
 					$"Component ({component.GetType().Name}) was just added to a folder.\n\nA folder should not have any components as all components on a folder will be lost when they are stripped from the scene",
 					"Destroy the component",
 					"Keep the component"

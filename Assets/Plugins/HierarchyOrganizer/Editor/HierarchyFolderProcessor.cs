@@ -13,10 +13,13 @@ namespace Jackey.HierarchyOrganizer.Editor {
 		public int callbackOrder => -1000;
 
 		public void OnPreprocessBuild(BuildReport _) {
-			if (!Settings.instance.StripOnBuilds) {
+			s_removeAsException = false;
+
+			Settings settings = Settings.instance;
+			if (!settings.StripOnBuilds && settings.WarnOfDisabledStripBuilds) {
 				s_removeAsException = EditorUtility.DisplayDialog(
-					"Hierarchy Organizer",
-					$"A build has started with folder stripping disabled. Folders should almost always be removed from builds. Do you want to remove the folders in this build as an exception?\n\nThis warning can be suppressed in the settings.",
+					PluginInfo.NAME,
+					"A build has started with folder stripping disabled. Folders should almost always be removed from builds. Do you want to remove the folders in this build as an exception?\n\nThis warning can be suppressed in the settings.",
 					"Remove",
 					"Keep"
 				);
