@@ -13,6 +13,8 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 	[ExecuteAlways]
 	internal class HierarchyFolder : MonoBehaviour {
 #if UNITY_EDITOR
+		private const HideFlags HIDE_FLAGS = HideFlags.HideInInspector | HideFlags.NotEditable;
+
 		private bool m_preventInitialization;
 		private bool m_initializing;
 		private bool m_initialized;
@@ -20,12 +22,13 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 		private Transform m_preMoveParent;
 
 		internal static event Action<HierarchyFolder> Initialized;
+		internal static event Action<HierarchyFolder> Destroyed;
 
 		// OnValidate is used to initialize the folder due to it being called when
 		// the instance is created or playmode is entered regardless of its GameObject's active state.
 		private void OnValidate() {
-			hideFlags |= HideFlags.HideInInspector | HideFlags.NotEditable;
-			transform.hideFlags |= HideFlags.HideInInspector | HideFlags.NotEditable;
+			hideFlags |= HIDE_FLAGS;
+			transform.hideFlags |= HIDE_FLAGS;
 
 			if (!m_initialized && !m_initializing && !m_preventInitialization) {
 				// The delay is needed due to parent manipulation sending messages which
@@ -75,8 +78,10 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 
 		private void OnDestroy() {
 			if (transform) {
-				transform.hideFlags &= ~HideFlags.HideInInspector;
+				transform.hideFlags &= ~HIDE_FLAGS;
 			}
+
+			Destroyed?.Invoke(this);
 		}
 
 		internal void Initialize() {
