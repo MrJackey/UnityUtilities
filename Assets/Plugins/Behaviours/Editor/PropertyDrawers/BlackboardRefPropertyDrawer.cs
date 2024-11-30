@@ -31,6 +31,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		private DropdownField m_dropdownField;
 		private SerializedProperty m_variableGuidProperty;
+		private SerializedProperty m_variableNameProperty;
 
 		private SerializedProperty m_modeProperty;
 		private Image m_modeImage;
@@ -69,7 +70,8 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_propertyField = new PropertyField(m_fieldProperty, property.displayName);
 
 			m_variableGuidProperty = property.FindPropertyRelative("m_variableGuid");
-			string variableName = property.FindPropertyRelative("m_variableName").stringValue;
+			m_variableNameProperty = property.FindPropertyRelative("m_variableName");
+			string variableName = m_variableNameProperty.stringValue;
 
 			m_refType = fieldInfo.FieldType.GenericTypeArguments[0];
 			BlackboardVar referencedVariable = FindVariable(m_variableGuidProperty.stringValue, variableName);
@@ -88,11 +90,11 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				RefreshDropdownOptions();
 
 				if (referencedVariable.IsAssignableTo(m_refType)) {
-					m_dropdownField.value = referencedVariable.Name;
+					m_dropdownField.SetValueWithoutNotify(referencedVariable.Name);
 				}
 			}
 			else {
-				m_dropdownField.value = string.IsNullOrEmpty(m_variableGuidProperty.stringValue) ? "" : variableName;
+				m_dropdownField.SetValueWithoutNotify(string.IsNullOrEmpty(m_variableGuidProperty.stringValue) ? "" : variableName);
 			}
 
 			RefreshConvertLabel(referencedVariable);
@@ -152,6 +154,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				}
 			}
 
+			s_dropdownOptions.Add(string.Empty);
+			s_dropdownOptions.Add("[Clear Reference]");
+
 			if (missingReference) {
 				m_dropdownField.value = string.Empty;
 			}
@@ -159,9 +164,14 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		private void OnDropdownPointerDown(PointerDownEvent evt) => RefreshDropdownOptions();
 		private void OnDropdownValueChanged(ChangeEvent<string> _) {
-			if (s_dropdownValues.Count == 0) return;
+			if (m_dropdownField.index == s_dropdownValues.Count + 1) { // Clear
+				m_variableGuidProperty.stringValue = string.Empty;
+				m_dropdownField.SetValueWithoutNotify(string.Empty);
+			}
+			else {
+				m_variableGuidProperty.stringValue = s_dropdownValues[m_dropdownField.index];
+			}
 
-			m_variableGuidProperty.stringValue = s_dropdownValues[m_dropdownField.index];
 			m_variableGuidProperty.serializedObject.ApplyModifiedProperties();
 
 			RefreshConvertLabel();
@@ -190,7 +200,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		private void RefreshConvertLabel() {
-			string variableName = m_property.FindPropertyRelative("m_variableName").stringValue;
+			string variableName = m_variableNameProperty.stringValue;
 			BlackboardVar referencedVariable = FindVariable(m_variableGuidProperty.stringValue, variableName);
 
 			RefreshConvertLabel(referencedVariable);
