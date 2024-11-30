@@ -48,6 +48,7 @@ namespace Jackey.ObjectPool.Editor {
 		private void OnDisable() {
 			ObjectPool.PoolCreated -= OnPoolCreated;
 			ObjectPool.PoolReset -= OnPoolReset;
+			ObjectPool.PoolRemoved -= OnPoolRemoved;
 			ObjectPool.Cleared -= OnClear;
 			ObjectPool.AnyObjectSetup -= OnAnyObjectSetup;
 			ObjectPool.AnyObjectReturned -= OnAnyObjectReturned;
@@ -84,6 +85,7 @@ namespace Jackey.ObjectPool.Editor {
 
 			ObjectPool.PoolCreated += OnPoolCreated;
 			ObjectPool.PoolReset += OnPoolReset;
+			ObjectPool.PoolRemoved += OnPoolRemoved;
 			ObjectPool.Cleared += OnClear;
 			ObjectPool.AnyObjectSetup += OnAnyObjectSetup;
 			ObjectPool.AnyObjectReturned += OnAnyObjectReturned;
@@ -425,6 +427,21 @@ namespace Jackey.ObjectPool.Editor {
 
 			if (m_inspectedPool != null)
 				ShowPoolObjects(pool);
+		}
+
+		private void OnPoolRemoved(IPool pool) {
+			m_poolList.Remove(pool);
+			m_poolListView.RefreshItems();
+
+			if (m_inspectedPool == pool) {
+				m_activeObjectsList.Clear();
+				m_activeObjectsListView.RefreshItems();
+
+				m_freeObjectsList.Clear();
+				m_freeObjectsListView.RefreshItems();
+			}
+
+			RefreshEmptyListLabels();
 		}
 
 		private void OnClear() {

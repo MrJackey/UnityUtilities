@@ -401,7 +401,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			for (int i = 0; i < initialObjects; i += 2)
 				Object.DestroyImmediate(objects[i]);
 
-			ObjectPool.RemoveDestroyedGameObjects();
+			ObjectPool.CleanGameObjects();
 
 			Assert.AreEqual(expectedCount, handle.Count);
 			Assert.AreEqual(expectedActive, handle.ActiveCount);

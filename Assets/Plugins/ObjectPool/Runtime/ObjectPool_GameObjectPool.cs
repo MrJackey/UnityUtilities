@@ -342,9 +342,24 @@ namespace Jackey.ObjectPool {
 			};
 		}
 
-		internal static void RemoveDestroyedGameObjects() {
-			foreach (GameObjectPool pool in s_gameObjectPools.Values) {
-				pool.RemoveDestroyedObjects();
+		internal static void CleanGameObjects() {
+			List<(Object, IPool)> poolsToRemove = null;
+
+			foreach ((Object original, IPool pool) in s_gameObjectPools) {
+				GameObjectPool objectPool = (GameObjectPool)pool;
+				objectPool.RemoveDestroyedObjects();
+
+				if (pool.Count == 0) {
+					poolsToRemove ??= new List<(Object, IPool)>();
+					poolsToRemove.Add((original, pool));
+				}
+			}
+
+			if (poolsToRemove != null) {
+				foreach ((Object original, IPool pool) in poolsToRemove) {
+					s_gameObjectPools.Remove(original);
+					PoolRemoved?.Invoke(pool);
+				}
 			}
 		}
 
