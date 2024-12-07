@@ -147,13 +147,6 @@ ActionInspector #Content {
 	padding: 10px 5px;
 }
 
-ActionInspector #ActionTarget {
-	border-bottom-width: 1px;
-	border-bottom-color: rgb(128, 128, 128);
-	padding-bottom: 4px;
-	margin-bottom: 4px;
-}
-
 #BlackboardRef {
 	flex-direction: column;
 }
@@ -223,6 +216,13 @@ ActionInspector #ActionTarget {
 
 #CreateButton {
 	margin: 10px 10px 0 10px;
+}
+
+#TargetField {
+	border-bottom-width: 1px;
+	border-bottom-color: rgb(128, 128, 128);
+	padding-bottom: 4px;
+	margin-bottom: 4px;
 }
 
 PopupTextElement {

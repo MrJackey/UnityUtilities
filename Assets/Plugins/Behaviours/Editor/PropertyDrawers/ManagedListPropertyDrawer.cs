@@ -140,8 +140,13 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_inspectorLabel.text = property.managedReferenceValue.GetType().GetDisplayOrTypeName();
 
 			int startDepth = property.depth;
-			for (bool enterChildren = true; property.NextVisible(enterChildren) && property.depth > startDepth; enterChildren = false)
-				m_itemInspector.Add(new PropertyField(property));
+			for (bool enterChildren = true; property.NextVisible(enterChildren) && property.depth > startDepth; enterChildren = false) {
+				PropertyField field = new PropertyField(property);
+				m_itemInspector.Add(field);
+
+				if (property.name == "m_target")
+					field.name = "TargetField";
+			}
 
 			m_itemInspector.Bind(property.serializedObject);
 			m_itemInspector.style.display = DisplayStyle.Flex;

@@ -42,7 +42,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 			SerializedProperty targetProperty = property.FindPropertyRelative("m_target");
 			if (targetProperty != null) {
-				Add(new PropertyField(targetProperty) { name = "ActionTarget" });
+				Add(new PropertyField(targetProperty) { name = "TargetField" });
 			}
 
 			int startDepth = property.depth;
