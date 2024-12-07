@@ -51,7 +51,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			};
 			m_root.Add(m_fieldRow);
 
-			m_blackboardOnly = fieldInfo.GetCustomAttribute(typeof(BlackboardOnlyAttribute)) != null;
+			m_blackboardOnly = fieldInfo.GetCustomAttribute(typeof(BlackboardOnlyAttribute)) != null || fieldInfo.FieldType.GetGenericArguments()[0].IsInterface;
 
 			SerializedProperty behaviourProperty = property.FindPropertyRelative("m_behaviour");
 			behaviourProperty.objectReferenceValue = EditorWindow.GetWindow<BehaviourEditorWindow>().OpenBehaviour;
