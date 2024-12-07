@@ -59,6 +59,9 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		}
 
 		private T GetReferenceValue() {
+			if (string.IsNullOrEmpty(m_variableGuid))
+				return default;
+
 			BlackboardVar variable = GetReferencedVariable();
 
 			if (variable == null) {
