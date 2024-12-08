@@ -156,18 +156,14 @@ namespace Jackey.Behaviours.Core {
 	public abstract class BehaviourAction<T> : BehaviourAction where T : Component {
 		[SerializeField] private BlackboardRef<T> m_target;
 
-		protected string TargetInfo => m_target.IsReferencingVariable ? m_target.Editor_Info : "SELF";
+		protected string TargetInfo => m_target.IsVariable ? m_target.Editor_Info : "SELF";
 
 		protected T GetTarget() => m_target.GetValue();
 
 		internal override ExecutionStatus Enter() {
-			if (m_target.GetValue() == null) {
-				if (!Owner.TryGetComponent(out T target)) {
-					Debug.LogError($"{nameof(BehaviourAction)} is missing its {typeof(T).Name} target");
-					return ExecutionStatus.Failure;
-				}
-
-				m_target.SetValue(target);
+			if (!Owner.SetTargetIfNeeded(ref m_target)) {
+				Debug.LogError($"{nameof(BehaviourAction)} is missing its {typeof(T).Name} target");
+				return ExecutionStatus.Failure;
 			}
 
 			return base.Enter();

@@ -18,18 +18,14 @@ namespace Jackey.Behaviours.Core.Conditions {
 	public abstract class BehaviourCondition<T> : BehaviourCondition {
 		[SerializeField] private BlackboardRef<T> m_target;
 
-		protected string TargetInfo => m_target.IsReferencingVariable ? m_target.Editor_Info : "SELF";
+		protected string TargetInfo => m_target.IsVariable ? m_target.Editor_Info : "SELF";
 
 		protected T GetTarget() => m_target.GetValue();
 
 		internal override void Enable(BehaviourOwner owner) {
-			if (m_target.GetValue() == null) {
-				if (!owner.TryGetComponent(out T target)) {
-					Debug.LogError($"{nameof(BehaviourCondition)} is missing its {typeof(T).Name} target");
-					return;
-				}
-
-				m_target.SetValue(target);
+			if (!owner.SetTargetIfNeeded(ref m_target)) {
+				Debug.LogError($"{nameof(BehaviourCondition)} is missing its {typeof(T).Name} target");
+				return;
 			}
 
 			base.Enable(owner);

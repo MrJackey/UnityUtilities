@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.BT;
 using Jackey.Behaviours.Core.Blackboard;
@@ -92,6 +93,24 @@ namespace Jackey.Behaviours {
 			for (int i = 0; i < listenerCount; i++) {
 				m_eventListeners[i].OnEvent(evt);
 			}
+		}
+
+		internal bool SetTargetIfNeeded<T>(ref BlackboardRef<T> target) {
+			if (target.IsVariable)
+				return true;
+
+			Type targetType = typeof(T);
+			if (!targetType.IsInterface && !typeof(Component).IsAssignableFrom(targetType))
+				return true;
+
+			if (target.GetValue() != null)
+				return true;
+
+			if (!TryGetComponent(out T component))
+				return false;
+
+			target.SetValue(component);
+			return true;
 		}
 
 		private enum StartMode {

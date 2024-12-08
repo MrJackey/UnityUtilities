@@ -15,7 +15,9 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		[UsedImplicitly] // #if !UNITY_EDITOR
 		private BlackboardVar m_cachedVariable;
 
-		public bool IsReferencingVariable => m_mode is Mode.Variable && !string.IsNullOrEmpty(m_variableGuid);
+		public bool IsValue => m_mode is Mode.Field;
+		public bool IsVariable => m_mode is Mode.Variable;
+		public bool IsEmptyVariable => m_mode is Mode.Variable && string.IsNullOrEmpty(m_variableGuid);
 
 #if UNITY_EDITOR
 		public string Editor_Info {
