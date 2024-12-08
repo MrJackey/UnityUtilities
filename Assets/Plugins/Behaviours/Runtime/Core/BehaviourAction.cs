@@ -153,7 +153,7 @@ namespace Jackey.Behaviours.Core {
 #endif
 	}
 
-	public abstract class BehaviourAction<T> : BehaviourAction where T : Component {
+	public abstract class BehaviourAction<T> : BehaviourAction {
 		[SerializeField] private BlackboardRef<T> m_target;
 
 		protected string TargetInfo => m_target.IsVariable ? m_target.Editor_Info : "SELF";

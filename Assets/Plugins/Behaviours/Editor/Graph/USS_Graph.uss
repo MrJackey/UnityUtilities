@@ -165,6 +165,13 @@ ActionInspector #Content {
 	margin-bottom: 0;
 }
 
+#BlackboardRef .NoEditValue {
+	border-color: #212121;
+	border-width: 1px;
+	border-radius: 3px;
+	-unity-text-align: middle-center;
+}
+
 #BlackboardRef Toggle {
 	margin-bottom: 1px;
 }

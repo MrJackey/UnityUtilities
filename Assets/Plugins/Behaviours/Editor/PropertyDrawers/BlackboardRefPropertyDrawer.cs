@@ -18,6 +18,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		private static List<string> s_dropdownValues = new();
 
 		private bool m_blackboardOnly;
+		private bool m_canEditField;
 
 		private SerializedProperty m_property;
 		private Type m_refType;
@@ -28,6 +29,10 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		private SerializedProperty m_fieldProperty;
 		private PropertyField m_propertyField;
+
+		private VisualElement m_noEditField;
+		private Label m_noEditLabel;
+		private Label m_noEditValue;
 
 		private DropdownField m_dropdownField;
 		private SerializedProperty m_variableGuidProperty;
@@ -51,7 +56,8 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			};
 			m_root.Add(m_fieldRow);
 
-			m_blackboardOnly = fieldInfo.GetCustomAttribute(typeof(BlackboardOnlyAttribute)) != null || fieldInfo.FieldType.GetGenericArguments()[0].IsInterface;
+			m_blackboardOnly = fieldInfo.GetCustomAttribute(typeof(BlackboardOnlyAttribute)) != null;
+			m_canEditField = !fieldInfo.FieldType.GetGenericArguments()[0].IsInterface;
 
 			SerializedProperty behaviourProperty = property.FindPropertyRelative("m_behaviour");
 			behaviourProperty.objectReferenceValue = EditorWindow.GetWindow<BehaviourEditorWindow>().OpenBehaviour;
@@ -68,6 +74,22 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			m_fieldProperty = property.FindPropertyRelative("m_fieldValue");
 			m_propertyField = new PropertyField(m_fieldProperty, property.displayName);
+
+			if (!m_canEditField) {
+				m_noEditField = new VisualElement();
+				m_noEditField.AddToClassList("unity-base-field");
+				m_noEditField.AddToClassList("unity-property-field");
+
+				m_noEditLabel = new Label(property.displayName);
+				m_noEditLabel.AddToClassList("unity-base-field__label");
+
+				m_noEditValue = new Label(fieldInfo.FieldType.GetGenericArguments()[0].Name);
+				m_noEditValue.AddToClassList("unity-base-field__input");
+				m_noEditValue.AddToClassList("NoEditValue");
+
+				m_noEditField.Add(m_noEditLabel);
+				m_noEditField.Add(m_noEditValue);
+			}
 
 			m_variableGuidProperty = property.FindPropertyRelative("m_variableGuid");
 			m_variableNameProperty = property.FindPropertyRelative("m_variableName");
@@ -103,8 +125,8 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_dropdownField.RegisterCallback<PointerDownEvent>(OnDropdownPointerDown, TrickleDown.TrickleDown);
 			m_dropdownField.RegisterValueChangedCallback(OnDropdownValueChanged);
 
-			if (mode == 0 && !m_blackboardOnly)
-				m_fieldRow.Add(m_propertyField);
+			if (mode == 0)
+				m_fieldRow.Add(m_canEditField ? m_propertyField : m_noEditField);
 			else
 				m_fieldRow.Add(m_dropdownField);
 
@@ -187,13 +209,26 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			if (newValue == 0) {
 				m_dropdownField.RemoveFromHierarchy();
-				m_propertyField.BindProperty(m_fieldProperty);
-				m_fieldRow.Insert(0, m_propertyField);
+
+				if (m_canEditField) {
+					m_propertyField.BindProperty(m_fieldProperty);
+					m_fieldRow.Insert(0, m_propertyField);
+				}
+				else {
+					m_fieldRow.Insert(0, m_noEditField);
+				}
+
 				m_convertLabel.RemoveFromHierarchy();
 			}
 			else {
-				m_propertyField.RemoveFromHierarchy();
-				m_propertyField.Unbind();
+				if (m_canEditField) {
+					m_propertyField.RemoveFromHierarchy();
+					m_propertyField.Unbind();
+				}
+				else {
+					m_noEditField.RemoveFromHierarchy();
+				}
+
 				m_fieldRow.Insert(0, m_dropdownField);
 				RefreshConvertLabel();
 			}
