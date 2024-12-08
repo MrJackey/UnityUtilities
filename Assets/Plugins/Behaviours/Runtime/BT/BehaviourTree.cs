@@ -122,7 +122,7 @@ namespace Jackey.Behaviours.BT {
 			int tickingIndex = m_tickingActions.IndexOf(action);
 
 			// Ensure that any currently ticking or just ticked actions does not skip any actions within the tick loop
-			if (m_tickIndex != -1 && tickingIndex < m_tickIndex)
+			if (m_tickIndex != -1 && tickingIndex <= m_tickIndex)
 				m_tickIndex--;
 
 			m_pendingTickingActions.Remove(action);
