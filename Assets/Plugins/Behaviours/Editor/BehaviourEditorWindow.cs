@@ -155,7 +155,8 @@ namespace Jackey.Behaviours.Editor {
 
 				EditBehaviour(owner.Behaviour);
 
-				if (m_activeGraph != null) {
+				// Prevent showing owner blackboard in runtime as the variables merge downwards and will thus be shown with the graph
+				if (m_activeGraph != null && EditorUtility.IsPersistent(owner.Behaviour)) {
 					SerializedProperty blackboardProperty = new SerializedObject(owner).FindProperty("m_blackboard");
 					m_activeGraph.BlackboardInspector.SetPrimaryBlackboard(owner.Blackboard, blackboardProperty);
 				}
