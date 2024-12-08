@@ -37,6 +37,9 @@ namespace Jackey.Behaviours.Core.Blackboard {
 			if (m_value is BlackboardValue<T> val)
 				return val.Value;
 
+			if (m_value.TryGetValue(out T result))
+				return result;
+
 			return m_value.ConvertTo<T>();
 		}
 
@@ -54,13 +57,26 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		}
 
 		internal abstract class BlackboardValue {
-			public abstract TResult ConvertTo<TResult>();
+			public abstract bool TryGetValue<T>(out T result);
+
 			public abstract bool TrySetValue<T>(T value);
 			public abstract void SetValueBoxed(object value);
+
+			public abstract TResult ConvertTo<TResult>();
 		}
 
 		internal class BlackboardValue<T> : BlackboardValue {
 			public T Value;
+
+			public override bool TryGetValue<TResult>(out TResult result) {
+				if (Value is TResult val) {
+					result = val;
+					return true;
+				}
+
+				result = default;
+				return false;
+			}
 
 			public override bool TrySetValue<TValue>(TValue value) {
 				if (value is T val) {
@@ -89,7 +105,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 				return;
 
 			if (serializedType.ContainsGenericParameters) {
-				Debug.LogError($"Blackboard variable {m_variableName} has generic parameters. This is not supported! Ensure the type itself does not have generics and that it is not nested in a generic type");
+				Debug.LogError($"Blackboard variable {m_variableName} has generic parameters. This is not supported! Ensure the type \"{serializedType.FullName}\" does not have generics and that it is not nested in a generic type");
 				return;
 			}
 

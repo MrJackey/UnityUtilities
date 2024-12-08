@@ -46,7 +46,11 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 					value = unityObjectProperty.objectReferenceValue,
 					allowSceneObjects = true,
 				};
-				field.BindProperty(unityObjectProperty);
+
+				if (Application.IsPlaying(property.serializedObject.targetObject))
+					SetupRuntimeObjectField(field, unityObjectProperty);
+				else
+					field.BindProperty(unityObjectProperty);
 
 				return field;
 			}
@@ -226,6 +230,21 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 					EditorUtility.SetDirty(serializedObject.targetObject);
 				});
 			}
+		}
+
+		private void SetupRuntimeObjectField(ObjectField field, SerializedProperty property) {
+			BlackboardVar variable = GetBlackboardVariable(property);
+
+			if (variable == null)
+				return;
+
+			field.schedule.Execute(() => {
+				field.value = variable.GetValue<Object>();
+			}).Every(1/60L);
+
+			field.RegisterValueChangedCallback(evt => {
+				variable.SetValue(evt.newValue);
+			});
 		}
 
 		private void SetupRuntimeField<T>(BaseField<T> field, SerializedProperty property) {
