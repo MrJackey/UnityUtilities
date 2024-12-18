@@ -138,6 +138,97 @@ namespace Jackey.Utilities.__Tests__.EditMode {
 		}
 
 		[Test]
+		public void ListenersToBeInvokedCanBeUnsubscribedDuringInvocation() {
+			Event1Listener event1Listener = new Event1Listener();
+			Event1Listener event1Listener2 = new Event1Listener();
+			Event1ListenerRemoveOther event1ListenerRemoveOther = new Event1ListenerRemoveOther(event1Listener2);
+
+			EventBus.Subscribe<Event1>(event1Listener);
+			EventBus.Subscribe<Event1>(event1ListenerRemoveOther);
+			EventBus.Subscribe<Event1>(event1Listener2);
+
+			EventBus.Invoke<Event1>();
+
+			Assert.AreEqual(1, event1ListenerRemoveOther.Invocations);
+			Assert.AreEqual(1, event1Listener.Invocations);
+			Assert.AreEqual(0, event1Listener2.Invocations);
+		}
+
+		[Test]
+		public void ListenersAlreadyInvokedCanBeUnsubscribedDuringInvocation() {
+			Event1Listener event1Listener = new Event1Listener();
+			Event1Listener event1Listener2 = new Event1Listener();
+			Event1ListenerRemoveOther event1ListenerRemoveOther = new Event1ListenerRemoveOther(event1Listener);
+
+			EventBus.Subscribe<Event1>(event1Listener);
+			EventBus.Subscribe<Event1>(event1ListenerRemoveOther);
+			EventBus.Subscribe<Event1>(event1Listener2);
+
+			EventBus.Invoke<Event1>();
+
+			Assert.AreEqual(1, event1Listener.Invocations);
+			Assert.AreEqual(1, event1ListenerRemoveOther.Invocations);
+			Assert.AreEqual(1, event1Listener2.Invocations);
+
+			EventBus.Invoke<Event1>();
+
+			Assert.AreEqual(1, event1Listener.Invocations);
+			Assert.AreEqual(2, event1ListenerRemoveOther.Invocations);
+			Assert.AreEqual(2, event1Listener2.Invocations);
+		}
+
+		[Test]
+		public void CallbacksToBeInvokedCanBeUnsubscribedDuringInvocation() {
+			int invocations = 0;
+			int invocations2 = 0;
+
+			EventBusCallback<Event1> callback1 = _ => invocations++;
+			EventBusCallback<Event1> callback3 = _ => invocations++;
+			EventBusCallback<Event1> callback2 = null;
+			callback2 = _ => {
+				invocations2++;
+				EventBus.Unsubscribe(callback3);
+			};
+
+			EventBus.Subscribe<Event1>(callback1);
+			EventBus.Subscribe<Event1>(callback2);
+			EventBus.Subscribe<Event1>(callback3);
+
+			EventBus.Invoke<Event1>();
+
+			Assert.AreEqual(1, invocations);
+			Assert.AreEqual(1, invocations2);
+		}
+
+		[Test]
+		public void CallbacksAlreadyInvokedCanBeUnsubscribedDuringInvocation() {
+			int invocations = 0;
+			int invocations2 = 0;
+
+			EventBusCallback<Event1> callback1 = _ => invocations++;
+			EventBusCallback<Event1> callback2 = null;
+			callback2 = _ => {
+				invocations2++;
+				EventBus.Unsubscribe(callback1);
+			};
+			EventBusCallback<Event1> callback3 = _ => invocations++;
+
+			EventBus.Subscribe<Event1>(callback1);
+			EventBus.Subscribe<Event1>(callback2);
+			EventBus.Subscribe<Event1>(callback3);
+
+			EventBus.Invoke<Event1>();
+
+			Assert.AreEqual(2, invocations);
+			Assert.AreEqual(1, invocations2);
+
+			EventBus.Invoke<Event1>();
+
+			Assert.AreEqual(3, invocations);
+			Assert.AreEqual(2, invocations2);
+		}
+
+		[Test]
 		public void SafeInvokeContinuesOnException() {
 			int invocations = 0;
 			EventBusCallback<Event1> event1Callback = _ => invocations++;
@@ -188,6 +279,21 @@ namespace Jackey.Utilities.__Tests__.EditMode {
 		void IEventBusListener<Event1>.OnEvent(Event1 args) {
 			Invocations++;
 			EventBus.UnsubscribeAll(this);
+		}
+	}
+
+	public class Event1ListenerRemoveOther : IEventBusListener<Event1> {
+		private IEventBusListener m_other;
+
+		public int Invocations { get; private set; }
+
+		public Event1ListenerRemoveOther(IEventBusListener other) {
+			m_other = other;
+		}
+
+		void IEventBusListener<Event1>.OnEvent(Event1 args) {
+			Invocations++;
+			EventBus.UnsubscribeAll(m_other);
 		}
 	}
 

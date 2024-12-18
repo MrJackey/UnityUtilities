@@ -160,87 +160,133 @@ namespace Jackey.Utilities {
 		private static class Bus<T> where T : IEvent {
 			private static readonly List<IEventBusListener<T>> s_listeners = new();
 			private static readonly List<EventBusCallback<T>> s_callbacks = new();
+			private static readonly List<IEventBusListener<T>> s_deferredListeners = new();
+			private static readonly List<EventBusCallback<T>> s_deferredCallbacks = new();
 
-			private static bool s_isDirty = true;
-
-			private static readonly List<IEventBusListener<T>> s_invokeListeners = new();
-			private static readonly List<EventBusCallback<T>> s_invokeCallbacks = new();
+			private static bool s_invoking;
+			private static int s_listenerInvokeIndex = -1;
+			private static int s_callbackInvokeIndex = -1;
 
 			public static void AddListener(IEventBusListener<T> listener) {
-				s_listeners.Add(listener);
-				s_isDirty = true;
+				if (s_invoking)
+					s_deferredListeners.Add(listener);
+				else
+					s_listeners.Add(listener);
 			}
 
 			public static void AddCallback(EventBusCallback<T> callback) {
-				s_callbacks.Add(callback);
-				s_isDirty = true;
+				if (s_invoking)
+					s_deferredCallbacks.Add(callback);
+				else
+					s_callbacks.Add(callback);
 			}
 
 			public static void RemoveListener(IEventBusListener<T> listener) {
-				s_listeners.Remove(listener);
-				s_isDirty = true;
+				if (!s_invoking) {
+					s_listeners.Remove(listener);
+					return;
+				}
+
+				s_deferredListeners.Remove(listener);
+
+				int listenerIndex = s_listeners.IndexOf(listener);
+				if (listenerIndex == -1)
+					return;
+
+				if (listenerIndex <= s_listenerInvokeIndex)
+					s_listenerInvokeIndex--;
+
+				s_listeners.RemoveAt(listenerIndex);
 			}
 
 			public static void RemoveCallback(EventBusCallback<T> callback) {
-				s_callbacks.Remove(callback);
-				s_isDirty = true;
+				if (!s_invoking) {
+					s_callbacks.Remove(callback);
+					return;
+				}
+
+				s_deferredCallbacks.Remove(callback);
+
+				int callbackIndex = s_callbacks.IndexOf(callback);
+				if (callbackIndex == -1)
+					return;
+
+				if (callbackIndex <= s_callbackInvokeIndex)
+					s_callbackInvokeIndex--;
+
+				s_callbacks.RemoveAt(callbackIndex);
 			}
 
 			public static void Invoke(T args) {
-				if (s_isDirty) {
-					s_invokeListeners.Clear();
-					s_invokeListeners.AddRange(s_listeners);
+				s_invoking = true;
 
-					s_invokeCallbacks.Clear();
-					s_invokeCallbacks.AddRange(s_callbacks);
+				try {
+					for (s_listenerInvokeIndex = 0; s_listenerInvokeIndex < s_listeners.Count; s_listenerInvokeIndex++) {
+						s_listeners[s_listenerInvokeIndex].OnEvent(args);
+					}
+					s_listenerInvokeIndex = -1;
 
-					s_isDirty = false;
+					for (s_callbackInvokeIndex = 0; s_callbackInvokeIndex < s_callbacks.Count; s_callbackInvokeIndex++) {
+						s_callbacks[s_callbackInvokeIndex].Invoke(args);
+					}
+					s_callbackInvokeIndex = -1;
 				}
+				finally {
+					if (s_deferredListeners.Count > 0) {
+						for (int i = 0; i < s_deferredListeners.Count; i++)
+							s_listeners.Add(s_deferredListeners[i]);
 
-				int listenerCount = s_invokeListeners.Count;
-				for (int i = 0; i < listenerCount; i++) {
-					s_invokeListeners[i].OnEvent(args);
-				}
+						s_deferredListeners.Clear();
+					}
 
-				int callbackCount = s_invokeCallbacks.Count;
-				for (int i = 0; i < callbackCount; i++) {
-					s_invokeCallbacks[i].Invoke(args);
+					if (s_deferredCallbacks.Count > 0) {
+						for (int i = 0; i < s_deferredCallbacks.Count; i++)
+							s_callbacks.Add(s_deferredCallbacks[i]);
+
+						s_deferredCallbacks.Clear();
+					}
+
+					s_invoking = false;
 				}
 			}
 
 			public static void InvokeSafe(T args) {
-				if (s_isDirty) {
-					s_invokeListeners.Clear();
-					s_invokeListeners.AddRange(s_listeners);
-
-					s_invokeCallbacks.Clear();
-					s_invokeCallbacks.AddRange(s_callbacks);
-
-					s_isDirty = false;
-				}
-
 				List<Exception> exceptions = null;
 
-				int listenerCount = s_invokeListeners.Count;
-				for (int i = 0; i < listenerCount; i++) {
+				for (s_listenerInvokeIndex = 0; s_listenerInvokeIndex < s_listeners.Count; s_listenerInvokeIndex++) {
 					try {
-						s_invokeListeners[i].OnEvent(args);
+						s_listeners[s_listenerInvokeIndex].OnEvent(args);
 					}
 					catch (Exception e) {
 						exceptions ??= new List<Exception>();
 						exceptions.Add(e);
 					}
 				}
+				s_listenerInvokeIndex = -1;
 
-				int callbackCount = s_invokeCallbacks.Count;
-				for (int i = 0; i < callbackCount; i++) {
+				for (s_callbackInvokeIndex = 0; s_callbackInvokeIndex < s_callbacks.Count; s_callbackInvokeIndex++) {
 					try {
-						s_invokeCallbacks[i].Invoke(args);
+						s_callbacks[s_callbackInvokeIndex].Invoke(args);
 					}
 					catch (Exception e) {
 						exceptions ??= new List<Exception>();
 						exceptions.Add(e);
 					}
+				}
+				s_callbackInvokeIndex = -1;
+
+				if (s_deferredListeners.Count > 0) {
+					for (int i = 0; i < s_deferredListeners.Count; i++)
+						s_listeners.Add(s_deferredListeners[i]);
+
+					s_deferredListeners.Clear();
+				}
+
+				if (s_deferredCallbacks.Count > 0) {
+					for (int i = 0; i < s_deferredCallbacks.Count; i++)
+						s_callbacks.Add(s_deferredCallbacks[i]);
+
+					s_deferredCallbacks.Clear();
 				}
 
 				if (exceptions != null)
