@@ -13,6 +13,7 @@ namespace Jackey.Behaviours.BT {
 		private List<BehaviourAction> m_tickingActions = new();
 		private List<BehaviourAction> m_pendingTickingActions = new();
 
+		private bool m_inTickLoop;
 		private int m_tickIndex;
 
 		public ActionStatus Status { get; private set; } = ActionStatus.Inactive;
@@ -39,6 +40,7 @@ namespace Jackey.Behaviours.BT {
 		}
 
 		internal override ExecutionStatus Tick() {
+			m_inTickLoop = true;
 			for (m_tickIndex = 0; m_tickIndex < m_tickingActions.Count; m_tickIndex++) {
 				int i = m_tickIndex;
 
@@ -53,7 +55,7 @@ namespace Jackey.Behaviours.BT {
 
 				// The entire tree has finished
 				if (parent == null) {
-					m_tickIndex = -1;
+					m_inTickLoop = false;
 					return actionStatus;
 				}
 
@@ -68,13 +70,13 @@ namespace Jackey.Behaviours.BT {
 
 					// The entire tree has finished
 					if (parent == null) {
-						m_tickIndex = -1;
+						m_inTickLoop = false;
 						return parentStatus;
 					}
 				}
 			}
 
-			m_tickIndex = -1;
+			m_inTickLoop = false;
 
 			if (m_pendingTickingActions.Count > 0) {
 				foreach (BehaviourAction action in m_pendingTickingActions)
@@ -92,7 +94,7 @@ namespace Jackey.Behaviours.BT {
 		}
 
 		public void EnableTicking(BehaviourAction action) {
-			if (m_tickIndex != -1) {
+			if (m_inTickLoop) {
 				m_pendingTickingActions.Add(action);
 				return;
 			}
@@ -117,16 +119,17 @@ namespace Jackey.Behaviours.BT {
 		}
 
 		public void DisableTicking(BehaviourAction action) {
-			int tickingIndex = m_tickingActions.IndexOf(action);
-
-			// Ensure that any currently ticking or just ticked actions does not skip any actions within the tick loop
-			if (m_tickIndex != -1 && tickingIndex <= m_tickIndex)
-				m_tickIndex--;
-
 			m_pendingTickingActions.Remove(action);
 
-			if (tickingIndex != -1)
+			int tickingIndex = m_tickingActions.IndexOf(action);
+
+			if (tickingIndex != -1) {
+				// Ensure that any currently ticking or just ticked actions does not skip any actions within the tick loop
+				if (m_inTickLoop && tickingIndex <= m_tickIndex)
+					m_tickIndex--;
+
 				m_tickingActions.RemoveAt(tickingIndex);
+			}
 		}
 
 		private void Reset() {
