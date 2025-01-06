@@ -27,8 +27,6 @@ namespace Jackey.Behaviours.BT {
 
 			int index = 0;
 			m_entry.Initialize(this, null, ref index);
-			// TODO: Remove
-			Debug.Log($"Initialized BehaviourTree with {index + 1} nodes");
 		}
 
 		internal override void Start() {
@@ -170,13 +168,6 @@ namespace Jackey.Behaviours.BT {
 			}
 
 			Inner(m_entry);
-		}
-
-		[ContextMenu(nameof(ClearManagedMissingTypes))]
-		public void ClearManagedMissingTypes() {
-			bool missingTypes = UnityEditor.SerializationUtility.HasManagedReferencesWithMissingTypes(this);
-			bool result = UnityEditor.SerializationUtility.ClearAllManagedReferencesWithMissingTypes(this);
-			Debug.Log(new { missingTypes, result });
 		}
 #endif
 	}

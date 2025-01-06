@@ -13,25 +13,6 @@ namespace Jackey.Behaviours.BT.Composites {
 
 		internal List<BehaviourAction> Children => m_children;
 
-		// TODO: Remove
-		public override string Editor_Info {
-			get {
-				if (m_children.Count == 0)
-					return "No Children";
-
-				string ret = string.Empty;
-
-				for (int i = 0; i < m_children.Count; i++) {
-					if (i > 0)
-						ret += '\n';
-
-					ret += $"[{i}] {m_children[i].GetType().Name}";
-				}
-
-				return ret;
-			}
-		}
-
 		internal override void Initialize(BehaviourTree behaviour, BehaviourAction parent, ref int index) {
 			base.Initialize(behaviour, parent, ref index);
 

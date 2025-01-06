@@ -10,16 +10,6 @@ namespace Jackey.Behaviours.BT.Decorators {
 		protected internal override int Editor_MaxChildCount => 1;
 #endif
 
-		// TODO: Remove
-		public override string Editor_Info {
-			get {
-				if (m_child != null)
-					return $"Decorating\n{m_child.GetType().Name}";
-
-				return "No Child";
-			}
-		}
-
 		internal BehaviourAction Child {
 			get => m_child;
 			set => m_child = value;
