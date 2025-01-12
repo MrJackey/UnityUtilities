@@ -10,6 +10,7 @@ namespace Jackey.Behaviours.BT.Composites {
 		[SerializeField] private Policy m_policy;
 
 		private int m_finishedChildren;
+		private bool m_started;
 
 #if UNITY_EDITOR
 		public override string Editor_Info => UnityEditor.ObjectNames.NicifyVariableName(m_policy.ToString());
@@ -18,6 +19,13 @@ namespace Jackey.Behaviours.BT.Composites {
 
 		protected override ExecutionStatus OnEnter() {
 			m_finishedChildren = 0;
+			m_started = false;
+
+			return ExecutionStatus.Running;
+		}
+
+		private ExecutionStatus Start() {
+			m_started = true;
 
 			int childCount = m_children.Count;
 			for (int i = 0; i < childCount; i++) {
@@ -41,6 +49,9 @@ namespace Jackey.Behaviours.BT.Composites {
 		}
 
 		protected override ExecutionStatus OnTick() {
+			if (!m_started)
+				return Start();
+
 			// Update the just finished children's bit
 			int childCount = m_children.Count;
 			for (int i = 0; i < childCount; i++) {
