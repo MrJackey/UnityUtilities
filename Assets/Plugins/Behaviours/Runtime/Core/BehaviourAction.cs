@@ -73,7 +73,7 @@ namespace Jackey.Behaviours.Core {
 		internal virtual void InterruptChildren() { }
 
 		/// <summary>
-		/// Actions are interrupted when an action with higher earlier in the tree finishes with still running actions.
+		/// Actions are interrupted when an action with lower index earlier in the tree finishes with still running actions.
 		/// <see cref="OnExit"/> is invoked directly afterwards
 		/// </summary>
 		protected virtual void OnInterrupt() { }
