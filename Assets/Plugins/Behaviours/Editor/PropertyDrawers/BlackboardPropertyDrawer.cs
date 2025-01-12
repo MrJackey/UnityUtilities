@@ -51,8 +51,6 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				text = "Create Variable",
 			});
 
-			Undo.undoRedoPerformed += OnUndoRedo;
-
 			return rootVisualElement;
 		}
 
@@ -163,11 +161,6 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			s_moveFrame = Time.frameCount;
 
-			ResetProperties();
-			m_listView.RefreshItems();
-		}
-
-		private void OnUndoRedo() {
 			ResetProperties();
 			m_listView.RefreshItems();
 		}
