@@ -28,6 +28,7 @@ namespace Jackey.Behaviours.BT.Composites {
 					m_finishedChildren |= 1 << i;
 
 					if (m_policy == Policy.FirstFinish) {
+						StopChildren();
 						return ExecutionStatus.Success;
 					}
 				}
