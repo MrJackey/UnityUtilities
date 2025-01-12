@@ -1,5 +1,6 @@
 ﻿using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {
@@ -10,6 +11,19 @@ namespace Jackey.Behaviours.BT.Decorators {
 		public bool UnscaledTime;
 
 		private float m_nextTime;
+
+#if UNITY_EDITOR
+		public override string Editor_Info {
+			get {
+				if (m_behaviour == null) // EditMode
+					return $"Cooldown {Duration.Editor_Info}s";
+
+				float time = UnscaledTime ? Time.unscaledTime : Time.time;
+				return $"{InfoUtilities.AlignCenter($"({Mathf.Max(m_nextTime - time, 0f):00.00})")}\n" +
+				       $"Cooldown {Duration.Editor_Info}s";
+			}
+		}
+#endif
 
 		protected override ExecutionStatus OnTick() {
 			float time = UnscaledTime ? Time.unscaledTime : Time.time;

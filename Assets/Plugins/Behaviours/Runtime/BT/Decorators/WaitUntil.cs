@@ -1,5 +1,6 @@
 ﻿using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.Core.Conditions;
+using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {
@@ -8,7 +9,8 @@ namespace Jackey.Behaviours.BT.Decorators {
 		[SerializeField] private BehaviourConditionGroup m_conditions;
 
 #if UNITY_EDITOR
-		public override string Editor_Info => $"<align=\"center\">Wait until</align>\n{m_conditions?.Editor_Info}";
+		public override string Editor_Info => $"{InfoUtilities.AlignCenter("Wait Until")}\n" +
+		                                      $"{m_conditions?.Editor_Info}";
 #endif
 
 		protected override ExecutionStatus OnEnter() {
