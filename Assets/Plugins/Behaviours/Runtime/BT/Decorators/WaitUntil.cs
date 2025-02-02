@@ -8,6 +8,8 @@ namespace Jackey.Behaviours.BT.Decorators {
 	public class WaitUntil : Decorator {
 		[SerializeField] private BehaviourConditionGroup m_conditions;
 
+		private bool m_isTicking;
+
 #if UNITY_EDITOR
 		public override string Editor_Info => $"{InfoUtilities.AlignCenter("Wait Until")}\n" +
 		                                      $"{m_conditions?.Editor_Info}";
@@ -16,6 +18,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 		protected override ExecutionStatus OnEnter() {
 			m_conditions.Enable(Owner);
 			EnableTicking();
+			m_isTicking = true;
 
 			return ExecutionStatus.Running;
 		}
@@ -25,7 +28,10 @@ namespace Jackey.Behaviours.BT.Decorators {
 				return (ExecutionStatus)m_child.Status;
 
 			if (m_conditions.Evaluate()) {
+				m_conditions.Disable();
 				DisableTicking();
+				m_isTicking = false;
+
 				return m_child?.EnterSequence() ?? ExecutionStatus.Success;
 			}
 
@@ -33,7 +39,10 @@ namespace Jackey.Behaviours.BT.Decorators {
 		}
 
 		protected override void OnExit() {
-			m_conditions.Disable();
+			if (m_isTicking) {
+				m_conditions.Disable();
+				DisableTicking();
+			}
 		}
 	}
 }
