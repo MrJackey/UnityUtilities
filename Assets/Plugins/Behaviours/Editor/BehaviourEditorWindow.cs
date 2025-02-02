@@ -23,6 +23,7 @@ namespace Jackey.Behaviours.Editor {
 		private BTGraph m_btGraph;
 		private FSMGraph m_fsmGraph;
 
+		private bool m_hasCreatedGUI;
 		private bool m_isLocked;
 		private bool m_isKeyUsed;
 
@@ -67,6 +68,8 @@ namespace Jackey.Behaviours.Editor {
 			rootVisualElement.styleSheets.Add(m_validatorStylesheet);
 
 			EditorApplication.delayCall += OnSelectionChange;
+
+			m_hasCreatedGUI = true;
 		}
 
 		private void ShowButton(Rect rect) {
@@ -328,6 +331,10 @@ namespace Jackey.Behaviours.Editor {
 		#endregion
 
 		private void OnPlayModeStateChanged(PlayModeStateChange stateChange) {
+			// The window hasn't called CreateGUI, it's open but probably in a hidden tab
+			if (!m_hasCreatedGUI)
+				return;
+
 			if (stateChange == PlayModeStateChange.EnteredEditMode)
 				OnSelectionChange();
 		}
