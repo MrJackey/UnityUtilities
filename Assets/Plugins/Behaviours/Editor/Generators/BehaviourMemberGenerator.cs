@@ -16,6 +16,7 @@ namespace Jackey.Behaviours.Editor.Generators {
 
 		private const string CLASS_TEMPLATE = @"using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.BT.Actions;
 using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Core.Conditions;
 using Jackey.Behaviours.Core.Operations;
@@ -31,11 +32,11 @@ namespace Jackey.Behaviours.BT.Generated {{
 		[DisplayName(""{0}"")]
 		[SearchPath(""Generated/{0}"")]
 		public sealed class {1} : BehaviourAction<{2}> {{
-			protected override ExecutionStatus OnEnter() => GetTarget().OnEnter(this);
-			protected override ExecutionStatus OnTick() => GetTarget().OnTick(this);
-			protected override void OnInterrupt() => GetTarget().OnInterrupt(this);
-			protected override void OnResult(ActionResult result) => GetTarget().OnResult(this, result);
-			protected override void OnExit() => GetTarget().OnExit(this);
+			protected override ExecutionStatus OnEnter() => ((IComponentAction)GetTarget()).OnEnter(this);
+			protected override ExecutionStatus OnTick() => ((IComponentAction)GetTarget()).OnTick(this);
+			protected override void OnInterrupt() => ((IComponentAction)GetTarget()).OnInterrupt(this);
+			protected override void OnResult(ActionResult result) => ((IComponentAction)GetTarget()).OnResult(this, result);
+			protected override void OnExit() => ((IComponentAction)GetTarget()).OnExit(this);
 		}}
 ";
 
@@ -45,11 +46,11 @@ namespace Jackey.Behaviours.BT.Generated {{
 		public sealed class {1} : BehaviourAction<{2}> {{
 			[SerializeField] private BlackboardRef<{3}> m_args;
 
-			protected override ExecutionStatus OnEnter() => GetTarget().OnEnter(this, m_args.GetValue());
-			protected override ExecutionStatus OnTick() => GetTarget().OnTick(this, m_args.GetValue());
-			protected override void OnInterrupt() => GetTarget().OnInterrupt(this, m_args.GetValue());
-			protected override void OnResult(ActionResult result) => GetTarget().OnResult(this, m_args.GetValue(), result);
-			protected override void OnExit() => GetTarget().OnExit(this, m_args.GetValue());
+			protected override ExecutionStatus OnEnter() => ((IComponentAction<{3}>)GetTarget()).OnEnter(this, m_args.GetValue());
+			protected override ExecutionStatus OnTick() => ((IComponentAction<{3}>)GetTarget()).OnTick(this, m_args.GetValue());
+			protected override void OnInterrupt() => ((IComponentAction<{3}>)GetTarget()).OnInterrupt(this, m_args.GetValue());
+			protected override void OnResult(ActionResult result) => ((IComponentAction<{3}>)GetTarget()).OnResult(this, m_args.GetValue(), result);
+			protected override void OnExit() => ((IComponentAction<{3}>)GetTarget()).OnExit(this, m_args.GetValue());
 		}}
 ";
 
