@@ -32,7 +32,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			GL.PushMatrix();
 			GL.Begin(GL.LINES);
 
-			GL.Color(new Color(0.16f, 0.16f, 0.16f, 1f));
+			GL.Color(new Color(0.12f, 0.12f, 0.12f, 1f));
 
 			float xStep = Spacing * scale.x;
 			for (float x = start.x; x < bound.width; x += xStep) {

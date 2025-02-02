@@ -1,6 +1,6 @@
 .BehaviourGraph {
 	flex: 1;
-	background-color: rgb(56, 56, 56);
+	background-color: rgb(41, 41, 41);
 }
 
 .BehaviourGraph > Label#BehaviourName {
@@ -185,7 +185,7 @@ ActionInspector #Content {
 }
 
 #BlackboardRef #ConvertLabel {
-	background-color: rgb(61, 61, 61);
+	background-color: rgb(71, 71, 71);
 	border-radius: 0 0 5px 5px;
 	margin: 2px 0;
 	padding: 3px 0;
@@ -210,7 +210,7 @@ ActionInspector #Content {
 }
 
 #ManagedListInspector {
-	background-color: rgb(75, 75, 75);
+	background-color: rgb(48, 48, 48);
 	border-radius: 5px;
 	margin-top: 10px;
 	padding: 5px 2px;
