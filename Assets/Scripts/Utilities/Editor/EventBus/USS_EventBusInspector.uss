@@ -1,0 +1,36 @@
+﻿.Section > Label {
+    background-color: #313131;
+    padding: 5px 0;
+    font-size: 18px;
+    overflow: hidden;
+    -unity-text-align: middle-center;
+}
+
+.Section > ListView {
+    flex-grow: 1;
+}
+
+#EventListItem {
+    padding: 0 5px;
+    border-bottom-color: #595959;
+    border-bottom-width: 1px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    -unity-text-overflow-position: start;
+}
+
+#EventListItem #EventName {
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+}
+
+#EventListItem #ListenerCount,#CallbackCount {
+    -unity-font-style: italic;
+    -unity-text-align: middle-left;
+    font-size: 12px;
+}
+
+.SubscriberItem {
+    padding: 0 5px;
+    -unity-text-align: middle-left;
+}

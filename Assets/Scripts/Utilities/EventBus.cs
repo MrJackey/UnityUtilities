@@ -11,6 +11,12 @@ namespace Jackey.Utilities {
 		private static readonly Dictionary<Type, List<(MethodInfo AddListener, MethodInfo RemoveListener)>> s_listenerBusCache = new();
 		private static readonly object[] s_singleListenerArray = new object[1];
 
+#if UNITY_EDITOR
+		public static List<Type> Editor_Buses { get; } = new();
+		public static event Action Editor_BusConstructed;
+		public static event Action<Type> Editor_BusUpdated;
+#endif
+
 		/// <summary>
 		/// Subscribe a listener to an event
 		/// </summary>
@@ -167,11 +173,22 @@ namespace Jackey.Utilities {
 			private static int s_listenerInvokeIndex = -1;
 			private static int s_callbackInvokeIndex = -1;
 
+#if UNITY_EDITOR
+			static Bus() {
+				Editor_Buses.Add(typeof(Bus<T>));
+				Editor_BusConstructed?.Invoke();
+			}
+#endif
+
 			public static void AddListener(IEventBusListener<T> listener) {
 				if (s_invoking)
 					s_deferredListeners.Add(listener);
 				else
 					s_listeners.Add(listener);
+
+#if UNITY_EDITOR
+				Editor_InvokeUpdate();
+#endif
 			}
 
 			public static void AddCallback(EventBusCallback<T> callback) {
@@ -179,11 +196,19 @@ namespace Jackey.Utilities {
 					s_deferredCallbacks.Add(callback);
 				else
 					s_callbacks.Add(callback);
+
+#if UNITY_EDITOR
+				Editor_InvokeUpdate();
+#endif
 			}
 
 			public static void RemoveListener(IEventBusListener<T> listener) {
 				if (!s_invoking) {
 					s_listeners.Remove(listener);
+
+#if UNITY_EDITOR
+					Editor_InvokeUpdate();
+#endif
 					return;
 				}
 
@@ -197,11 +222,19 @@ namespace Jackey.Utilities {
 					s_listenerInvokeIndex--;
 
 				s_listeners.RemoveAt(listenerIndex);
+
+#if UNITY_EDITOR
+				Editor_InvokeUpdate();
+#endif
 			}
 
 			public static void RemoveCallback(EventBusCallback<T> callback) {
 				if (!s_invoking) {
 					s_callbacks.Remove(callback);
+
+#if UNITY_EDITOR
+					Editor_InvokeUpdate();
+#endif
 					return;
 				}
 
@@ -215,6 +248,10 @@ namespace Jackey.Utilities {
 					s_callbackInvokeIndex--;
 
 				s_callbacks.RemoveAt(callbackIndex);
+
+#if UNITY_EDITOR
+				Editor_InvokeUpdate();
+#endif
 			}
 
 			public static void Invoke(T args) {
@@ -237,6 +274,10 @@ namespace Jackey.Utilities {
 							s_listeners.Add(s_deferredListeners[i]);
 
 						s_deferredListeners.Clear();
+
+#if UNITY_EDITOR
+						Editor_InvokeUpdate();
+#endif
 					}
 
 					if (s_deferredCallbacks.Count > 0) {
@@ -244,6 +285,10 @@ namespace Jackey.Utilities {
 							s_callbacks.Add(s_deferredCallbacks[i]);
 
 						s_deferredCallbacks.Clear();
+
+#if UNITY_EDITOR
+						Editor_InvokeUpdate();
+#endif
 					}
 
 					s_invoking = false;
@@ -280,6 +325,10 @@ namespace Jackey.Utilities {
 						s_listeners.Add(s_deferredListeners[i]);
 
 					s_deferredListeners.Clear();
+
+#if UNITY_EDITOR
+					Editor_InvokeUpdate();
+#endif
 				}
 
 				if (s_deferredCallbacks.Count > 0) {
@@ -287,11 +336,21 @@ namespace Jackey.Utilities {
 						s_callbacks.Add(s_deferredCallbacks[i]);
 
 					s_deferredCallbacks.Clear();
+
+#if UNITY_EDITOR
+					Editor_InvokeUpdate();
+#endif
 				}
 
 				if (exceptions != null)
 					throw new AggregateException("EventBus invocation threw exceptions on one or more subscribers", exceptions);
 			}
+
+#if UNITY_EDITOR
+			private static void Editor_InvokeUpdate() {
+				Editor_BusUpdated?.Invoke(typeof(Bus<T>));
+			}
+#endif
 		}
 	}
 
