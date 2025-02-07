@@ -85,8 +85,8 @@ namespace Jackey.Behaviours.Editor {
 		}
 
 		private void OnDestroy() {
-			m_btGraph.SerializedBehaviour?.Dispose();
-			m_fsmGraph.SerializedBehaviour?.Dispose();
+			m_btGraph?.SerializedBehaviour?.Dispose();
+			m_fsmGraph?.SerializedBehaviour?.Dispose();
 		}
 
 		private void CheckInput() {
