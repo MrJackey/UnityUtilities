@@ -63,6 +63,8 @@ namespace Jackey.Utilities {
 			foreach ((MethodInfo AddListener, MethodInfo _) bus in GetAllListenerBuses(listener)) {
 				bus.AddListener.Invoke(null, s_singleListenerArray);
 			}
+
+			s_singleListenerArray[0] = null;
 		}
 
 		/// <inheritdoc cref="SubscribeAll"/>
@@ -80,6 +82,8 @@ namespace Jackey.Utilities {
 			foreach ((MethodInfo _, MethodInfo RemoveListener) bus in GetAllListenerBuses(listener)) {
 				bus.RemoveListener.Invoke(null, s_singleListenerArray);
 			}
+
+			s_singleListenerArray[0] = null;
 		}
 
 		/// <inheritdoc cref="UnsubscribeAll"/>
