@@ -164,6 +164,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		protected virtual void InspectElement(VisualElement element) { }
 		public void ClearInspection() => m_actionInspector.ClearInspection();
+
+		public virtual void Duplicate() { }
 	}
 
 	public class BehaviourGraph<T> : BehaviourGraph where T : ObjectBehaviour {

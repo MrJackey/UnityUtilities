@@ -44,6 +44,13 @@ namespace Jackey.Behaviours.Editor.Graph {
 			manager.SelectedElements.AddRange(elements);
 		}
 
+		public static void AddToSelection(this ISelectionManager manager, IEnumerable<ISelectableElement> elements) {
+			foreach (ISelectableElement selectableElement in elements)
+				selectableElement.Element.AddToClassList(ISelectionManager.SELECTED_CLASS);
+
+			manager.SelectedElements.AddRange(elements);
+		}
+
 		public static void ReplaceSelection(this ISelectionManager manager, ISelectableElement element) {
 			manager.ClearSelection();
 			manager.AddToSelection(element);
@@ -51,6 +58,12 @@ namespace Jackey.Behaviours.Editor.Graph {
 		}
 
 		public static void ReplaceSelection(this ISelectionManager manager, List<ISelectableElement> elements) {
+			manager.ClearSelection();
+			manager.AddToSelection(elements);
+			manager.OnSelectionChange();
+		}
+
+		public static void ReplaceSelection(this ISelectionManager manager, IEnumerable<ISelectableElement> elements) {
 			manager.ClearSelection();
 			manager.AddToSelection(elements);
 			manager.OnSelectionChange();

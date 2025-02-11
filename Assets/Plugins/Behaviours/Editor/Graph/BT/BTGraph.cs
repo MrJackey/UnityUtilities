@@ -5,6 +5,7 @@ using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
 using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Editor.TypeSearch;
+using Jackey.Behaviours.Editor.Utilities;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -149,6 +150,78 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			Debug.Assert(removed);
 
 			m_serializedBehaviour.Update();
+		}
+
+		public override void Duplicate() {
+			if (SelectedElements.Count == 0) return;
+
+			List<BTNode> originals = new List<BTNode>();
+			List<BTNode> clones = new List<BTNode>();
+
+			// Duplicate Nodes
+			foreach (ISelectableElement selectedElement in SelectedElements) {
+				BTNode btNode = (BTNode)selectedElement;
+				BehaviourAction actionClone = SerializationUtilities.DeepClone(btNode.Action);
+				BTNode nodeClone = new BTNode(actionClone);
+
+				originals.Add(btNode);
+				clones.Add(nodeClone);
+
+				m_behaviour.m_allActions.Add(actionClone);
+
+				AddNode(nodeClone);
+				nodeClone.transform.position += Node.DUPLICATE_OFFSET;
+			}
+
+			m_serializedBehaviour.Update();
+
+			// Clear/Duplicate Connections
+			for (int i = 0; i < clones.Count; i++) {
+				BTNode original = originals[i];
+				BTNode clone = clones[i];
+
+				int childCloneIndex;
+
+				switch (clone.Action) {
+					case Composite composite:
+						composite.Children.Clear();
+
+						Debug.Assert(original.Action is Composite);
+						Composite originalComposite = (Composite)original.Action;
+
+						foreach (BehaviourAction originalChild in originalComposite.Children) {
+							childCloneIndex = originals.FindIndex(x => x.Action == originalChild);
+							if (childCloneIndex == -1) continue;
+
+							composite.Children.Add(clones[childCloneIndex].Action);
+
+							AddConnection(new Connection(
+								start: clone.OutSocket,
+								end: clones[childCloneIndex]
+							));
+						}
+						break;
+
+					case Decorator decorator:
+						decorator.Child = null;
+
+						Debug.Assert(original.Action is Decorator);
+						Decorator originalDecorator = (Decorator)original.Action;
+
+						childCloneIndex = originals.FindIndex(x => x.Action == originalDecorator.Child);
+						if (childCloneIndex == -1) break;
+
+						decorator.Child = clones[childCloneIndex].Action;
+
+						AddConnection(new Connection(
+							start: clone.OutSocket,
+							end: clones[childCloneIndex]
+						));
+						break;
+				}
+			}
+
+			this.ReplaceSelection(clones);
 		}
 
 		#endregion

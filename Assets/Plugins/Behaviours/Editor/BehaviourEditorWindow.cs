@@ -132,6 +132,11 @@ namespace Jackey.Behaviours.Editor {
 							FrameContent();
 
 						break;
+					case KeyCode.D when evt.control:
+						if (m_activeGraph.IsEditable)
+							m_activeGraph.Duplicate();
+
+						break;
 				}
 			}
 		}
