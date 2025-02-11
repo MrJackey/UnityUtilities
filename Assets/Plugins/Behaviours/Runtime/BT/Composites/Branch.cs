@@ -12,6 +12,7 @@ namespace Jackey.Behaviours.BT.Composites {
 		private int m_runningIndex = -1;
 
 #if UNITY_EDITOR
+		public override string Editor_Info => m_conditions?.Editor_Info;
 		protected internal override int Editor_MaxChildCount => 2;
 #endif
 
