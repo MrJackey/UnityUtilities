@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
+using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
 using Jackey.Behaviours.Core;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT {
+	[BehaviourType]
 	[CreateAssetMenu(fileName = "new BehaviourTree", menuName = "Jackey/Behaviour/Behaviour Tree", order = 0)]
 	public class BehaviourTree : ObjectBehaviour {
 		[SerializeReference] internal List<BehaviourAction> m_allActions = new();
@@ -89,6 +91,7 @@ namespace Jackey.Behaviours.BT {
 		}
 
 		internal override void Stop() {
+			m_entry.Interrupt();
 			m_entry.Reset();
 			Status = ActionStatus.Inactive;
 		}

@@ -7,6 +7,8 @@ using UnityEngine;
 namespace Jackey.Behaviours.Core {
 	[Serializable]
 	public abstract class BehaviourAction {
+		protected BehaviourTree m_runtimeBehaviour;
+
 		[CanBeNull]
 		internal BehaviourAction Parent { get; set; }
 		internal int Index { get; private set; }
@@ -14,7 +16,7 @@ namespace Jackey.Behaviours.Core {
 		public ActionStatus Status { get; set; } = ActionStatus.Inactive;
 		public bool IsFinished => Status is ActionStatus.Success or ActionStatus.Failure;
 
-		protected BehaviourOwner Owner => m_behaviour.Owner;
+		protected BehaviourOwner Owner => m_runtimeBehaviour.Owner;
 
 #if UNITY_EDITOR
 		[SerializeField] internal EditorData Editor_Data = new();
@@ -22,10 +24,8 @@ namespace Jackey.Behaviours.Core {
 		public virtual string Editor_Info => string.Empty;
 		protected internal virtual int Editor_MaxChildCount => 0;
 
-		protected BehaviourTree m_behaviour;
-
 		internal virtual void Initialize(BehaviourTree behaviour, [CanBeNull] BehaviourAction parent, ref int index) {
-			m_behaviour = behaviour;
+			m_runtimeBehaviour = behaviour;
 			Parent = parent;
 			Index = index;
 		}
@@ -33,7 +33,7 @@ namespace Jackey.Behaviours.Core {
 		internal virtual ExecutionStatus Enter() {
 #if UNITY_EDITOR
 			if (Editor_Data.Breakpoint) {
-				Debug.Log($"Behaviour Breakpoint @{m_behaviour.Owner.name}", m_behaviour.Owner);
+				Debug.Log($"Behaviour Breakpoint @{Owner.name}", Owner);
 				UnityEditor.EditorApplication.isPaused = true;
 			}
 #endif
@@ -101,11 +101,11 @@ namespace Jackey.Behaviours.Core {
 		protected virtual void OnExit() { }
 
 		public void EnableTicking() {
-			m_behaviour.EnableTicking(this);
+			m_runtimeBehaviour.EnableTicking(this);
 		}
 
 		public void DisableTicking() {
-			m_behaviour.DisableTicking(this);
+			m_runtimeBehaviour.DisableTicking(this);
 		}
 
 		public void Reset() {

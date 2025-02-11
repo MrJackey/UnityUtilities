@@ -17,16 +17,16 @@ namespace Jackey.Behaviours.BT.Actions.Utility {
 		protected override ExecutionStatus OnEnter() {
 			switch (Type) {
 				case LogType.Log:
-					Debug.Log(Message.GetValue(), m_behaviour.Owner);
+					Debug.Log(Message.GetValue(), Owner);
 					break;
 				case LogType.Warning:
-					Debug.LogWarning(Message.GetValue(), m_behaviour.Owner);
+					Debug.LogWarning(Message.GetValue(), Owner);
 					break;
 				case LogType.Error:
-					Debug.LogError(Message.GetValue(), m_behaviour.Owner);
+					Debug.LogError(Message.GetValue(), Owner);
 					break;
 				case LogType.Assert:
-					Debug.LogAssertion(Message.GetValue(), m_behaviour.Owner);
+					Debug.LogAssertion(Message.GetValue(), Owner);
 					break;
 				default:
 					throw new ArgumentOutOfRangeException();

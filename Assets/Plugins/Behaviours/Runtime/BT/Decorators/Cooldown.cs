@@ -15,7 +15,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 #if UNITY_EDITOR
 		public override string Editor_Info {
 			get {
-				if (m_behaviour == null) // EditMode
+				if (m_runtimeBehaviour == null) // EditMode
 					return $"Cooldown {Duration.Editor_Info}s";
 
 				float time = UnscaledTime ? Time.unscaledTime : Time.time;
