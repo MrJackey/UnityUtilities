@@ -273,6 +273,13 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				EditorWindow.GetWindow<BehaviourEditorWindow>().PushBehaviour(nestedTree.InstanceOrBehaviour);
 				return;
 			}
+
+			if (btNode.Action is Composite or Decorator) {
+				List<BTNode> nodeHierarchy = GetHierarchyOfNode(btNode);
+
+				if (nodeHierarchy.Count > 1)
+					this.ReplaceSelection(nodeHierarchy);
+			}
 		}
 
 		private void OnSocketMouseDown(MouseDownEvent evt, IConnectionSocket socket) {
@@ -483,6 +490,32 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			}
 
 			return connections != null ? connections : Array.Empty<Connection>();
+		}
+
+		private List<BTNode> GetHierarchyOfNode(BTNode node) {
+			List<BTNode> nodes = new();
+			Inner(node, nodes);
+
+			return nodes;
+
+			void Inner(BTNode hierarchyNode, List<BTNode> acc) {
+				acc.Add(hierarchyNode);
+
+				BehaviourAction action = hierarchyNode.Action;
+
+				if (action is Composite composite) {
+					foreach (BehaviourAction child in composite.Children) {
+						BTNode childNode = GetNodeOfAction(child);
+						Inner(childNode, acc);
+					}
+				}
+				else if (action is Decorator decorator) {
+					if (decorator.Child == null) return;
+
+					BTNode childNode = GetNodeOfAction(decorator.Child);
+					Inner(childNode, acc);
+				}
+			}
 		}
 
 		protected override void InspectElement(VisualElement element) {
