@@ -12,6 +12,8 @@ namespace Jackey.Behaviours.BT.Nested {
 
 		private BehaviourTree m_behaviourInstance;
 
+		public BehaviourTree InstanceOrBehaviour => m_behaviourInstance != null ? m_behaviourInstance : m_behaviour.GetValue();
+
 #if UNITY_EDITOR
 		public override string Editor_Info {
 			get {

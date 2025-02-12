@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Jackey.Behaviours.BT;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
+using Jackey.Behaviours.BT.Nested;
 using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Editor.Utilities;
@@ -37,6 +38,9 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_graphHeader.Bind(m_serializedBehaviour);
 
 			m_blackboardInspector.SetSecondaryBlackboard(behaviour.Blackboard, m_serializedBehaviour.FindProperty(nameof(ObjectBehaviour.m_blackboard)));
+
+			this.ClearSelection();
+			OnSelectionChange();
 		}
 
 		private void BuildGraph() {
@@ -253,6 +257,15 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				RemoveNode(btNode);
 				m_serializedBehaviour.Update();
 			});
+		}
+
+		protected override void OnNodeDoubleClick(Node node) {
+			BTNode btNode = (BTNode)node;
+
+			if (btNode.Action is NestedBehaviourTree nestedTree && nestedTree.InstanceOrBehaviour != null) {
+				EditorWindow.GetWindow<BehaviourEditorWindow>().PushBehaviour(nestedTree.InstanceOrBehaviour);
+				return;
+			}
 		}
 
 		private void OnSocketMouseDown(MouseDownEvent evt, IConnectionSocket socket) {

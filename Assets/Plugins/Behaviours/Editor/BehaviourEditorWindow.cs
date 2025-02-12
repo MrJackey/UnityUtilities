@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Jackey.Behaviours.BT;
 using Jackey.Behaviours.Editor.Graph;
 using Jackey.Behaviours.Editor.Graph.BT;
@@ -6,6 +7,7 @@ using Jackey.Behaviours.Editor.Graph.FSM;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
@@ -17,6 +19,10 @@ namespace Jackey.Behaviours.Editor {
 		[SerializeField] private StyleSheet m_validatorStylesheet;
 
 		private ValidationPanel m_validationPanel;
+
+		private Toolbar m_toolbar;
+		private ToolbarBreadcrumbs m_toolbarBreadcrumbs;
+		private Stack<ObjectBehaviour> m_depthStack = new();
 
 		[CanBeNull]
 		private BehaviourGraph m_activeGraph;
@@ -57,6 +63,9 @@ namespace Jackey.Behaviours.Editor {
 
 		private void CreateGUI() {
 			titleContent = new GUIContent("Behaviour Editor");
+
+			rootVisualElement.Add(m_toolbar = new Toolbar());
+			m_toolbar.Add(m_toolbarBreadcrumbs = new ToolbarBreadcrumbs());
 
 			m_validationPanel = new ValidationPanel(this);
 
@@ -155,13 +164,13 @@ namespace Jackey.Behaviours.Editor {
 			Object selectedObject = Selection.activeObject;
 
 			if (selectedObject is ObjectBehaviour behaviour) {
-				EditBehaviour(behaviour);
+				SetBehaviour(behaviour);
 			}
 			else if (selectedObject is GameObject selectedGameObject && selectedGameObject.TryGetComponent(out BehaviourOwner owner)) {
 				if (owner.Behaviour == null)
 					return;
 
-				EditBehaviour(owner.Behaviour);
+				SetBehaviour(owner.Behaviour);
 
 				// Prevent showing owner blackboard in runtime as the variables merge downwards and will thus be shown with the graph
 				if (m_activeGraph != null && EditorUtility.IsPersistent(owner.Behaviour)) {
@@ -171,10 +180,28 @@ namespace Jackey.Behaviours.Editor {
 			}
 		}
 
-		public void EditBehaviour(ObjectBehaviour behaviour) {
+		public void SetBehaviour(ObjectBehaviour behaviour) {
+			while (m_toolbarBreadcrumbs.childCount > 0)
+				m_toolbarBreadcrumbs.PopItem();
+
+			m_depthStack.Clear();
+			PushBehaviour(behaviour);
+		}
+
+		public void PushBehaviour(ObjectBehaviour behaviour) {
 			if (behaviour == m_activeGraph?.SerializedBehaviour?.targetObject)
 				return;
 
+			int depthIndex = m_depthStack.Count;
+			m_toolbarBreadcrumbs.PushItem(behaviour.name, () => GoToDepth(depthIndex));
+			((IBindable)m_toolbarBreadcrumbs[depthIndex]).bindingPath = "m_Name";
+			m_toolbarBreadcrumbs[depthIndex].Bind(new SerializedObject(behaviour));
+			m_depthStack.Push(behaviour);
+
+			EditBehaviour(behaviour);
+		}
+
+		private void EditBehaviour(ObjectBehaviour behaviour) {
 			if (!IsBehaviourValid(behaviour)) {
 				m_activeGraph?.RemoveFromHierarchy();
 				m_activeGraph = null;
@@ -197,6 +224,19 @@ namespace Jackey.Behaviours.Editor {
 
 			Repaint();
 			EditorApplication.delayCall += FrameContent;
+		}
+
+		private void GoToDepth(int index) {
+			Debug.Assert(index >= 0);
+			Debug.Assert(index < m_depthStack.Count);
+
+			while (m_toolbarBreadcrumbs.childCount > index + 1) {
+				m_toolbarBreadcrumbs.PopItem();
+				m_depthStack.Pop();
+			}
+
+			Debug.Assert(m_depthStack.Count == index + 1);
+			EditBehaviour(m_depthStack.Peek());
 		}
 
 		private bool IsBehaviourValid(ObjectBehaviour behaviour) {
@@ -243,6 +283,9 @@ namespace Jackey.Behaviours.Editor {
 		// TODO: Implement
 		// private void ChangeGraph(StateMachine fsm) { }
 		private void ChangeGraph(BehaviourTree bt) {
+			if (m_validationPanel.parent != null)
+				m_validationPanel.RemoveFromHierarchy();
+
 			if (m_activeGraph != null && m_activeGraph != m_btGraph)
 				m_activeGraph.RemoveFromHierarchy();
 

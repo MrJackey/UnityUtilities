@@ -19,7 +19,7 @@ namespace Jackey.Behaviours.Editor.Editors {
 			ObjectBehaviour assignedBehaviour = (ObjectBehaviour)serializedObject.targetObject;
 
 			if (assignedBehaviour != null)
-				EditorWindow.GetWindow<BehaviourEditorWindow>().EditBehaviour(assignedBehaviour);
+				EditorWindow.GetWindow<BehaviourEditorWindow>().SetBehaviour(assignedBehaviour);
 		}
 	}
 }

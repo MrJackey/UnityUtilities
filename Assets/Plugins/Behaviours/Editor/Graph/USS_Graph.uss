@@ -1,6 +1,7 @@
 .BehaviourGraph {
 	flex: 1;
 	background-color: rgb(41, 41, 41);
+	overflow: hidden;
 }
 
 .BehaviourGraph > Label#BehaviourName {

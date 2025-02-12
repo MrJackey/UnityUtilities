@@ -73,7 +73,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			SerializationUtilities.RemoveNullManagedTypes(LoadBehaviourAsset());
 
 			AssetDatabase.Refresh();
-			m_window.EditBehaviour(LoadBehaviourAsset());
+			m_window.SetBehaviour(LoadBehaviourAsset());
 		}
 
 		private ObjectBehaviour LoadBehaviourAsset() {
@@ -94,7 +94,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			}
 
 			AssetDatabase.Refresh();
-			m_window.EditBehaviour(LoadBehaviourAsset());
+			m_window.SetBehaviour(LoadBehaviourAsset());
 		}
 	}
 }

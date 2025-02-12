@@ -86,6 +86,16 @@ namespace Jackey.Behaviours.Editor.Graph {
 		}
 
 		public void AddNode(Node node) {
+			// This needs to listen before any draggers. Otherwise, it won't receive its
+			// events as they stop propagation to prevent conflicts with each other
+			Clickable doubleClickManipulator = new Clickable(() => OnNodeDoubleClick(node));
+			doubleClickManipulator.activators.Clear();
+			doubleClickManipulator.activators.Add(new ManipulatorActivationFilter() {
+				button = MouseButton.LeftMouse,
+				clickCount = 2,
+			});
+			node.AddManipulator(doubleClickManipulator);
+
 			if (m_isEditable) {
 				node.AddManipulator(new SelectionDragger(this));
 				node.AddManipulator(new Dragger());
@@ -101,6 +111,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			OnNodeAdded(node);
 		}
 		protected virtual void OnNodeAdded(Node node) { }
+		protected virtual void OnNodeDoubleClick(Node node) { }
 
 		public void RemoveNode(Node node) {
 			OnNodeRemoval(node);
