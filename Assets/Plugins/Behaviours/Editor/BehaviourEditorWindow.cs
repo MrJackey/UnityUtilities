@@ -142,6 +142,8 @@ namespace Jackey.Behaviours.Editor {
 
 						break;
 					case KeyCode.D when evt.control:
+						m_isKeyUsed = true;
+
 						if (m_activeGraph.IsEditable)
 							m_activeGraph.Duplicate();
 
