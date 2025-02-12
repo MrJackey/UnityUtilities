@@ -232,11 +232,12 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 		private void ShowNodeContext(ContextualMenuPopulateEvent evt) {
 			BTNode btNode = (BTNode)evt.target;
+			DropdownMenuAction.Status editStatus = m_isEditable ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
 
 			evt.menu.AppendAction(
 				"Entry",
 				_ => { SetEntry(btNode); },
-				m_behaviour.m_entry == btNode.Action ? DropdownMenuAction.Status.Checked | DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal
+				m_behaviour.m_entry == btNode.Action ? DropdownMenuAction.Status.Checked | DropdownMenuAction.Status.Disabled : editStatus
 			);
 			evt.menu.AppendAction(
 				"Decorate",
@@ -245,7 +246,9 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 					TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<Decorator>();
 
 					TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => DecorateNode(btNode, type));
-				});
+				},
+				editStatus
+			);
 			evt.menu.AppendAction(
 				"Breakpoint",
 				_ => { ToggleBreakpoint(btNode); },
@@ -253,10 +256,14 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			);
 
 			evt.menu.AppendSeparator();
-			evt.menu.AppendAction("Delete", _ => {
-				RemoveNode(btNode);
-				m_serializedBehaviour.Update();
-			});
+			evt.menu.AppendAction(
+				"Delete",
+				_ => {
+					RemoveNode(btNode);
+					m_serializedBehaviour.Update();
+				},
+				editStatus
+			);
 		}
 
 		protected override void OnNodeDoubleClick(Node node) {

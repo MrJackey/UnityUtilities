@@ -103,8 +103,6 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 			node.AddManipulator(new ClickSelector(this));
 
-			node.SetEnabled(m_isEditable);
-
 			Add(node);
 			m_nodes.Add(node);
 
