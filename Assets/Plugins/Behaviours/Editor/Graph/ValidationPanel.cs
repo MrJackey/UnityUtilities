@@ -1,7 +1,4 @@
-﻿using Jackey.Behaviours.BT;
-using Jackey.Behaviours.BT.Composites;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Editor.Utilities;
+﻿using Jackey.Behaviours.Editor.Utilities;
 using UnityEditor;
 using UnityEngine.UIElements;
 
@@ -29,8 +26,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 			});
 
 			VisualElement controlsRoot = new VisualElement() { name = "Controls" };
-			controlsRoot.Add(new Button(Purge) { text = "Purge" });
-			controlsRoot.Add(new Button(Repair) { text = "Repair" });
+			controlsRoot.Add(new Button(Purge) { name = "PurgeButton", text = "Purge" });
+			controlsRoot.Add(new Button(Repair) { name = "RepairButton", text = "Repair" });
 			Add(controlsRoot);
 		}
 
