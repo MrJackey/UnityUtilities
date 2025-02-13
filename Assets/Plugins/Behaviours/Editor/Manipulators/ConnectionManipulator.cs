@@ -12,6 +12,9 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 		private Connection m_connection;
 		private IConnectionSocket m_socket;
 
+		public delegate bool ConnectionValidHandler(IConnectionSocket start, IConnectionSocket end);
+		public ConnectionValidHandler ConnectionValidator;
+
 		public delegate void ConnectionVoidedHandler(Connection connection, Action<Connection, IConnectionSocket> restore);
 		public event ConnectionVoidedHandler ConnectionVoided;
 
@@ -111,6 +114,12 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 					if (!element.ContainsPoint(socketMousePosition))
 						continue;
 
+					bool isConnectionValid = ConnectionValidator?.Invoke(m_connection.Start, socket) ?? true;
+					if (!isConnectionValid) {
+						voided = false;
+						continue;
+					}
+
 					voided = false;
 
 					if (socket.IncomingConnections >= socket.MaxIncomingConnections)
@@ -158,6 +167,13 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 					Vector2 socketMousePosition = target.ChangeCoordinatesTo(element, mousePosition);
 
 					if (!element.ContainsPoint(socketMousePosition))
+						continue;
+
+					bool isConnectionValid = ConnectionValidator != null &&
+					                         (m_connection.Start != null
+						                         ? ConnectionValidator.Invoke(m_connection.Start, socket)
+						                         : ConnectionValidator.Invoke(socket, m_connection.End));
+					if (!isConnectionValid)
 						continue;
 
 					// Moved to same socket

@@ -59,6 +59,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 			this.AddManipulator(m_connectionManipulator = new ConnectionManipulator(this));
 			m_connectionManipulator.ConnectionCreated += OnConnectionCreated;
+			m_connectionManipulator.ConnectionValidator = IsConnectionValid;
 
 			AddToClassList(nameof(BehaviourGraph));
 		}
@@ -119,6 +120,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 			Debug.Assert(removed);
 		}
 		protected virtual void OnNodeRemoval(Node node) { }
+
+		protected virtual bool IsConnectionValid(IConnectionSocket start, IConnectionSocket end) => true;
 
 		private void OnConnectionCreated(Connection connection) {
 			m_connections.Add(connection);

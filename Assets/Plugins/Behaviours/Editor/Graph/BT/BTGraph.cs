@@ -305,6 +305,39 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			});
 		}
 
+		protected override bool IsConnectionValid(IConnectionSocket start, IConnectionSocket end) {
+			BTNode startNode = start.Element.GetFirstOfType<BTNode>();
+			BTNode endNode = end.Element.GetFirstOfType<BTNode>();
+
+			BehaviourAction startAction = startNode.Action;
+			BehaviourAction endAction = endNode.Action;
+
+			return Inner(endAction);
+
+			// Disallow cyclic connections
+			bool Inner(BehaviourAction action) {
+				if (action == startAction)
+					return false;
+
+				switch (action) {
+					case Composite composite:
+						foreach (BehaviourAction childAction in composite.Children) {
+							if (!Inner(childAction))
+								return false;
+						}
+
+						return true;
+					case Decorator decorator:
+						if (decorator.Child == null)
+							return true;
+
+						return Inner(decorator.Child);
+				}
+
+				return true;
+			}
+		}
+
 		private void OnConnectionCreated(Connection connection) {
 			BTNode start = connection.Start.Element.GetFirstOfType<BTNode>();
 			BTNode child = connection.End.Element.GetFirstOfType<BTNode>();
