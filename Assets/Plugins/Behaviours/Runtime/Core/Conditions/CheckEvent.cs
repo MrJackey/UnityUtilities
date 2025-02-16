@@ -25,7 +25,10 @@ namespace Jackey.Behaviours.Core.Conditions {
 		}
 
 		public override bool Evaluate() {
-			return m_yield;
+			bool result = m_yield;
+			m_yield = false;
+
+			return result;
 		}
 
 		void IBehaviourEventListener.OnEvent(BehaviourEvent evt) {
