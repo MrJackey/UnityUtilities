@@ -65,7 +65,7 @@ namespace Jackey.Behaviours.Core {
 
 		internal void Interrupt() {
 			InterruptChildren();
-			Status = ActionStatus.Inactive;
+			Status = ActionStatus.Failure;
 
 			OnInterrupt();
 			Exit();
