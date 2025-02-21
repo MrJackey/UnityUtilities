@@ -51,6 +51,11 @@ namespace Jackey.Behaviours.Editor.Graph {
 			manager.SelectedElements.AddRange(elements);
 		}
 
+		public static void RemoveFromSelection(this ISelectionManager manager, ISelectableElement element) {
+			element.Element.RemoveFromClassList(ISelectionManager.SELECTED_CLASS);
+			manager.SelectedElements.Remove(element);
+		}
+
 		public static void ReplaceSelection(this ISelectionManager manager, ISelectableElement element) {
 			manager.ClearSelection();
 			manager.AddToSelection(element);

@@ -1,4 +1,5 @@
 ﻿using Jackey.Behaviours.Editor.Graph;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Manipulators {
@@ -10,6 +11,10 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 
 			activators.Add(new ManipulatorActivationFilter() {
 				button = MouseButton.LeftMouse,
+			});
+			activators.Add(new ManipulatorActivationFilter() {
+				button = MouseButton.LeftMouse,
+				modifiers = EventModifiers.Control,
 			});
 		}
 
@@ -32,11 +37,21 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 
 			ISelectableElement selectableTarget = (ISelectableElement)target;
 
-			if (m_manager.SelectedElements.Count == 1 && m_manager.SelectedElements.Contains(selectableTarget))
-				return;
+			if ((evt.modifiers & EventModifiers.Control) == 0) {
+				if (m_manager.SelectedElements.Count == 1 && m_manager.SelectedElements.Contains(selectableTarget))
+					return;
 
-			m_manager.ClearSelection();
-			m_manager.AddToSelection(selectableTarget);
+				m_manager.ReplaceSelection(selectableTarget);
+			}
+			else {
+				if (selectableTarget is not IGroupSelectable)
+					return;
+
+				if (m_manager.SelectedElements.Contains(selectableTarget))
+					m_manager.RemoveFromSelection(selectableTarget);
+				else
+					m_manager.AddToSelection(selectableTarget);
+			}
 
 			m_manager.OnSelectionChange();
 		}
