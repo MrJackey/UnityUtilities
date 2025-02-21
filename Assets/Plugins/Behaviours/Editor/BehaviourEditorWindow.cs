@@ -120,7 +120,7 @@ namespace Jackey.Behaviours.Editor {
 						m_isKeyUsed = true;
 
 						if (m_activeGraph.IsEditable)
-							DeleteSelectedElements();
+							m_activeGraph.DeleteSelection();
 
 						break;
 					// TODO: Remove this
@@ -145,7 +145,7 @@ namespace Jackey.Behaviours.Editor {
 						m_isKeyUsed = true;
 
 						if (m_activeGraph.IsEditable)
-							m_activeGraph.Duplicate();
+							m_activeGraph.DuplicateSelection();
 
 						break;
 				}
@@ -298,26 +298,6 @@ namespace Jackey.Behaviours.Editor {
 				rootVisualElement.Add(m_activeGraph);
 
 			m_btGraph.UpdateBehaviour(bt);
-		}
-
-		private void DeleteSelectedElements() {
-			Debug.Assert(m_activeGraph != null);
-
-			if (m_activeGraph.SelectedElements.Count == 0)
-				return;
-
-			// TODO: Add undo
-			m_activeGraph.ClearInspection();
-
-			foreach (ISelectableElement selectedElement in m_activeGraph.SelectedElements) {
-				if (selectedElement.Element is Node node)
-					m_activeGraph.RemoveNode(node);
-			}
-
-			m_activeGraph.SerializedBehaviour.Update();
-
-			m_activeGraph.SelectedElements.Clear();
-			((ISelectionManager)m_activeGraph).OnSelectionChange();
 		}
 
 		#region Frame

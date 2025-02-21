@@ -156,7 +156,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_serializedBehaviour.Update();
 		}
 
-		public override void Duplicate() {
+		public override void DuplicateSelection() {
 			if (SelectedElements.Count == 0) return;
 
 			List<BTNode> originals = new List<BTNode>();

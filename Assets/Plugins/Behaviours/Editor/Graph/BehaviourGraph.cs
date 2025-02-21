@@ -167,6 +167,31 @@ namespace Jackey.Behaviours.Editor.Graph {
 			}
 		}
 
+		#region Actions
+
+		public void DeleteSelection() {
+			if (SelectedElements.Count == 0)
+				return;
+
+			ClearInspection();
+
+			foreach (ISelectableElement selectedElement in SelectedElements) {
+				if (selectedElement.Element is Node node)
+					RemoveNode(node);
+				else if (selectedElement.Element is GraphGroup group)
+					RemoveGroup(group);
+			}
+
+			// TODO: Add undo
+			SerializedBehaviour.Update();
+
+			SelectedElements.Clear();
+			OnSelectionChange();
+		}
+
+		public virtual void DuplicateSelection() { }
+
+		#endregion
 		public void OnSelectionChange() {
 			if (SelectedElements.Count == 1)
 				InspectElement(SelectedElements[0].Element);
