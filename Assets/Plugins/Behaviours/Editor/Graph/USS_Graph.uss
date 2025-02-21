@@ -107,6 +107,22 @@ BTNode Label {
 	border-color: rgb(125, 125, 125);
 }
 
+.ResizeHorizontal {
+	cursor: resize-horizontal;
+}
+
+.ResizeVertical {
+	cursor: resize-vertical;
+}
+
+.ResizeUpRight {
+	cursor: resize-up-right;
+}
+
+.ResizeUpLeft {
+	cursor: resize-up-left;
+}
+
 ConnectionSocket {
 	background-color: rgb(75, 75, 75);
 	border-color: rgb(25, 25, 25);
