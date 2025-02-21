@@ -43,7 +43,9 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			OnSelectionChange();
 		}
 
-		private void BuildGraph() {
+		protected override void BuildGraph() {
+			base.BuildGraph();
+
 			foreach (BehaviourAction action in m_behaviour.m_allActions)
 				AddNode(new BTNode(action));
 
@@ -68,6 +70,9 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 						break;
 				}
 			}
+
+			foreach (ObjectBehaviour.EditorData.Group group in m_behaviour.Editor_Data.Groups)
+				AddGroup(new GraphGroup(group.Rect));
 		}
 
 		#region Node CRUD
@@ -164,7 +169,9 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 			// Duplicate Nodes
 			foreach (ISelectableElement selectedElement in SelectedElements) {
-				BTNode btNode = (BTNode)selectedElement;
+				if (selectedElement is not BTNode btNode)
+					continue;
+
 				BehaviourAction actionClone = SerializationUtilities.DeepClone(btNode.Action);
 				BTNode nodeClone = new BTNode(actionClone);
 
@@ -564,7 +571,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			Debug.Assert(nodeIndex != -1);
 
 			SerializedProperty nodeProperty = m_serializedBehaviour.FindProperty($"{nameof(m_behaviour.m_allActions)}.Array.data[{nodeIndex}]");
-			m_actionInspector.Inspect(node.Action.GetType(), nodeProperty);
+			m_inspector.Inspect(node.Action.GetType(), nodeProperty);
 		}
 	}
 }

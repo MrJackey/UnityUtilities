@@ -7,14 +7,14 @@ using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Graph {
-	public class ActionInspector : VisualElement {
+	public class Inspector : VisualElement {
 		private static readonly string[] s_hiddenProperties = { "Editor_Data", "m_target" };
 
 		private Label m_header;
 
 		public override VisualElement contentContainer { get; }
 
-		public ActionInspector() {
+		public Inspector() {
 			style.position = Position.Absolute;
 			style.display = DisplayStyle.None;
 

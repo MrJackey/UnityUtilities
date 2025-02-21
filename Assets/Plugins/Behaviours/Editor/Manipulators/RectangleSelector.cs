@@ -27,16 +27,14 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			m_rectElement.AddToClassList("SelectionRect");
 		}
 
-		protected override void RegisterCallbacksOnTarget()
-		{
+		protected override void RegisterCallbacksOnTarget() {
 			target.RegisterCallback<MouseDownEvent>(OnMouseDown);
 			target.RegisterCallback<MouseMoveEvent>(OnMouseMove);
 			target.RegisterCallback<MouseUpEvent>(OnMouseUp);
 			target.RegisterCallback<MouseCaptureOutEvent>(OnMouseCaptureOutEvent);
 		}
 
-		protected override void UnregisterCallbacksFromTarget()
-		{
+		protected override void UnregisterCallbacksFromTarget() {
 			target.UnregisterCallback<MouseDownEvent>(OnMouseDown);
 			target.UnregisterCallback<MouseMoveEvent>(OnMouseMove);
 			target.UnregisterCallback<MouseUpEvent>(OnMouseUp);
@@ -44,26 +42,24 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 		}
 
 		private void OnMouseDown(MouseDownEvent evt) {
-			if (m_active)
-			{
+			if (m_active) {
 				evt.StopImmediatePropagation();
+				return;
 			}
-			else
-			{
-				if (!CanStartManipulation(evt))
-					return;
 
-				target.hierarchy.Add(m_rectElement);
+			if (!CanStartManipulation(evt))
+				return;
 
-				m_start = evt.localMousePosition;
-				m_end = m_start;
+			target.hierarchy.Add(m_rectElement);
 
-				UpdateVisualRect();
-				m_active = true;
+			m_start = evt.localMousePosition;
+			m_end = m_start;
 
-				target.CaptureMouse();
-				evt.StopImmediatePropagation();
-			}
+			UpdateVisualRect();
+			m_active = true;
+
+			target.CaptureMouse();
+			evt.StopImmediatePropagation();
 		}
 
 		private void OnMouseMove(MouseMoveEvent evt) {
@@ -143,7 +139,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			m_rectElement.transform.position = rect.min;
 			m_rectElement.style.width = rect.width;
 			m_rectElement.style.height = rect.height;
-	}
+		}
 
 		private void UpdatePreSelection() {
 			Rect selectionRect = GetSelectionRect();

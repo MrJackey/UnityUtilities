@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Jackey.Behaviours.Editor.Events;
 using Jackey.Behaviours.Editor.Manipulators;
 using UnityEditor;
 using UnityEngine;
@@ -8,15 +9,17 @@ namespace Jackey.Behaviours.Editor.Graph {
 	public class BehaviourGraph : VisualElement, ISelectionManager {
 		protected SerializedObject m_serializedBehaviour;
 
-		protected ActionInspector m_actionInspector = new();
+		protected Inspector m_inspector = new();
 		protected BlackboardInspector m_blackboardInspector = new();
 		protected ConnectionManipulator m_connectionManipulator;
+		protected GraphGroupCreator m_groupCreator;
 
 		protected Label m_graphHeader;
 		protected Label m_graphInstanceInfo;
 
 		protected List<Node> m_nodes = new();
 		protected List<Connection> m_connections = new();
+		protected List<GraphGroup> m_groups = new();
 
 		protected bool m_isEditable;
 		protected Vector2 m_createNodePosition;
@@ -50,7 +53,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 				pickingMode = PickingMode.Ignore,
 			});
 
-			hierarchy.Add(m_actionInspector);
+			hierarchy.Add(m_inspector);
 			hierarchy.Add(m_blackboardInspector);
 
 			this.AddManipulator(new ContentDragger());
@@ -61,6 +64,9 @@ namespace Jackey.Behaviours.Editor.Graph {
 			m_connectionManipulator.ConnectionCreated += OnConnectionCreated;
 			m_connectionManipulator.ConnectionValidator = IsConnectionValid;
 
+			m_groupCreator = new GraphGroupCreator();
+			m_groupCreator.GroupCreated += OnGroupCreated;
+
 			AddToClassList(nameof(BehaviourGraph));
 		}
 
@@ -70,12 +76,24 @@ namespace Jackey.Behaviours.Editor.Graph {
 					tickElement.Tick();
 				}
 			}
+
+			UpdateEditorData();
+		}
+		protected virtual void UpdateEditorData() { }
+
+		protected virtual void BuildGraph() {
+			if (m_isEditable) {
+				this.AddManipulator(m_groupCreator);
+			}
 		}
 
 		protected void ClearGraph() {
 			Clear();
 			m_nodes.Clear();
 			m_connections.Clear();
+			m_groups.Clear();
+
+			this.RemoveManipulator(m_groupCreator);
 		}
 
 		public virtual void BeginNodeCreation() {
@@ -86,7 +104,11 @@ namespace Jackey.Behaviours.Editor.Graph {
 			m_createNodePosition = Event.current.mousePosition;
 		}
 
+		#region Node
+
 		public void AddNode(Node node) {
+			Debug.Assert(!m_nodes.Contains(node));
+
 			// This needs to listen before any draggers. Otherwise, it won't receive its
 			// events as they stop propagation to prevent conflicts with each other
 			Clickable doubleClickManipulator = new Clickable(() => OnNodeDoubleClick(node));
@@ -121,18 +143,24 @@ namespace Jackey.Behaviours.Editor.Graph {
 		}
 		protected virtual void OnNodeRemoval(Node node) { }
 
+		#endregion
+
+		#region Connection
+
 		protected virtual bool IsConnectionValid(IConnectionSocket start, IConnectionSocket end) => true;
 
 		private void OnConnectionCreated(Connection connection) {
 			m_connections.Add(connection);
-			connection.SendToBack();
+			Insert(m_groups.Count, connection);
 
 			connection.RegisterCallback<MouseDownEvent>(OnConnectionMouseDown);
 		}
 
 		public void AddConnection(Connection connection) {
-			Insert(0, connection);
+			Debug.Assert(!m_connections.Contains(connection));
+
 			m_connections.Add(connection);
+			Insert(m_groups.Count, connection);
 
 			connection.RegisterCallback<MouseDownEvent>(OnConnectionMouseDown);
 		}
@@ -167,6 +195,43 @@ namespace Jackey.Behaviours.Editor.Graph {
 			}
 		}
 
+		#endregion
+
+		#region Group
+
+		private void OnGroupCreated(GraphGroup group) {
+			m_groups.Add(group);
+			group.SendToBack();
+
+			group.AddManipulator(new ClickSelector(this) { Propagation = PropagationMode.Stop });
+
+			OnGroupCreate(group);
+		}
+		protected virtual void OnGroupCreate(GraphGroup group) { }
+
+		public void AddGroup(GraphGroup group) {
+			Debug.Assert(!m_groups.Contains(group));
+
+			group.AddManipulator(new ClickSelector(this) { Propagation = PropagationMode.Stop });
+
+			m_groups.Add(group);
+			Insert(0, group);
+
+			OnGroupAdded(group);
+		}
+		protected virtual void OnGroupAdded(GraphGroup group) { }
+
+		public void RemoveGroup(GraphGroup group) {
+			OnGroupRemoval(group);
+
+			group.RemoveFromHierarchy();
+			bool removed = m_groups.Remove(group);
+			Debug.Assert(removed);
+		}
+		protected virtual void OnGroupRemoval(GraphGroup group) { }
+
+		#endregion
+
 		#region Actions
 
 		public void DeleteSelection() {
@@ -192,22 +257,61 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public virtual void DuplicateSelection() { }
 
 		#endregion
+
 		public void OnSelectionChange() {
-			if (SelectedElements.Count == 1)
-				InspectElement(SelectedElements[0].Element);
-			else
+			if (SelectedElements.Count != 1) {
 				ClearInspection();
+				return;
+			}
+
+			if (SelectedElements[0].Element is GraphGroup group)
+				InspectGroup(group);
+			else
+				InspectElement(SelectedElements[0].Element);
 		}
 
-		protected virtual void InspectElement(VisualElement element) { }
-		public void ClearInspection() => m_actionInspector.ClearInspection();
+		private void InspectGroup(GraphGroup group) {
+			int groupIndex = m_groups.IndexOf(group);
+			Debug.Assert(groupIndex != -1);
 
-		public virtual void Duplicate() { }
+			SerializedProperty groupProperty = m_serializedBehaviour.FindProperty($"Editor_Data.Groups.Array.data[{groupIndex}]");
+			m_inspector.Inspect(typeof(ObjectBehaviour.EditorData.Group), groupProperty);
+		}
+		protected virtual void InspectElement(VisualElement element) { }
+		public void ClearInspection() => m_inspector.ClearInspection();
 	}
 
 	public class BehaviourGraph<T> : BehaviourGraph where T : ObjectBehaviour {
 		protected T m_behaviour;
 
 		public override ObjectBehaviour Behaviour => m_behaviour;
+
+		protected override void UpdateEditorData() {
+			for (int i = 0; i < m_groups.Count; i++) {
+				GraphGroup graphGroup = m_groups[i];
+				ObjectBehaviour.EditorData.Group dataGroup = m_behaviour.Editor_Data.Groups[i];
+
+				dataGroup.Rect = new Rect(graphGroup.transform.position, graphGroup.layout.size);
+				dataGroup.Label = graphGroup.Label;
+			}
+		}
+
+		protected override void OnGroupCreate(GraphGroup group) {
+			m_behaviour.Editor_Data.Groups.Add(new ObjectBehaviour.EditorData.Group());
+		}
+
+		protected override void OnGroupAdded(GraphGroup group) {
+			int groupIndex = m_groups.IndexOf(group);
+
+			Debug.Assert(groupIndex != -1);
+			group.Label = m_behaviour.Editor_Data.Groups[groupIndex].Label;
+		}
+
+		protected override void OnGroupRemoval(GraphGroup group) {
+			int groupIndex = m_groups.IndexOf(group);
+
+			Debug.Assert(groupIndex != -1);
+			m_behaviour.Editor_Data.Groups.RemoveAt(groupIndex);
+		}
 	}
 }
