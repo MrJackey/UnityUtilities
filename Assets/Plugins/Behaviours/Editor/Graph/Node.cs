@@ -2,7 +2,7 @@
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Graph {
-	public class Node : VisualElement, ISelectableElement {
+	public class Node : VisualElement, ISelectableElement, IGroupSelectable {
 		public const float DEFAULT_WIDTH = 100f;
 		public const float DEFAULT_HEIGHT = 64f;
 

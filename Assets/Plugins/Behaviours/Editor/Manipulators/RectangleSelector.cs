@@ -89,7 +89,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			Rect selectionRect = GetSelectionRect();
 
 			foreach (VisualElement child in m_manager.Element.Children()) {
-				if (child is not ISelectableElement selectable)
+				if (!IsSelectable(child, out ISelectableElement selectable))
 					continue;
 
 				m_manager.RemoveFromPreSelection(selectable);
@@ -149,7 +149,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			Rect selectionRect = GetSelectionRect();
 
 			foreach (VisualElement child in m_manager.Element.Children()) {
-				if (child is not ISelectableElement selectable)
+				if (!IsSelectable(child, out ISelectableElement selectable))
 					continue;
 
 				Rect childRect = target.ChangeCoordinatesTo(child, selectionRect);
@@ -169,6 +169,19 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			rect.yMax = Mathf.Max(m_start.y, m_end.y);
 
 			return rect;
+		}
+
+		private bool IsSelectable(VisualElement element, out ISelectableElement selectable) {
+			selectable = null;
+
+			if (element is not ISelectableElement checkedSelectable)
+				return false;
+
+			if (element is not IGroupSelectable)
+				return false;
+
+			selectable = checkedSelectable;
+			return true;
 		}
 
 		private void OnMouseCaptureOutEvent(MouseCaptureOutEvent evt) {
