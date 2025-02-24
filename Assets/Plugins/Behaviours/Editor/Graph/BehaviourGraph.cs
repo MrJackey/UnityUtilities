@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Jackey.Behaviours.Editor.Events;
 using Jackey.Behaviours.Editor.Manipulators;
 using UnityEditor;
 using UnityEngine;
@@ -115,10 +114,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			// events as they stop propagation to prevent conflicts with each other
 			Clickable doubleClickManipulator = new Clickable(() => OnNodeDoubleClick(node));
 			doubleClickManipulator.activators.Clear();
-			doubleClickManipulator.activators.Add(new ManipulatorActivationFilter() {
-				button = MouseButton.LeftMouse,
-				clickCount = 2,
-			});
+			doubleClickManipulator.activators.Add(new ManipulatorActivationFilter() { button = MouseButton.LeftMouse, clickCount = 2 });
 			node.AddManipulator(doubleClickManipulator);
 
 			if (m_isEditable) {
@@ -205,7 +201,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 			m_groups.Add(group);
 			group.SendToBack();
 
-			group.AddManipulator(new ClickSelector(this) { Propagation = PropagationMode.Stop });
+			group.AddManipulator(new ClickSelector(this));
+			group.SelectionManager = this;
 
 			OnGroupCreate(group);
 		}
@@ -214,7 +211,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public void AddGroup(GraphGroup group) {
 			Debug.Assert(!m_groups.Contains(group));
 
-			group.AddManipulator(new ClickSelector(this) { Propagation = PropagationMode.Stop });
+			group.AddManipulator(new ClickSelector(this));
+			group.SelectionManager = this;
 
 			m_groups.Add(group);
 			Insert(0, group);

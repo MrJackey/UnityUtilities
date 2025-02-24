@@ -1,13 +1,10 @@
 ﻿using Jackey.Behaviours.Editor.Graph;
-using Jackey.Behaviours.Editor.Events;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Manipulators {
 	public class ClickSelector : MouseManipulator {
 		private ISelectionManager m_manager;
-
-		public PropagationMode Propagation { get; set; }
 
 		public ClickSelector(ISelectionManager manager) {
 			m_manager = manager;
@@ -37,7 +34,8 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 
 		private void OnMouseDown(MouseDownEvent evt) {
 			if (!CanStartManipulation(evt)) return;
-			Propagation.Process(evt);
+
+			evt.StopPropagation();
 
 			ISelectableElement selectableTarget = (ISelectableElement)target;
 

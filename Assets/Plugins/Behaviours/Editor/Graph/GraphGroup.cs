@@ -10,6 +10,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 		private const float AUTO_SIZE_PADDING_BOTTOM = 50f;
 		private const float AUTO_SIZE_PADDING_LEFT = 50f;
 
+		private ISelectionManager m_selectionManager;
+
 		private TextField m_label;
 		private Image m_autoSizeImage;
 
@@ -24,6 +26,10 @@ namespace Jackey.Behaviours.Editor.Graph {
 			set => m_label.value = value;
 		}
 		public bool AutoSize => m_autoSize;
+
+		public ISelectionManager SelectionManager {
+			set => m_selectionManager = value;
+		}
 
 		VisualElement ISelectableElement.Element => this;
 
@@ -44,6 +50,11 @@ namespace Jackey.Behaviours.Editor.Graph {
 			m_dragger = new Dragger();
 			m_groupDragger = new GroupDragger(this);
 
+			Clickable doubleCLickManipulator = new Clickable(SelectGroupedElements);
+			doubleCLickManipulator.activators.Clear();
+			doubleCLickManipulator.activators.Add(new ManipulatorActivationFilter() { button = MouseButton.LeftMouse, clickCount = 2 });
+			this.AddManipulator(doubleCLickManipulator);
+
 			SetAutoSize_Internal(m_autoSize);
 		}
 
@@ -57,11 +68,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			Rect? totalRect = null;
 
 			foreach (VisualElement sibling in parent.Children()) {
-				if (sibling is not IGroupableElement)
-					continue;
-
-				Rect overlapRect = this.ChangeCoordinatesTo(sibling, myLayout);
-				if (!sibling.Overlaps(overlapRect))
+				if (!IsGroupable(myLayout, sibling, out IGroupableElement _))
 					continue;
 
 				Rect siblingRect = sibling.localBound;
@@ -92,15 +99,35 @@ namespace Jackey.Behaviours.Editor.Graph {
 			style.height = rect.height;
 		}
 
+		private void SelectGroupedElements() {
+			Debug.Assert(m_selectionManager != null);
+
+			bool hadSelection = m_selectionManager.SelectedElements.Count > 0;
+			m_selectionManager.ClearSelection();
+
+			Rect myLayout = layout;
+			foreach (VisualElement sibling in parent.Children()) {
+				if (!IsGroupable(myLayout, sibling, out IGroupableElement _))
+					continue;
+
+				if (sibling is not ISelectableElement selectable)
+					continue;
+
+				if (sibling is not IGroupSelectable)
+					continue;
+
+				m_selectionManager.AddToSelection(selectable);
+			}
+
+			if (hadSelection || m_selectionManager.SelectedElements.Count > 0)
+				m_selectionManager.OnSelectionChange();
+		}
+
 		public void GetGroupedElements(List<IGroupableElement> list) {
 			Rect myLayout = layout;
 
 			foreach (VisualElement sibling in parent.Children()) {
-				if (sibling is not IGroupableElement groupable)
-					continue;
-
-				Rect overlapRect = this.ChangeCoordinatesTo(sibling, myLayout);
-				if (!sibling.Overlaps(overlapRect))
+				if (!IsGroupable(myLayout, sibling, out IGroupableElement groupable))
 					continue;
 
 				list.Add(groupable);
@@ -127,6 +154,20 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 			m_autoSizeImage.image = Resources.Load<Texture>(value ? "GroupAutoSize_Enabled" : "GroupAutoSize_Disabled");
 			m_autoSize = value;
+		}
+
+		private bool IsGroupable(Rect myLayout, VisualElement element, out IGroupableElement groupable) {
+			groupable = null;
+
+			if (element is not IGroupableElement checkedGroupable)
+				return false;
+
+			Rect overlapRect = this.ChangeCoordinatesTo(element, myLayout);
+			if (!element.Overlaps(overlapRect))
+				return false;
+
+			groupable = checkedGroupable;
+			return true;
 		}
 	}
 }
