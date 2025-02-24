@@ -294,8 +294,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 				ObjectBehaviour.EditorData.Group dataGroup = m_behaviour.Editor_Data.Groups[i];
 
 				dataGroup.Label = graphGroup.Label;
-				dataGroup.Rect = new Rect(graphGroup.transform.position, graphGroup.layout.size);
 				dataGroup.AutoSize = graphGroup.AutoSize;
+				dataGroup.Rect = new Rect(graphGroup.transform.position, graphGroup.layout.size);
 			}
 		}
 

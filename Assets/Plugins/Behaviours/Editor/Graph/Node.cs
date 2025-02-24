@@ -11,6 +11,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public override VisualElement contentContainer { get; }
 
 		VisualElement ISelectableElement.Element => this;
+		VisualElement IGroupableElement.Element => this;
 
 		protected Node() {
 			style.position = Position.Absolute;

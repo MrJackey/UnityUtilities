@@ -1,4 +1,5 @@
-﻿using Jackey.Behaviours.Editor.Manipulators;
+﻿using System.Collections.Generic;
+using Jackey.Behaviours.Editor.Manipulators;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -16,6 +17,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		private Resizer m_resizer;
 		private Dragger m_dragger;
+		private GroupDragger m_groupDragger;
 
 		public string Label {
 			get => m_label.value;
@@ -40,23 +42,25 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 			m_resizer = new Resizer();
 			m_dragger = new Dragger();
+			m_groupDragger = new GroupDragger(this);
 
 			SetAutoSize_Internal(m_autoSize);
 		}
 
 		void ITickElement.Tick() {
-			if (AutoSize)
+			if (m_autoSize && !m_groupDragger.Active)
 				UpdateAutoSize();
 		}
 
 		private void UpdateAutoSize() {
+			Rect myLayout = layout;
 			Rect? totalRect = null;
 
 			foreach (VisualElement sibling in parent.Children()) {
 				if (sibling is not IGroupableElement)
 					continue;
 
-				Rect overlapRect = this.ChangeCoordinatesTo(sibling, layout);
+				Rect overlapRect = this.ChangeCoordinatesTo(sibling, myLayout);
 				if (!sibling.Overlaps(overlapRect))
 					continue;
 
@@ -88,6 +92,21 @@ namespace Jackey.Behaviours.Editor.Graph {
 			style.height = rect.height;
 		}
 
+		public void GetGroupedElements(List<IGroupableElement> list) {
+			Rect myLayout = layout;
+
+			foreach (VisualElement sibling in parent.Children()) {
+				if (sibling is not IGroupableElement groupable)
+					continue;
+
+				Rect overlapRect = this.ChangeCoordinatesTo(sibling, myLayout);
+				if (!sibling.Overlaps(overlapRect))
+					continue;
+
+				list.Add(groupable);
+			}
+		}
+
 		public void SetAutoSize(bool value) {
 			if (value == m_autoSize) return;
 
@@ -98,10 +117,12 @@ namespace Jackey.Behaviours.Editor.Graph {
 			if (value) {
 				this.RemoveManipulator(m_resizer);
 				this.RemoveManipulator(m_dragger);
+				this.AddManipulator(m_groupDragger);
 			}
 			else {
 				this.AddManipulator(m_resizer);
 				this.AddManipulator(m_dragger);
+				this.RemoveManipulator(m_groupDragger);
 			}
 
 			m_autoSizeImage.image = Resources.Load<Texture>(value ? "GroupAutoSize_Enabled" : "GroupAutoSize_Disabled");
