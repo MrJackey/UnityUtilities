@@ -262,6 +262,15 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				btNode.Action.Editor_Data.Breakpoint ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal
 			);
 
+			MonoScript script = AssetUtilities.GetScriptAsset(btNode.Action.GetType());
+			if (script != null) {
+				evt.menu.AppendSeparator();
+				evt.menu.AppendAction(
+					"Edit Script",
+					_ => AssetDatabase.OpenAsset(script)
+				);
+			}
+
 			evt.menu.AppendSeparator();
 			evt.menu.AppendAction(
 				"Soft Delete",
