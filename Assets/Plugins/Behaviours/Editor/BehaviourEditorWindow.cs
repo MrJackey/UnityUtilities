@@ -116,6 +116,13 @@ namespace Jackey.Behaviours.Editor {
 							m_activeGraph.BeginNodeCreation();
 
 						break;
+					case KeyCode.Delete when evt.shift:
+						m_isKeyUsed = true;
+
+						if (m_activeGraph.IsEditable)
+							m_activeGraph.SoftDeleteSelection();
+
+						break;
 					case KeyCode.Delete:
 						m_isKeyUsed = true;
 

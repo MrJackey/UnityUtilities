@@ -195,6 +195,19 @@ namespace Jackey.Behaviours.Editor.Graph {
 			}
 		}
 
+		protected void MoveConnection(Connection connection, IConnectionSocket from, IConnectionSocket to) {
+			if (from == connection.Start) {
+				from.OutgoingConnections--;
+				connection.Start = to;
+				to.OutgoingConnections++;
+			}
+			else {
+				from.IncomingConnections--;
+				connection.End = to;
+				to.IncomingConnections++;
+			}
+		}
+
 		#endregion
 
 		#region Group
@@ -255,6 +268,34 @@ namespace Jackey.Behaviours.Editor.Graph {
 			SelectedElements.Clear();
 			OnSelectionChange();
 		}
+
+		public void SoftDeleteSelection() {
+			if (SelectedElements.Count == 0)
+				return;
+
+			ClearInspection();
+
+			foreach (ISelectableElement selectedElement in SelectedElements)
+				SoftDelete(selectedElement.Element);
+
+			// TODO: Add undo
+			SerializedBehaviour.Update();
+
+			SelectedElements.Clear();
+			OnSelectionChange();
+		}
+
+		protected void SoftDelete(VisualElement element) {
+				OnSoftDeletion(element);
+
+				if (element is Node node)
+					RemoveNode(node);
+				else if (element is GraphGroup group)
+					RemoveGroup(group);
+
+				SerializedBehaviour.Update();
+		}
+		protected virtual void OnSoftDeletion(VisualElement element) { }
 
 		public virtual void DuplicateSelection() { }
 

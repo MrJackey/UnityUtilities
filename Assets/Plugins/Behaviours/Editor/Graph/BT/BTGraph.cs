@@ -264,6 +264,11 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 			evt.menu.AppendSeparator();
 			evt.menu.AppendAction(
+				"Soft Delete",
+				_ => SoftDelete(btNode),
+				editStatus
+			);
+			evt.menu.AppendAction(
 				"Delete",
 				_ => {
 					RemoveNode(btNode);
@@ -296,6 +301,39 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				return;
 
 			m_connectionManipulator.CreateConnection(socket);
+		}
+
+		protected override void OnSoftDeletion(VisualElement element) {
+			if (element is not BTNode btNode) return;
+
+			Connection toConnection = GetConnectionToNode(btNode);
+			if (toConnection != null) {
+				IList<Connection> nodeConnections = GetConnectionsFromNode(btNode);
+				if (nodeConnections.Count == 0)
+					return;
+
+				RemoveConnection(toConnection);
+
+				BTNode parentNode = toConnection.Start.Element.GetFirstOfType<BTNode>();
+				Debug.Assert(parentNode != null);
+
+				BehaviourAction parentAction = parentNode.Action;
+
+				foreach (Connection childConnection in nodeConnections) {
+					if (parentNode.OutSocket.OutgoingConnections >= parentAction.Editor_MaxChildCount)
+						return;
+
+					BehaviourAction connectedAction = ((BTNode)childConnection.End.Element).Action;
+
+					Debug.Assert(parentAction is Composite or Decorator);
+					if (parentAction is Composite composite)
+						composite.Children.Add(connectedAction);
+					else if (parentAction is Decorator decorator)
+						decorator.Child = connectedAction;
+
+					MoveConnection(childConnection, btNode.OutSocket, parentNode.OutSocket);
+				}
+			}
 		}
 
 		#region Connection Callbacks
@@ -525,7 +563,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			foreach (Connection connection in m_connections) {
 				if (connection.Start.Element == node.OutSocket) {
 					connections ??= new List<Connection>();
-					connection.Add(connection);
+					connections.Add(connection);
 				}
 			}
 
