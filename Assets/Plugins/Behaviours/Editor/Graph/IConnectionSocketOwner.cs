@@ -2,6 +2,6 @@
 
 namespace Jackey.Behaviours.Editor.Graph {
 	public interface IConnectionSocketOwner {
-		public List<IConnectionSocket> Sockets { get; }
+		List<IConnectionSocket> Sockets { get; }
 	}
 }

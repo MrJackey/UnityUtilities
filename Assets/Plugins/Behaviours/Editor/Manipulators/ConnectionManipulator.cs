@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Jackey.Behaviours.Editor.Graph;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -155,10 +156,16 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 
 		private void EndMove(MouseUpEvent evt) {
 			Vector2 mousePosition = evt.localMousePosition;
+			List<IConnectionSocketOwner> fallbackOwners = null;
 
 			foreach (VisualElement child in target.Children()) {
 				if (child is not IConnectionSocketOwner socketOwner)
 					continue;
+
+				if (child.ContainsPoint(target.ChangeCoordinatesTo(child, mousePosition))) {
+					fallbackOwners ??= new List<IConnectionSocketOwner>();
+					fallbackOwners.Add(socketOwner);
+				}
 
 				for (int i = socketOwner.Sockets.Count - 1; i >= 0; i--) {
 					IConnectionSocket socket = socketOwner.Sockets[i];
@@ -169,52 +176,25 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 					if (!element.ContainsPoint(socketMousePosition))
 						continue;
 
-					bool isConnectionValid = ConnectionValidator != null &&
-					                         (m_connection.Start != null
-						                         ? ConnectionValidator.Invoke(m_connection.Start, socket)
-						                         : ConnectionValidator.Invoke(socket, m_connection.End));
-					if (!isConnectionValid)
-						continue;
-
-					// Moved to same socket
-					if (socket == m_socket) {
-						if (m_connection.Start == null) {
-							Debug.Assert(socket.MaxOutgoingConnections == -1 || socket.OutgoingConnections < socket.MaxOutgoingConnections);
-
-							m_connection.Start = socket;
-							socket.OutgoingConnections++;
-						}
-						else {
-							Debug.Assert(socket.MaxIncomingConnections == -1 || socket.IncomingConnections < socket.MaxIncomingConnections);
-
-							m_connection.End = socket;
-							socket.IncomingConnections++;
-						}
-
+					if (TryEndMoveToSocket(socket))
 						return;
-					}
-
-					// Moved to new socket
-					if (m_connection.Start == null) {
-						if (socket.MaxOutgoingConnections != -1 && socket.OutgoingConnections >= socket.MaxOutgoingConnections)
-							continue;
-
-						m_connection.Start = socket;
-						socket.OutgoingConnections++;
-					}
-					else {
-						if (socket.IncomingConnections != -1 && socket.IncomingConnections >= socket.MaxIncomingConnections)
-							continue;
-
-						m_connection.End = socket;
-						socket.IncomingConnections++;
-					}
-
-					ConnectionMoved?.Invoke(m_connection, m_socket, socket);
-					return;
 				}
 			}
 
+			// No direct sockets found. Check hovered owners' sockets and pick the first that works
+			if (fallbackOwners != null) {
+				// Go backwards to prioritize topmost element
+				for (int i = fallbackOwners.Count - 1; i >= 0; i--) {
+					IConnectionSocketOwner owner = fallbackOwners[i];
+
+					foreach (IConnectionSocket socket in owner.Sockets) {
+						if (TryEndMoveToSocket(socket))
+							return;
+					}
+				}
+			}
+
+			// Nothing to connect to. Remove the connection
 			if (m_connection.Start == null) {
 				m_connection.End.IncomingConnections--;
 				m_connection.RemoveFromHierarchy();
@@ -225,6 +205,47 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 				m_connection.RemoveFromHierarchy();
 				ConnectionRemoved?.Invoke(m_connection, m_connection.Start, m_socket);
 			}
+		}
+
+		private bool TryEndMoveToSocket(IConnectionSocket socket) {
+			if (socket == m_socket) { // Moved back
+				Debug.Assert(m_connection.Start != null || (socket.MaxOutgoingConnections == -1 || socket.OutgoingConnections < socket.MaxOutgoingConnections));
+				Debug.Assert(m_connection.End != null || (socket.MaxIncomingConnections == -1 || socket.IncomingConnections < socket.MaxIncomingConnections));
+			}
+
+			if (!IsConnectionValidWithSocket(m_connection, socket)) {
+				Debug.Assert(socket != m_socket);
+				return false;
+			}
+
+			if (m_connection.Start == null) {
+				if (socket.MaxOutgoingConnections != -1 && socket.OutgoingConnections >= socket.MaxOutgoingConnections)
+					return false;
+
+				m_connection.Start = socket;
+				socket.OutgoingConnections++;
+			}
+			else {
+				if (socket.IncomingConnections != -1 && socket.IncomingConnections >= socket.MaxIncomingConnections)
+					return false;
+
+				m_connection.End = socket;
+				socket.IncomingConnections++;
+			}
+
+			if (socket != m_socket)
+				ConnectionMoved?.Invoke(m_connection, m_socket, socket);
+
+			return true;
+		}
+
+		private bool IsConnectionValidWithSocket(Connection connection, IConnectionSocket socket) {
+			if (ConnectionValidator == null)
+				return true;
+
+			return connection.Start != null
+				? ConnectionValidator.Invoke(connection.Start, socket)
+				: ConnectionValidator.Invoke(socket, connection.End);
 		}
 	}
 }
