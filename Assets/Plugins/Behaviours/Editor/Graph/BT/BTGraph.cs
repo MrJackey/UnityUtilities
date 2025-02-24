@@ -77,10 +77,10 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 		#region Node CRUD
 
-		public override void BeginNodeCreation() {
-			base.BeginNodeCreation();
+		public override void BeginNodeCreation(Vector2 GUIPosition) {
+			base.BeginNodeCreation(GUIPosition);
 
-			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
+			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(GUIPosition);
 			TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>();
 
 			TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => CreateNode(type));

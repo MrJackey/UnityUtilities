@@ -66,6 +66,8 @@ namespace Jackey.Behaviours.Editor {
 
 			rootVisualElement.Add(m_toolbar = new Toolbar());
 			m_toolbar.Add(m_toolbarBreadcrumbs = new ToolbarBreadcrumbs());
+			m_toolbar.Add(new ToolbarSpacer() { flex = true });
+			m_toolbar.Add(CreateShortcutMenu());
 
 			m_validationPanel = new ValidationPanel(this);
 
@@ -79,6 +81,12 @@ namespace Jackey.Behaviours.Editor {
 			EditorApplication.delayCall += OnSelectionChange;
 
 			m_hasCreatedGUI = true;
+		}
+
+		private void RecreateGUI() {
+			m_activeGraph = null;
+			rootVisualElement.Clear();
+			CreateGUI();
 		}
 
 		private void ShowButton(Rect rect) {
@@ -98,6 +106,56 @@ namespace Jackey.Behaviours.Editor {
 			m_fsmGraph?.SerializedBehaviour?.Dispose();
 		}
 
+		#region Input
+
+		private ToolbarMenu CreateShortcutMenu() {
+			ToolbarMenu shortcuts = new ToolbarMenu() { text = "Shortcuts" };
+
+			shortcuts.menu.AppendAction(
+				"(Space) Create Node",
+				evt => m_activeGraph.BeginNodeCreation(EditorGUIUtility.ScreenToGUIPoint(position.center)),
+				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
+			);
+			shortcuts.menu.AppendAction(
+				"(Ctrl + D) Duplicate Selection",
+				_ => m_activeGraph.DuplicateSelection(),
+				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
+			);
+
+			shortcuts.menu.AppendSeparator();
+
+			shortcuts.menu.AppendAction(
+				"(F) Frame Selection",
+				_ => {
+				if (m_activeGraph.SelectedElements.Count > 0)
+					FrameSelection();
+				else
+					FrameContent();
+				},
+				_ => m_activeGraph != null ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
+			);
+
+			shortcuts.menu.AppendSeparator();
+			shortcuts.menu.AppendAction(
+				"(Del) Delete Selection",
+				_ => m_activeGraph.DeleteSelection(),
+				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
+			);
+			shortcuts.menu.AppendAction(
+				"(Shift + Del) Soft Delete Selection",
+				_ => m_activeGraph.SoftDeleteSelection(),
+				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
+			);
+
+			shortcuts.menu.AppendSeparator();
+			shortcuts.menu.AppendAction(
+				"(Shift + R) Recreate GUI",
+				_ => RecreateGUI()
+			);
+
+			return shortcuts;
+		}
+
 		private void CheckInput() {
 			Event evt = Event.current;
 
@@ -113,7 +171,7 @@ namespace Jackey.Behaviours.Editor {
 						m_isKeyUsed = true;
 
 						if (m_activeGraph.IsEditable)
-							m_activeGraph.BeginNodeCreation();
+							m_activeGraph.BeginNodeCreation(evt.mousePosition);
 
 						break;
 					case KeyCode.Delete when evt.shift:
@@ -134,9 +192,7 @@ namespace Jackey.Behaviours.Editor {
 					case KeyCode.R when evt.shift:
 						m_isKeyUsed = true;
 
-						m_activeGraph = null;
-						rootVisualElement.Clear();
-						CreateGUI();
+						RecreateGUI();
 
 						break;
 					case KeyCode.F:
@@ -158,6 +214,8 @@ namespace Jackey.Behaviours.Editor {
 				}
 			}
 		}
+
+		#endregion
 
 		private void OnFocus() {
 			m_isKeyUsed = false;

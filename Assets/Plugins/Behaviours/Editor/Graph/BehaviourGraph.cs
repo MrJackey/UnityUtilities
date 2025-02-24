@@ -99,8 +99,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 			this.RemoveManipulator(m_groupCreator);
 		}
 
-		public virtual void BeginNodeCreation() {
-			SaveCreatePosition();
+		public virtual void BeginNodeCreation(Vector2 GUIPosition) {
+			m_createNodePosition = GUIPosition;
 		}
 
 		protected void SaveCreatePosition() {
