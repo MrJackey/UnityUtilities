@@ -53,7 +53,9 @@ namespace Jackey.Behaviours.Editor.Graph {
 			});
 
 			hierarchy.Add(m_inspector);
+			m_inspector.RegisterCallback<WheelEvent>(evt => evt.StopPropagation());
 			hierarchy.Add(m_blackboardInspector);
+			m_blackboardInspector.RegisterCallback<WheelEvent>(evt => evt.StopPropagation());
 
 			this.AddManipulator(new ContentDragger());
 			this.AddManipulator(new ContentZoomer());
