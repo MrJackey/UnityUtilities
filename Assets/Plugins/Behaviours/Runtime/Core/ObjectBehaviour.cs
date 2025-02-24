@@ -31,11 +31,14 @@ namespace Jackey.Behaviours {
 			[Serializable]
 			public class Group {
 				[HideInInspector]
+				public Rect Rect;
+				[HideInInspector]
+				public bool AutoSize;
+
+				[HideInInspector]
 				public string Label;
 				[TextArea]
 				public string Comments;
-				[HideInInspector]
-				public Rect Rect;
 			}
 		}
 #endif

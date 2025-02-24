@@ -293,8 +293,9 @@ namespace Jackey.Behaviours.Editor.Graph {
 				GraphGroup graphGroup = m_groups[i];
 				ObjectBehaviour.EditorData.Group dataGroup = m_behaviour.Editor_Data.Groups[i];
 
-				dataGroup.Rect = new Rect(graphGroup.transform.position, graphGroup.layout.size);
 				dataGroup.Label = graphGroup.Label;
+				dataGroup.Rect = new Rect(graphGroup.transform.position, graphGroup.layout.size);
+				dataGroup.AutoSize = graphGroup.AutoSize;
 			}
 		}
 
@@ -306,7 +307,10 @@ namespace Jackey.Behaviours.Editor.Graph {
 			int groupIndex = m_groups.IndexOf(group);
 
 			Debug.Assert(groupIndex != -1);
-			group.Label = m_behaviour.Editor_Data.Groups[groupIndex].Label;
+			ObjectBehaviour.EditorData.Group dataGroup = m_behaviour.Editor_Data.Groups[groupIndex];
+
+			group.Label = dataGroup.Label;
+			group.SetAutoSize(dataGroup.AutoSize);
 		}
 
 		protected override void OnGroupRemoval(GraphGroup group) {
