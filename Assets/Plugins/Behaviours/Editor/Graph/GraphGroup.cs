@@ -34,6 +34,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 		VisualElement ISelectableElement.Element => this;
 
 		public GraphGroup(Rect rect) {
+			usageHints = UsageHints.DynamicTransform;
+
 			style.position = Position.Absolute;
 
 			Reposition(rect);

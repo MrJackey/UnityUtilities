@@ -22,25 +22,36 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 			start.OutgoingConnections++;
 			end.IncomingConnections++;
+
+			usageHints = UsageHints.DynamicTransform;
 		}
 
 		protected override void ImmediateRepaint() {
 			(Vector2 start, Vector2 end) = GetPoints();
-			(Vector2 startTangent, Vector2 endTangent) = GetTangents(start, end);
 
-			// Update bound. Add click distance as padding to handle edges being clicked
 			float width = Mathf.Max(Mathf.Abs(start.x - end.x), WIDTH);
 			float height = Mathf.Max(Mathf.Abs(start.y - end.y), WIDTH);
-			style.width = width + 2f * CLICK_DISTANCE;
-			style.height = height + 2 * CLICK_DISTANCE;
 
 			Vector2 localCenter = (start + end) / 2f;
 			Vector2 size = new Vector2(width, height);
-			Rect localRect = new Rect(localCenter - size / 2f - new Vector2(CLICK_DISTANCE, CLICK_DISTANCE), size);
+			Rect localRect = new Rect(
+				localCenter - size / 2f - new Vector2(CLICK_DISTANCE, CLICK_DISTANCE),
+				size + new Vector2(CLICK_DISTANCE * 2f, CLICK_DISTANCE * 2f)
+			);
 
+			// Prevent drawing and updating of the transform if the result won't be visible.
+			// DrawSolidDisc is worst with ~0.035ms each, with two per connection
+			if (!parent.Overlaps(this.ChangeCoordinatesTo(parent, localRect)))
+				return;
+
+			// Update bounds. Add click distance as padding to handle edges being clicked
 			transform.position = this.ChangeCoordinatesTo(parent.contentContainer, localRect).position;
+			style.width = width + 2f * CLICK_DISTANCE;
+			style.height = height + 2f * CLICK_DISTANCE;
 
 			// Draw graphics
+			(Vector2 startTangent, Vector2 endTangent) = GetTangents(start, end);
+
 			Handles.DrawBezier(
 				start,
 				end,
