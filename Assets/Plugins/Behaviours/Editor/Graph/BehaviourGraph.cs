@@ -269,14 +269,14 @@ namespace Jackey.Behaviours.Editor.Graph {
 			OnSelectionChange();
 		}
 
-		public void SoftDeleteSelection() {
+		public void SmartDeleteSelection() {
 			if (SelectedElements.Count == 0)
 				return;
 
 			ClearInspection();
 
 			foreach (ISelectableElement selectedElement in SelectedElements)
-				SoftDelete(selectedElement.Element);
+				SmartDelete(selectedElement.Element);
 
 			// TODO: Add undo
 			SerializedBehaviour.Update();
@@ -285,8 +285,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 			OnSelectionChange();
 		}
 
-		protected void SoftDelete(VisualElement element) {
-				OnSoftDeletion(element);
+		protected void SmartDelete(VisualElement element) {
+				OnSmartDeletion(element);
 
 				if (element is Node node)
 					RemoveNode(node);
@@ -295,7 +295,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 				SerializedBehaviour.Update();
 		}
-		protected virtual void OnSoftDeletion(VisualElement element) { }
+		protected virtual void OnSmartDeletion(VisualElement element) { }
 
 		public virtual void DuplicateSelection() { }
 

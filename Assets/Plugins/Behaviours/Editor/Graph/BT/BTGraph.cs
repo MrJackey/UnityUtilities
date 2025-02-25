@@ -273,8 +273,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 			evt.menu.AppendSeparator();
 			evt.menu.AppendAction(
-				"Soft Delete",
-				_ => SoftDelete(btNode),
+				"Smart Delete",
+				_ => SmartDelete(btNode),
 				editStatus
 			);
 			evt.menu.AppendAction(
@@ -312,7 +312,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_connectionManipulator.CreateConnection(socket);
 		}
 
-		protected override void OnSoftDeletion(VisualElement element) {
+		protected override void OnSmartDeletion(VisualElement element) {
 			if (element is not BTNode btNode) return;
 
 			Connection toConnection = GetConnectionToNode(btNode);

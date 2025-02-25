@@ -142,8 +142,8 @@ namespace Jackey.Behaviours.Editor {
 				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
 			);
 			shortcuts.menu.AppendAction(
-				"(Shift + Del) Soft Delete Selection",
-				_ => m_activeGraph.SoftDeleteSelection(),
+				"(Shift + Del) Smart Delete Selection",
+				_ => m_activeGraph.SmartDeleteSelection(),
 				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
 			);
 
@@ -178,7 +178,7 @@ namespace Jackey.Behaviours.Editor {
 						m_isKeyUsed = true;
 
 						if (m_activeGraph.IsEditable)
-							m_activeGraph.SoftDeleteSelection();
+							m_activeGraph.SmartDeleteSelection();
 
 						break;
 					case KeyCode.Delete:
