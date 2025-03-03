@@ -248,6 +248,9 @@ namespace Jackey.Behaviours.Editor {
 		}
 
 		public void SetBehaviour(ObjectBehaviour behaviour) {
+			if (behaviour == m_activeGraph?.SerializedBehaviour?.targetObject)
+				return;
+
 			while (m_toolbarBreadcrumbs.childCount > 0)
 				m_toolbarBreadcrumbs.PopItem();
 
