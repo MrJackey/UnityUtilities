@@ -11,7 +11,7 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 	[AddComponentMenu("")]
 	[DisallowMultipleComponent]
 	[ExecuteAlways]
-	internal class HierarchyFolder : MonoBehaviour {
+	public class HierarchyFolder : MonoBehaviour {
 #if UNITY_EDITOR
 		private const HideFlags HIDE_FLAGS = HideFlags.HideInInspector | HideFlags.NotEditable;
 
