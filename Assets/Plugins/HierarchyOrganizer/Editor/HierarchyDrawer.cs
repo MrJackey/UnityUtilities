@@ -77,7 +77,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 			return (
 				normalIcon,
-				expandedIcon == null ? normalIcon : expandedIcon
+				expandedIcon != null ? expandedIcon : normalIcon
 			);
 		}
 

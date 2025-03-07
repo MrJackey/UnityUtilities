@@ -226,6 +226,9 @@ namespace Jackey.HierarchyOrganizer.Editor {
 			if (EditorUtility.IsPersistent(go))
 				return false;
 
+			if (PrefabUtility.IsPartOfAnyPrefab(go))
+				return false;
+
 			if (IsFolder(go.GetInstanceID()))
 				return false;
 
