@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Jackey.Behaviours.Editor.Manipulators;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -21,7 +22,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		protected List<GraphGroup> m_groups = new();
 
 		protected bool m_isEditable;
-		protected Vector2 m_createNodePosition;
+		protected Vector2 m_createPosition;
 
 		public override VisualElement contentContainer { get; }
 		public SerializedObject SerializedBehaviour => m_serializedBehaviour;
@@ -35,8 +36,6 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public bool IsEditable => m_isEditable;
 
 		public BehaviourGraph() {
-			usageHints = UsageHints.GroupTransform;
-
 			hierarchy.Add(new GraphBackground());
 			hierarchy.Add(contentContainer = new VisualElement() {
 				name = "GraphContent",
@@ -84,6 +83,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 		}
 		protected virtual void UpdateEditorData() { }
 
+		public virtual void UpdateBehaviour(ObjectBehaviour behaviour) { }
+
 		protected virtual void BuildGraph() {
 			if (m_isEditable) {
 				this.AddManipulator(m_groupCreator);
@@ -100,11 +101,14 @@ namespace Jackey.Behaviours.Editor.Graph {
 		}
 
 		public virtual void BeginNodeCreation(Vector2 GUIPosition) {
-			m_createNodePosition = GUIPosition;
+			m_createPosition = GUIPosition;
 		}
 
-		protected void SaveCreatePosition() {
-			m_createNodePosition = Event.current.mousePosition;
+		protected Vector2 GetNodeCreatePosition() {
+			Vector2 createPosition = this.ChangeCoordinatesTo(contentContainer, m_createPosition);
+			createPosition.x -= Node.DEFAULT_WIDTH / 2f;
+			createPosition.y -= Node.DEFAULT_HEIGHT / 2f;
+			return createPosition;
 		}
 
 		#region Node
@@ -328,6 +332,29 @@ namespace Jackey.Behaviours.Editor.Graph {
 		protected T m_behaviour;
 
 		public override ObjectBehaviour Behaviour => m_behaviour;
+
+		public override void UpdateBehaviour(ObjectBehaviour behaviour) {
+			if (behaviour is not T typedBehaviour) return;
+
+			m_serializedBehaviour?.Dispose();
+
+			m_behaviour = typedBehaviour;
+			m_serializedBehaviour = new SerializedObject(behaviour);
+
+			bool isPersistent = EditorUtility.IsPersistent(m_behaviour);
+			m_graphInstanceInfo.text = isPersistent ? "(Asset)" : "(Instance)";
+			m_isEditable = isPersistent;
+
+			ClearGraph();
+			BuildGraph();
+
+			m_graphHeader.Bind(m_serializedBehaviour);
+
+			m_blackboardInspector.SetSecondaryBlackboard(behaviour.Blackboard, m_serializedBehaviour.FindProperty(nameof(ObjectBehaviour.m_blackboard)));
+
+			this.ClearSelection();
+			OnSelectionChange();
+		}
 
 		protected override void UpdateEditorData() {
 			for (int i = 0; i < m_groups.Count; i++) {

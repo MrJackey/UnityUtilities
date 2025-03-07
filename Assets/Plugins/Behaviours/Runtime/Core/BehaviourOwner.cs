@@ -66,6 +66,8 @@ namespace Jackey.Behaviours {
 		}
 
 		public void TickBehaviour() {
+			if (m_behaviour.Status != ActionStatus.Running) return;
+
 			ExecutionStatus tickStatus = m_behaviour.Tick();
 
 			if (tickStatus != ExecutionStatus.Running) {

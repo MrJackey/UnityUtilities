@@ -61,6 +61,20 @@
 	border-radius: 999px;
 }
 
+.Node > #Icon {
+	width: 100px;
+	height: 64px;
+	align-self: center;
+}
+
+.Node Label {
+	align-self: center;
+	margin: 5px;
+	border-radius: 5px;
+	font-size: 16px;
+	-unity-text-align: middle-left;
+}
+
 .Status-Running, .Status-Success, .Status-Failure {
 	border-width: 2px;
 }
@@ -75,20 +89,6 @@
 
 .Status-Failure {
 	border-color: red;
-}
-
-BTNode > #Icon {
-	width: 100px;
-	height: 64px;
-	align-self: center;
-}
-
-BTNode Label {
-	align-self: center;
-	margin: 5px;
-	border-radius: 5px;
-	font-size: 16px;
-	-unity-text-align: middle-left;
 }
 
 GraphGroup {

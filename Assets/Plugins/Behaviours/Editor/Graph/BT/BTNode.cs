@@ -16,7 +16,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		private static Dictionary<string, Texture> s_iconCache = new();
 
 		private BehaviourAction m_action;
-		private ActionStatus m_actionStatus = ActionStatus.Inactive;
+		private ActionStatus m_lastRuntimeStatus = ActionStatus.Inactive;
 
 		private Image m_icon;
 		private Label m_label;
@@ -66,6 +66,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			hierarchy.Add(m_outSocket = new ConnectionSocket());
 			m_sockets = new List<IConnectionSocket> { this, m_outSocket };
 
+			usageHints = UsageHints.DynamicTransform;
 			transform.position = action.Editor_Data.Position;
 
 			SetAction(action);
@@ -117,11 +118,19 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_breakpointElement.visible = m_action.Editor_Data.Breakpoint;
 		}
 
+		private void UpdateEditorData() {
+			m_action.Editor_Data.Position = transform.position;
+
+			if (m_action is Composite composite) {
+				composite.Editor_OrderChildren();
+			}
+		}
+
 		private void RuntimeTick() {
-			if (m_action.Status == m_actionStatus)
+			if (m_action.Status == m_lastRuntimeStatus)
 				return;
 
-			string previousClass = m_actionStatus switch {
+			string previousClass = m_lastRuntimeStatus switch {
 				ActionStatus.Running => "Status-Running",
 				ActionStatus.Success => "Status-Success",
 				ActionStatus.Failure => "Status-Failure",
@@ -141,15 +150,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			if (!string.IsNullOrEmpty(nextClass))
 				contentContainer.EnsureClass(nextClass);
 
-			m_actionStatus = m_action.Status;
-		}
-
-		private void UpdateEditorData() {
-			m_action.Editor_Data.Position = transform.position;
-
-			if (m_action is Composite composite) {
-				composite.Editor_OrderChildren();
-			}
+			m_lastRuntimeStatus = m_action.Status;
 		}
 
 		public void SetEntry(bool isEntry) {

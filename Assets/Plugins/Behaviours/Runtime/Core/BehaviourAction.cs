@@ -30,7 +30,7 @@ namespace Jackey.Behaviours.Core {
 			Index = index;
 		}
 
-		internal virtual ExecutionStatus Enter() {
+		private protected virtual ExecutionStatus Enter() {
 #if UNITY_EDITOR
 			if (Editor_Data.Breakpoint) {
 				Debug.Log($"Behaviour Breakpoint @{Owner.name}", Owner);
@@ -46,7 +46,7 @@ namespace Jackey.Behaviours.Core {
 
 		protected virtual ExecutionStatus OnEnter() => ExecutionStatus.Running;
 
-		internal ExecutionStatus Tick() {
+		private ExecutionStatus Tick() {
 			if (IsFinished)
 				return (ExecutionStatus)Status;
 
@@ -63,7 +63,7 @@ namespace Jackey.Behaviours.Core {
 		/// <returns></returns>
 		protected virtual ExecutionStatus OnTick() => ExecutionStatus.Running;
 
-		internal void Interrupt() {
+		public void Interrupt() {
 			InterruptChildren();
 			Status = ActionStatus.Failure;
 
@@ -78,7 +78,7 @@ namespace Jackey.Behaviours.Core {
 		/// </summary>
 		protected virtual void OnInterrupt() { }
 
-		internal void Result(ActionResult result) {
+		private void Result(ActionResult result) {
 			OnResult(result);
 			Exit();
 		}
@@ -90,7 +90,7 @@ namespace Jackey.Behaviours.Core {
 		/// <param name="result">The result of the action execution</param>
 		protected virtual void OnResult(ActionResult result) { }
 
-		internal void Exit() {
+		private void Exit() {
 			OnExit();
 		}
 
@@ -160,7 +160,7 @@ namespace Jackey.Behaviours.Core {
 
 		protected T GetTarget() => m_target.GetValue();
 
-		internal override ExecutionStatus Enter() {
+		private protected override ExecutionStatus Enter() {
 			if (!Owner.SetTargetIfNeeded(ref m_target)) {
 				Debug.LogError($"{nameof(BehaviourAction)} is missing its {typeof(T).Name} target");
 				return ExecutionStatus.Failure;

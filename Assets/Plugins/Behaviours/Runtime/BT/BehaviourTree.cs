@@ -18,8 +18,6 @@ namespace Jackey.Behaviours.BT {
 		private bool m_inTickLoop;
 		private int m_tickIndex;
 
-		public ActionStatus Status { get; private set; } = ActionStatus.Inactive;
-
 		internal override void Initialize(BehaviourOwner owner) {
 			if (m_entry == null) {
 				Debug.LogError("Behaviour Tree does not have an entry action. Unable to initialize", this);
@@ -36,9 +34,7 @@ namespace Jackey.Behaviours.BT {
 			if (Status != ActionStatus.Inactive)
 				return;
 
-			Status = ActionStatus.Running;
-
-			m_entry.EnterSequence();
+			Status = (ActionStatus)m_entry.EnterSequence();
 		}
 
 		internal override ExecutionStatus Tick() {

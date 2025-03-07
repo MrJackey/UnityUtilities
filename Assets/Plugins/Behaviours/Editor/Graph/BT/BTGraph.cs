@@ -9,7 +9,6 @@ using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Editor.Utilities;
 using JetBrains.Annotations;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -20,27 +19,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_connectionManipulator.ConnectionCreated += OnConnectionCreated;
 			m_connectionManipulator.ConnectionMoved += OnConnectionMoved;
 			m_connectionManipulator.ConnectionRemoved += OnConnectionRemoved;
-		}
-
-		public void UpdateBehaviour(BehaviourTree behaviour) {
-			m_serializedBehaviour?.Dispose();
-
-			m_behaviour = behaviour;
-			m_serializedBehaviour = new SerializedObject(behaviour);
-
-			bool isPersistent = EditorUtility.IsPersistent(m_behaviour);
-			m_graphInstanceInfo.text = isPersistent ? "(Asset)" : "(Instance)";
-			m_isEditable = isPersistent;
-
-			ClearGraph();
-			BuildGraph();
-
-			m_graphHeader.Bind(m_serializedBehaviour);
-
-			m_blackboardInspector.SetSecondaryBlackboard(behaviour.Blackboard, m_serializedBehaviour.FindProperty(nameof(ObjectBehaviour.m_blackboard)));
-
-			this.ClearSelection();
-			OnSelectionChange();
 		}
 
 		protected override void BuildGraph() {
@@ -89,11 +67,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		private BTNode CreateNode(Type type) {
 			BehaviourAction action = (BehaviourAction)Activator.CreateInstance(type);
 			BTNode node = CreateNode(action);
-
-			Vector2 createPosition = this.ChangeCoordinatesTo(contentContainer, m_createNodePosition);
-			createPosition.x -= Node.DEFAULT_WIDTH / 2f;
-			createPosition.y -= Node.DEFAULT_HEIGHT / 2f;
-			node.transform.position = createPosition;
+			node.transform.position = GetNodeCreatePosition();
 
 			this.ReplaceSelection(node);
 
@@ -348,7 +322,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		#region Connection Callbacks
 
 		private void OnConnectionVoided(Connection connection, Action<Connection, IConnectionSocket> restore) {
-			SaveCreatePosition();
+			m_createPosition = Event.current.mousePosition;
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
 			TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>();
@@ -506,7 +480,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		}
 
 		private void DecorateNode(BTNode node, Type type) {
-			m_createNodePosition = node.ChangeCoordinatesTo(this, new Vector2(Node.DEFAULT_WIDTH / 2f, -Node.DEFAULT_HEIGHT * 2.5f));
+			m_createPosition = node.ChangeCoordinatesTo(this, new Vector2(Node.DEFAULT_WIDTH / 2f, -Node.DEFAULT_HEIGHT * 2.5f));
 
 			BTNode decoratorNode = CreateNode(type);
 			Decorator decorator = (Decorator)decoratorNode.Action;
@@ -606,10 +580,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		}
 
 		protected override void InspectElement(VisualElement element) {
-			// TODO: Remove guard?
-			if (m_behaviour == null)
-				return;
-
 			if (element is not BTNode node)
 				return;
 
