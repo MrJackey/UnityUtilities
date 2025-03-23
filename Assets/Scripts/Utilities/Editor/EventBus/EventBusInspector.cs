@@ -30,6 +30,7 @@ namespace Jackey.Utilities.Editor.EventBus {
 		}
 
 		private void OnDisable() {
+			Utilities.EventBus.Editor_BusConstructed -= OnBusConstructed;
 			Utilities.EventBus.Editor_BusUpdated -= OnBusUpdated;
 		}
 
