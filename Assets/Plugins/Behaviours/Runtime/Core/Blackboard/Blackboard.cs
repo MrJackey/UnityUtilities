@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Jackey.Behaviours.Utilities;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -33,7 +34,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 
 		public void SetVariable<T>(string name, T value) {
 			foreach (BlackboardVar variable in m_variables) {
-				if (variable.Name == name && variable.GetSerializedType() is T) {
+				if (variable.Name == name && (variable.GetSerializedType()?.IsAssignableFrom(typeof(T)) ?? false)) {
 					variable.SetValue(value);
 					return;
 				}
@@ -45,7 +46,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		}
 
 		[CanBeNull]
-		internal BlackboardVar FindVariableWithGuidOrName(string guid, string name) {
+		internal BlackboardVar FindVariableWithGuidOrName(SerializedGUID guid, string name) {
 			int variableCount = m_variables.Count;
 
 			// Prioritize the guid

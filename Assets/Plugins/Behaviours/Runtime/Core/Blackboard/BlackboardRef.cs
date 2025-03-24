@@ -1,4 +1,5 @@
 ﻿using System;
+using Jackey.Behaviours.Utilities;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -9,7 +10,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		[SerializeField] private T m_fieldValue;
 
 		[SerializeField] private ObjectBehaviour m_behaviour;
-		[SerializeField] private string m_variableGuid;
+		[SerializeField] private SerializedGUID m_variableGuid;
 		[SerializeField] private string m_variableName;
 
 		[UsedImplicitly] // #if !UNITY_EDITOR
@@ -17,7 +18,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 
 		public bool IsValue => m_mode is Mode.Field;
 		public bool IsVariable => m_mode is Mode.Variable;
-		public bool IsEmptyVariable => m_mode is Mode.Variable && string.IsNullOrEmpty(m_variableGuid);
+		public bool IsEmptyVariable => m_mode is Mode.Variable && m_variableGuid == default;
 
 #if UNITY_EDITOR
 		public string Editor_Info {
@@ -26,7 +27,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 					case Mode.Field:
 						return $"{m_fieldValue?.ToString() ?? string.Empty}";
 					case Mode.Variable:
-						if (!string.IsNullOrEmpty(m_variableGuid)) {
+						if (m_variableGuid != default) {
 							BlackboardVar variable = GetReferencedVariable();
 							return variable != null ? $"<b>({variable.Name})</b>" : $"<color=red><b>({m_variableName})</b></color>";
 						}
@@ -61,7 +62,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		}
 
 		private T GetReferenceValue() {
-			if (string.IsNullOrEmpty(m_variableGuid))
+			if (m_variableGuid == default)
 				return default;
 
 			BlackboardVar variable = GetReferencedVariable();
@@ -115,7 +116,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		}
 
 		void ISerializationCallbackReceiver.OnBeforeSerialize() {
-			if (string.IsNullOrEmpty(m_variableGuid)) {
+			if (m_variableGuid == default) {
 				m_variableName = null;
 				return;
 			}

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Utilities;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -15,7 +16,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		private static Texture s_blackboardIcon = EditorGUIUtility.IconContent("d_VerticalLayoutGroup Icon").image;
 
 		private static List<string> s_dropdownOptions = new();
-		private static List<string> s_dropdownValues = new();
+		private static List<SerializedGUID> s_dropdownValues = new();
 
 		private bool m_blackboardOnly;
 		private bool m_canEditField;
@@ -92,11 +93,12 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			}
 
 			m_variableGuidProperty = property.FindPropertyRelative("m_variableGuid");
+			SerializedGUID guidValue = SerializedGUID.Editor_GetFromProperty(m_variableGuidProperty);
 			m_variableNameProperty = property.FindPropertyRelative("m_variableName");
 			string variableName = m_variableNameProperty.stringValue;
 
 			m_refType = fieldInfo.FieldType.GenericTypeArguments[0];
-			BlackboardVar referencedVariable = FindVariable(m_variableGuidProperty.stringValue, variableName);
+			BlackboardVar referencedVariable = FindVariable(guidValue, variableName);
 
 			m_dropdownField = new DropdownField() {
 				label = property.displayName,
@@ -116,7 +118,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				}
 			}
 			else {
-				m_dropdownField.SetValueWithoutNotify(string.IsNullOrEmpty(m_variableGuidProperty.stringValue) ? "" : variableName);
+				m_dropdownField.SetValueWithoutNotify(guidValue == default ? "" : variableName);
 			}
 
 			RefreshConvertLabel(referencedVariable);
@@ -143,7 +145,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		[CanBeNull]
-		private BlackboardVar FindVariable(string guid, string name) {
+		private BlackboardVar FindVariable(SerializedGUID guid, string name) {
 			foreach (Blackboard blackboard in Blackboard.Available) {
 				if (blackboard == null) continue;
 
@@ -159,8 +161,8 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			s_dropdownOptions.Clear();
 			s_dropdownValues.Clear();
 
-			string referencedGuid = m_variableGuidProperty.stringValue;
-			bool missingReference = string.IsNullOrEmpty(referencedGuid);
+			SerializedGUID referencedGuid = SerializedGUID.Editor_GetFromProperty(m_variableGuidProperty);
+			bool missingReference = referencedGuid == default;
 
 			foreach (Blackboard blackboard in Blackboard.Available) {
 				if (blackboard == null) continue;
@@ -187,11 +189,11 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		private void OnDropdownPointerDown(PointerDownEvent evt) => RefreshDropdownOptions();
 		private void OnDropdownValueChanged(ChangeEvent<string> _) {
 			if (m_dropdownField.index == s_dropdownValues.Count + 1) { // Clear
-				m_variableGuidProperty.stringValue = string.Empty;
+				SerializedGUID.Editor_WriteToProperty(m_variableGuidProperty, new SerializedGUID());
 				m_dropdownField.SetValueWithoutNotify(string.Empty);
 			}
 			else {
-				m_variableGuidProperty.stringValue = s_dropdownValues[m_dropdownField.index];
+				SerializedGUID.Editor_WriteToProperty(m_variableGuidProperty, s_dropdownValues[m_dropdownField.index]);
 			}
 
 			m_variableGuidProperty.serializedObject.ApplyModifiedProperties();
@@ -236,7 +238,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		private void RefreshConvertLabel() {
 			string variableName = m_variableNameProperty.stringValue;
-			BlackboardVar referencedVariable = FindVariable(m_variableGuidProperty.stringValue, variableName);
+			BlackboardVar referencedVariable = FindVariable(SerializedGUID.Editor_GetFromProperty(m_variableGuidProperty), variableName);
 
 			RefreshConvertLabel(referencedVariable);
 		}

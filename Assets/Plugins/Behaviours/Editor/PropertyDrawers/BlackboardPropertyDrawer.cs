@@ -3,6 +3,7 @@ using System.Linq;
 using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Editor.TypeSearch;
+using Jackey.Behaviours.Utilities;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -141,8 +142,13 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				m_variablesProperty.InsertArrayElementAtIndex(nextIndex);
 				SerializedProperty newProperty = m_variablesProperty.GetArrayElementAtIndex(nextIndex);
 
+				// Apply and update to ensure the guid's fixed buffer size is correct.
+				// Not sure if it's a Unity bug or not but otherwise it reports a fixed buffer size of 0
+				newProperty.serializedObject.ApplyModifiedProperties();
+				newProperty.serializedObject.Update();
+
 				// Set default values
-				newProperty.FindPropertyRelative("m_guid").stringValue = GUID.Generate().ToString();
+				SerializedGUID.Editor_WriteToProperty(newProperty.FindPropertyRelative("m_guid"), SerializedGUID.Generate());
 				newProperty.FindPropertyRelative("m_variableName").stringValue = $"new {type.Name} Variable";
 				newProperty.FindPropertyRelative("m_serializedTypeName").stringValue = type.AssemblyQualifiedName;
 				newProperty.FindPropertyRelative("m_boxedValue").managedReferenceValue = null;

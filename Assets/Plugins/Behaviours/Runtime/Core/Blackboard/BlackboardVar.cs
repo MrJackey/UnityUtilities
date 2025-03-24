@@ -1,4 +1,5 @@
 ﻿using System;
+using Jackey.Behaviours.Utilities;
 using JetBrains.Annotations;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -8,7 +9,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 	public sealed class BlackboardVar : ISerializationCallbackReceiver {
 		[SerializeField] private string m_variableName;
 		[SerializeField] private string m_serializedTypeName;
-		[SerializeField] private string m_guid;
+		[SerializeField] private SerializedGUID m_guid;
 
 		[SerializeField] private Object m_unityObjectValue;
 		[SerializeReference] private object m_boxedValue;
@@ -18,10 +19,10 @@ namespace Jackey.Behaviours.Core.Blackboard {
 
 		private BlackboardValue m_value;
 
-		internal string Guid => m_guid;
+		internal SerializedGUID Guid => m_guid;
 
 		public BlackboardVar([NotNull] Type type) {
-			m_guid = new Guid().ToString();
+			m_guid = SerializedGUID.Generate();
 			m_serializedTypeName = type.AssemblyQualifiedName;
 		}
 
