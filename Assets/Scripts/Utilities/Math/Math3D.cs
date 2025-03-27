@@ -65,19 +65,6 @@ namespace Jackey.Utilities.Math {
 		}
 
 		/// <summary>
-		/// Copy a Vector3 setting each component less or equal to their corresponding counterpart in <paramref name="min"/>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		[Pure]
-		public static Vector3 Min(Vector3 vec, Vector3 min) {
-			return new Vector3(
-				Mathf.Min(vec.x, min.x),
-				Mathf.Min(vec.y, min.y),
-				Mathf.Min(vec.z, min.z)
-			);
-		}
-
-		/// <summary>
 		/// Copy a Vector3 setting each component greater or equal to <paramref name="max"/>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -87,19 +74,6 @@ namespace Jackey.Utilities.Math {
 				Mathf.Max(vec.x, max),
 				Mathf.Max(vec.y, max),
 				Mathf.Max(vec.z, max)
-			);
-		}
-
-		/// <summary>
-		/// Copy a Vector3 setting each component greater or equal to their corresponding counterpart in <paramref name="max"/>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		[Pure]
-		public static Vector3 Max(Vector3 vec, Vector3 max) {
-			return new Vector3(
-				Mathf.Max(vec.x, max.x),
-				Mathf.Max(vec.y, max.y),
-				Mathf.Max(vec.z, max.z)
 			);
 		}
 
