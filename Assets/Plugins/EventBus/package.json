@@ -1,0 +1,11 @@
+{
+	"name": "com.jackey.event-bus",
+	"version": "1.0.0",
+	"description": "Provides a system for globally accessed events that anything that subscribe to and invoke. Especially useful for many -> many events.",
+	"displayName": "Event Bus",
+	"unity": "2022.3",
+	"keywords": [],
+	"author": {
+		"name": "Jacob Lundberg"
+	}
+}

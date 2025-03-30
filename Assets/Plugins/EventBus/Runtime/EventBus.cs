@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Jackey.Utilities {
+namespace Jackey.EventBus {
 	/// <summary>
 	/// Interface for sending globally accessed events. It is especially useful for
 	/// many -> many events which can be hard to properly subscribe to and unsubscribe from.
@@ -12,9 +12,9 @@ namespace Jackey.Utilities {
 		private static readonly object[] s_singleListenerArray = new object[1];
 
 #if UNITY_EDITOR
-		public static List<Type> Editor_Buses { get; } = new();
-		public static event Action Editor_BusConstructed;
-		public static event Action<Type> Editor_BusUpdated;
+		internal static List<Type> Editor_Buses { get; } = new();
+		internal static event Action Editor_BusConstructed;
+		internal static event Action<Type> Editor_BusUpdated;
 #endif
 
 		/// <summary>

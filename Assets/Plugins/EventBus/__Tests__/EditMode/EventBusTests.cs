@@ -1,7 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 
-namespace Jackey.Utilities.__Tests__.EditMode {
+namespace Jackey.EventBus.__Tests__.EditMode {
 	public class EventBusTests {
 		[SetUp]
 		public void SetUp() { }

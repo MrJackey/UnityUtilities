@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Jackey.Utilities.Editor.EventBus {
+namespace Jackey.EventBus.Editor {
 	public class EventBusInspector : EditorWindow {
 		[SerializeField] private StyleSheet m_styleSheet;
 
@@ -18,20 +18,20 @@ namespace Jackey.Utilities.Editor.EventBus {
 		private ListView m_callbacksView;
 		private List<Clickable> m_callbackClickables = new();
 
-		[MenuItem("Tools/Jackey/Utilities/EventBus Inspector", priority = 100000)]
+		[MenuItem("Tools/Jackey/EventBus/Inspector")]
 		private static void ShowWindow() {
 			EventBusInspector window = GetWindow<EventBusInspector>();
 			window.Show();
 		}
 
 		private void OnEnable() {
-			Utilities.EventBus.Editor_BusConstructed += OnBusConstructed;
-			Utilities.EventBus.Editor_BusUpdated += OnBusUpdated;
+			EventBus.Editor_BusConstructed += OnBusConstructed;
+			EventBus.Editor_BusUpdated += OnBusUpdated;
 		}
 
 		private void OnDisable() {
-			Utilities.EventBus.Editor_BusConstructed -= OnBusConstructed;
-			Utilities.EventBus.Editor_BusUpdated -= OnBusUpdated;
+			EventBus.Editor_BusConstructed -= OnBusConstructed;
+			EventBus.Editor_BusUpdated -= OnBusUpdated;
 		}
 
 		private void CreateGUI() {
@@ -52,7 +52,7 @@ namespace Jackey.Utilities.Editor.EventBus {
 			eventsSection.Add(new Label("Events"));
 			eventsSection.Add(m_eventView = new ListView() {
 				name = "EventList",
-				itemsSource = Utilities.EventBus.Editor_Buses,
+				itemsSource = EventBus.Editor_Buses,
 				fixedItemHeight = 50,
 				selectionType = SelectionType.Single,
 				showBorder = false,
@@ -112,7 +112,7 @@ namespace Jackey.Utilities.Editor.EventBus {
 		}
 
 		private void BindEventItem(VisualElement visualElement, int i) {
-			visualElement.Q<Label>("EventName").text = Utilities.EventBus.Editor_Buses[i].GenericTypeArguments[0].FullName;
+			visualElement.Q<Label>("EventName").text = EventBus.Editor_Buses[i].GenericTypeArguments[0].FullName;
 
 			(IList listeners, IList callbacks) = GetBusSubscribers(i);
 			visualElement.Q<Label>("ListenerCount").text = $"Listeners: {listeners.Count}";
@@ -130,7 +130,7 @@ namespace Jackey.Utilities.Editor.EventBus {
 		}
 
 		private void OnBusUpdated(Type busType) {
-			int busIndex = Utilities.EventBus.Editor_Buses.IndexOf(busType);
+			int busIndex = EventBus.Editor_Buses.IndexOf(busType);
 			Debug.Assert(busIndex != -1);
 
 			m_eventView.RefreshItem(busIndex);
@@ -212,7 +212,7 @@ namespace Jackey.Utilities.Editor.EventBus {
 		}
 
 		private (IList listeners, IList callbacks) GetBusSubscribers(int index) {
-			Type busType = Utilities.EventBus.Editor_Buses[index];
+			Type busType = EventBus.Editor_Buses[index];
 
 			return (
 				(IList)busType.GetField("s_listeners", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null),
