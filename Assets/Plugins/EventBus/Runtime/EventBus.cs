@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using JetBrains.Annotations;
 
 namespace Jackey.EventBus {
 	/// <summary>
@@ -135,6 +136,14 @@ namespace Jackey.EventBus {
 		public static void ClearCache() {
 			s_listenerBusCache.Clear();
 		}
+
+#if UNITY_EDITOR
+		internal static void ClearBuses() {
+			foreach (Type busType in Editor_Buses) {
+				busType.GetMethod("Editor_Clear")!.Invoke(null, Array.Empty<object>());
+			}
+		}
+#endif
 
 		private static List<(MethodInfo AddListener, MethodInfo RemoveListener)> GetAllListenerBuses(IEventBusListener listener) {
 			Type listenerType = listener.GetType();
@@ -351,6 +360,14 @@ namespace Jackey.EventBus {
 			}
 
 #if UNITY_EDITOR
+			[UsedImplicitly] // Reflection
+			public static void Editor_Clear() {
+				s_listeners.Clear();
+				s_callbacks.Clear();
+
+				Editor_InvokeUpdate();
+			}
+
 			private static void Editor_InvokeUpdate() {
 				Editor_BusUpdated?.Invoke(typeof(Bus<T>));
 			}

@@ -9,6 +9,7 @@ namespace Jackey.EventBus.__Tests__.EditMode {
 		[TearDown]
 		public void TearDown() {
 			EventBus.ClearCache();
+			EventBus.ClearBuses();
 		}
 
 		[Test]
