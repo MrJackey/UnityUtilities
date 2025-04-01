@@ -38,6 +38,7 @@ namespace Jackey.Behaviours.BT.Nested {
 
 			if (m_behaviourInstance == null) {
 				m_behaviourInstance = Object.Instantiate(behaviour);
+				Owner.Blackboard.MergeInto(m_behaviourInstance.Blackboard);
 				m_behaviourInstance.Initialize(Owner);
 			}
 
