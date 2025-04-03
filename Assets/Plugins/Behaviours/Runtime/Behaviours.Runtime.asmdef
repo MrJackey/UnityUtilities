@@ -1,0 +1,14 @@
+{
+    "name": "Jackey.Behaviours.Runtime",
+    "rootNamespace": "Jackey",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

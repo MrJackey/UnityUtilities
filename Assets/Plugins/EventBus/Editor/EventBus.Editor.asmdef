@@ -1,0 +1,18 @@
+{
+    "name": "Jackey.EventBus.Editor",
+    "rootNamespace": "Jackey",
+    "references": [
+        "GUID:2a13f95ee6df10544aa6a94350043d8d"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

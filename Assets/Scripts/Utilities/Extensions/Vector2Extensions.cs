@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace Jackey.Utilities.Extensions {
 	public static class Vector2Extensions {
@@ -17,11 +18,13 @@ namespace Jackey.Utilities.Extensions {
 		/// <summary>
 		/// Returns a Vector2 copy giving x a new value
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Vector2 WithX(this Vector2 vec, float x) => new Vector2(x, vec.y);
 
 		/// <summary>
 		/// Returns a Vector2 copy giving y a new value
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Vector2 WithY(this Vector2 vec, float y) => new Vector2(vec.x, y);
 	}
 }

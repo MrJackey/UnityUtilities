@@ -1,0 +1,15 @@
+{
+	"name": "com.jackey.behaviours",
+	"version": "0.1.0",
+	"description": "",
+	"displayName": "Behaviours",
+	"unity": "2022.3",
+	"keywords": [
+		"behaviours",
+		"behaviour tree",
+		"graph editor"
+	],
+	"author": {
+		"name": "Jacob Lundberg"
+	}
+}

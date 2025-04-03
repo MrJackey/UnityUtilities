@@ -3,7 +3,6 @@ using System.Diagnostics;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
@@ -20,10 +19,8 @@ namespace Jackey.Utilities.Attributes {
 	[Conditional("UNITY_EDITOR")]
 	public class IfAttribute : PropertyAttribute {
 		public string Other { get; }
-		public Comparison Method { get; }
+		internal Comparison Method { get; }
 		internal ValueType OtherType { get; }
-
-		public bool ComparisonIsValid { get; }
 
 		public bool BoolValue { get; }
 		public double NumberValue { get; }
@@ -33,33 +30,18 @@ namespace Jackey.Utilities.Attributes {
 			Method = comparison;
 		}
 
-		protected IfAttribute(string other, Comparison comparison, bool value) : this(other, comparison) {
+		protected IfAttribute(string other, BoolComparison comparison, bool value) : this(other, (Comparison)comparison) {
 			OtherType = ValueType.Boolean;
-			ComparisonIsValid = comparison is Comparison.Equal or Comparison.NotEqual;
 			BoolValue = value;
-
-			if (!ComparisonIsValid) {
-				Debug.LogWarning($"{nameof(IfAttribute)} can not use comparison {comparison} on booleans");
-			}
 		}
 
-		protected IfAttribute(string other, Comparison comparison, double value) : this(other, comparison) {
+		protected IfAttribute(string other, NumberComparison comparison, double value) : this(other, (Comparison)comparison) {
 			OtherType = ValueType.Number;
-			ComparisonIsValid = comparison is Comparison.Equal or Comparison.NotEqual or Comparison.Greater or Comparison.GreaterOrEqual or Comparison.Less or Comparison.LessOrEqual or Comparison.AND or Comparison.NOT or Comparison.OR;
 			NumberValue = value;
-
-			if (!ComparisonIsValid) {
-				Debug.LogWarning($"{nameof(IfAttribute)} can not use comparison {comparison} on numbers");
-			}
 		}
 
-		protected IfAttribute(string other, Comparison comparison, Object _) : this(other, comparison) {
+		protected IfAttribute(string other, ObjectComparison comparison, Object _) : this(other, (Comparison)comparison) {
 			OtherType = ValueType.Object;
-			ComparisonIsValid = comparison is Comparison.Null or Comparison.NotNull;
-
-			if (!ComparisonIsValid) {
-				Debug.LogWarning($"{nameof(IfAttribute)} can not use comparison {comparison} on Unity objects");
-			}
 		}
 
 #if UNITY_EDITOR
@@ -73,7 +55,29 @@ namespace Jackey.Utilities.Attributes {
 		}
 #endif
 
-		public enum Comparison {
+		public enum BoolComparison {
+			Equal = Comparison.Equal,
+			NotEqual = Comparison.NotEqual,
+		}
+
+		public enum NumberComparison {
+			Equal = Comparison.Equal,
+			NotEqual = Comparison.NotEqual,
+			Greater = Comparison.Greater,
+			GreaterOrEqual = Comparison.GreaterOrEqual,
+			Less = Comparison.Less,
+			LessOrEqual = Comparison.LessOrEqual,
+			AND = Comparison.AND,
+			NOT = Comparison.NOT,
+			OR = Comparison.OR,
+		}
+
+		public enum ObjectComparison {
+			Null = Comparison.Null,
+			NotNull = Comparison.NotNull,
+		}
+
+		internal enum Comparison {
 			Equal,
 			NotEqual,
 			Greater,
@@ -98,9 +102,9 @@ namespace Jackey.Utilities.Attributes {
 	/// Show this field in the inspector only when a comparison with another field is true
 	/// </summary>
 	public class ShowIfAttribute : IfAttribute {
-		public ShowIfAttribute(string other, Comparison comparison, bool value) : base(other, comparison, value) { }
-		public ShowIfAttribute(string other, Comparison comparison, double value) : base(other, comparison, value) { }
-		public ShowIfAttribute(string other, Comparison comparison) : base(other, comparison, null) { }
+		public ShowIfAttribute(string other, BoolComparison comparison, bool value) : base(other, comparison, value) { }
+		public ShowIfAttribute(string other, NumberComparison comparison, double value) : base(other, comparison, value) { }
+		public ShowIfAttribute(string other, ObjectComparison comparison) : base(other, comparison, null) { }
 
 #if UNITY_EDITOR
 		public void Bind(VisualElement element, SerializedProperty property) {
@@ -120,18 +124,18 @@ namespace Jackey.Utilities.Attributes {
 	/// <see cref="IfAttribute.EvaluateCondition(SerializedProperty)"/> for IMGUI
 	/// </summary>
 	public sealed class CustomShowIfAttribute : ShowIfAttribute {
-		public CustomShowIfAttribute(string other, Comparison comparison, bool value) : base(other, comparison, value) { }
-		public CustomShowIfAttribute(string other, Comparison comparison, double value) : base(other, comparison, value) { }
-		public CustomShowIfAttribute(string other, Comparison comparison) : base(other, comparison) { }
+		public CustomShowIfAttribute(string other, BoolComparison comparison, bool value) : base(other, comparison, value) { }
+		public CustomShowIfAttribute(string other, NumberComparison comparison, double value) : base(other, comparison, value) { }
+		public CustomShowIfAttribute(string other, ObjectComparison comparison) : base(other, comparison) { }
 	}
 
 	/// <summary>
 	/// Have this field enabled for editing in the inspector only when a comparison with another field is true
 	/// </summary>
 	public class EnableIfAttribute : IfAttribute {
-		public EnableIfAttribute(string other, Comparison comparison, bool value) : base(other, comparison, value) { }
-		public EnableIfAttribute(string other, Comparison comparison, double value) : base(other, comparison, value) { }
-		public EnableIfAttribute(string other, Comparison comparison) : base(other, comparison, null) { }
+		public EnableIfAttribute(string other, BoolComparison comparison, bool value) : base(other, comparison, value) { }
+		public EnableIfAttribute(string other, NumberComparison comparison, double value) : base(other, comparison, value) { }
+		public EnableIfAttribute(string other, ObjectComparison comparison) : base(other, comparison, null) { }
 
 #if UNITY_EDITOR
 		public void Bind(VisualElement element, SerializedProperty property) {
@@ -151,18 +155,15 @@ namespace Jackey.Utilities.Attributes {
 	/// <see cref="IfAttribute.EvaluateCondition(SerializedProperty)"/> for IMGUI
 	/// </summary>
 	public sealed class CustomEnableIfAttribute : EnableIfAttribute {
-		public CustomEnableIfAttribute(string other, Comparison comparison, bool value) : base(other, comparison, value) { }
-		public CustomEnableIfAttribute(string other, Comparison comparison, double value) : base(other, comparison, value) { }
-		public CustomEnableIfAttribute(string other, Comparison comparison) : base(other, comparison) { }
+		public CustomEnableIfAttribute(string other, BoolComparison comparison, bool value) : base(other, comparison, value) { }
+		public CustomEnableIfAttribute(string other, NumberComparison comparison, double value) : base(other, comparison, value) { }
+		public CustomEnableIfAttribute(string other, ObjectComparison comparison) : base(other, comparison) { }
 	}
 
 #if UNITY_EDITOR
 	namespace PropertyDrawers {
 		public abstract class IfAttributeDrawer : PropertyDrawer {
 			public static bool EvaluateCondition(SerializedProperty property, IfAttribute attr) {
-				if (!attr.ComparisonIsValid)
-					return false;
-
 				SerializedProperty otherProperty = FindOtherProperty(property, attr);
 
 				if (!PropertyMatchesCheck(otherProperty, attr.OtherType))
