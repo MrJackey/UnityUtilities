@@ -6,7 +6,7 @@ namespace Jackey.Utilities.Extensions {
 		/// Checks whether or not the LayerMask contains the input layer
 		/// </summary>
 		/// <returns>Returns true if the mask contains the layer</returns>
-		public static bool Includes(this LayerMask mask, int layer) {
+		public static bool Contains(this LayerMask mask, int layer) {
 			return (mask.value & (1 << layer)) != 0;
 		}
 	}
