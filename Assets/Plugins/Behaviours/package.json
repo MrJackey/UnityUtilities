@@ -3,11 +3,11 @@
 	"version": "0.1.0",
 	"description": "",
 	"displayName": "Behaviours",
-	"unity": "2021.1",
+	"unity": "2022.3",
 	"keywords": [
 		"behaviours",
 		"behaviour tree",
-		"finite statemachine"
+		"graph editor"
 	],
 	"author": {
 		"name": "Jacob Lundberg"
