@@ -232,7 +232,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 			if (IsFolder(go.GetInstanceID()))
 				return false;
 
-			if (go.GetComponents<Component>().Length > 1)
+			if (go.GetComponentCount() > 1)
 				return false;
 
 			Transform parent = go.transform.parent;

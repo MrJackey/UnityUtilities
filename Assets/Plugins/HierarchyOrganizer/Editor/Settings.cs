@@ -11,6 +11,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 		[SerializeField] private bool m_stripOnBuilds = true;
 		[SerializeField] private bool m_stripInEditor;
+		[SerializeField] private HierarchyFolderProcessor.DisabledFolderStripMethod m_disabledFolderStripMethod = HierarchyFolderProcessor.DisabledFolderStripMethod.DestroyChildren;
 
 		[SerializeField] private bool m_warnOfDisabledStripBuilds = true;
 
@@ -31,6 +32,11 @@ namespace Jackey.HierarchyOrganizer.Editor {
 				m_stripInEditor = value;
 				Menu.SetChecked(FOLDER_EDITOR_STRIP_MENU_PATH, value);
 			}
+		}
+
+		internal HierarchyFolderProcessor.DisabledFolderStripMethod DisabledFolderStripMethod {
+			get => m_disabledFolderStripMethod;
+			set => m_disabledFolderStripMethod = value;
 		}
 
 		internal bool WarnOfDisabledStripBuilds {

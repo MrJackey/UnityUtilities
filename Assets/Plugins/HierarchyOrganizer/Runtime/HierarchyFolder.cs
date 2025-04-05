@@ -15,9 +15,9 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 #if UNITY_EDITOR
 		private const HideFlags HIDE_FLAGS = HideFlags.HideInInspector | HideFlags.NotEditable;
 
-		private bool m_preventInitialization;
 		private bool m_initializing;
 		private bool m_initialized;
+		private bool m_inDelayedDestroy;
 
 		private Transform m_preMoveParent;
 
@@ -30,7 +30,7 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 			hideFlags |= HIDE_FLAGS;
 			transform.hideFlags |= HIDE_FLAGS;
 
-			if (!m_initialized && !m_initializing && !m_preventInitialization) {
+			if (!m_initialized && !m_initializing && !m_inDelayedDestroy) {
 				// The delay is needed due to parent manipulation sending messages which
 				// is not supported in OnValidate and therefore logs warnings
 				EditorApplication.delayCall += Initialize;
@@ -71,7 +71,7 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 							prefabStage.ClearDirtiness();
 					};
 
-					m_preventInitialization = true;
+					m_inDelayedDestroy = true;
 				}
 			}
 		}
@@ -143,26 +143,36 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 			return depth;
 		}
 
-		#region Flatten
-
 		internal void Flatten() {
-			if (GetComponents<Component>().Length > 2)
-				Debug.LogWarning($"Folder \"{name}\" in scene {gameObject.scene.name} has components on it which is lost during folder stripping", this);
-
-			DetachChildren();
-		}
-
-		private void DetachChildren() {
 			Transform myTransform = transform;
 			Transform parent = myTransform.parent;
-			int childCount = myTransform.childCount;
 
+			int childCount = myTransform.childCount;
 			for (int i = childCount - 1; i >= 0; i--) {
 				myTransform.GetChild(i).SetParent(parent);
 			}
 		}
 
-		#endregion
+		internal void DestroyChildren() {
+			Transform myTransform = transform;
+
+			int childCount = myTransform.childCount;
+			for (int i = childCount - 1; i >= 0; i--) {
+				DestroyImmediate(myTransform.GetChild(i).gameObject);
+			}
+		}
+
+		internal void FlattenAndDisableChildren() {
+			Transform myTransform = transform;
+			Transform parent = myTransform.parent;
+
+			int childCount = myTransform.childCount;
+			for (int i = childCount - 1; i >= 0; i--) {
+				Transform child = myTransform.GetChild(i);
+				child.gameObject.SetActive(false);
+				child.SetParent(parent);
+			}
+		}
 #endif
 	}
 }

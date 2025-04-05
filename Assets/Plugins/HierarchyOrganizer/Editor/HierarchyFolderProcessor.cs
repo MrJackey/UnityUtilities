@@ -1,10 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Jackey.HierarchyOrganizer.Runtime;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace Jackey.HierarchyOrganizer.Editor {
 	internal class HierarchyFolderProcessor : IProcessSceneWithReport, IPreprocessBuildWithReport {
@@ -49,13 +51,41 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 		private static void StripFolders() {
 			foreach (HierarchyFolder folder in Object.FindObjectsOfType<HierarchyFolder>(true).OrderByDescending(x => x.GetDepth())) {
-				folder.Flatten();
+				GameObject folderObject = folder.gameObject;
+
+				if (folderObject.GetComponentCount() > 2) // Expects Transform & HierarchyFolder
+					Debug.LogWarning($"Folder \"{folder.name}\" in scene {folderObject.scene.name} has components on it which is lost during folder stripping", folder);
+
+				if (folderObject.activeInHierarchy) {
+					folder.Flatten();
+				}
+				else {
+					switch (Settings.instance.DisabledFolderStripMethod) {
+						case DisabledFolderStripMethod.DestroyChildren:
+							folder.DestroyChildren();
+							break;
+						case DisabledFolderStripMethod.DisableChildren:
+							folder.FlattenAndDisableChildren();
+							break;
+						case DisabledFolderStripMethod.DoNothing:
+							folder.Flatten();
+							break;
+						default:
+							throw new ArgumentOutOfRangeException();
+					}
+				}
 
 				if (Application.isPlaying)
-					Object.Destroy(folder.gameObject);
+					Object.Destroy(folderObject);
 				else
-					Object.DestroyImmediate(folder.gameObject);
+					Object.DestroyImmediate(folderObject);
 			}
+		}
+
+		public enum DisabledFolderStripMethod {
+			DestroyChildren,
+			DisableChildren,
+			DoNothing,
 		}
 	}
 }

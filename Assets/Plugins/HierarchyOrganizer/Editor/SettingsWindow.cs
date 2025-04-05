@@ -17,7 +17,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 			CreateFolderGUI();
 
-			rootVisualElement.Add(Separator());
+			rootVisualElement.Add(Space(12f));
 
 			CreateIndentGuideGUI();
 		}
@@ -25,35 +25,46 @@ namespace Jackey.HierarchyOrganizer.Editor {
 		private void CreateFolderGUI() {
 			VisualElement folderSection = CreateSection("Folders");
 
-			Toggle toggleField = new Toggle(ObjectNames.NicifyVariableName(nameof(Settings.instance.StripOnBuilds))) {
+			Toggle stripBuildsField = new Toggle(ObjectNames.NicifyVariableName(nameof(Settings.instance.StripOnBuilds))) {
 				value = Settings.instance.StripOnBuilds,
 			};
-			toggleField.RegisterValueChangedCallback(evt => {
+			stripBuildsField.RegisterValueChangedCallback(evt => {
 				Settings.instance.StripOnBuilds = evt.newValue;
 				Settings.instance.Save();
 			});
-			folderSection.Add(toggleField);
+			folderSection.Add(stripBuildsField);
 
-			toggleField = new Toggle(ObjectNames.NicifyVariableName(nameof(Settings.instance.StripInEditor))) {
-				value = Settings.instance.StripInEditor,
-			};
-			toggleField.RegisterValueChangedCallback(evt => {
-				Settings.instance.StripInEditor = evt.newValue;
-				Settings.instance.Save();
-			});
-			folderSection.Add(toggleField);
-
-			folderSection.Add(Separator());
-
-			toggleField = new Toggle("Warn on Builds") {
+			Toggle warnField = new Toggle("Warn on Builds") {
 				value = Settings.instance.WarnOfDisabledStripBuilds,
 				tooltip = "If build stripping is disabled, a dialog will appear on builds allowing for an exception for that specific build",
 			};
-			toggleField.RegisterValueChangedCallback(evt => {
+			warnField.RegisterValueChangedCallback(evt => {
 				Settings.instance.WarnOfDisabledStripBuilds = evt.newValue;
 				Settings.instance.Save();
 			});
-			folderSection.Add(toggleField);
+			folderSection.Add(warnField);
+
+			folderSection.Add(Space(4f));
+
+			Toggle stripEditorField = new Toggle(ObjectNames.NicifyVariableName(nameof(Settings.instance.StripInEditor))) {
+				value = Settings.instance.StripInEditor,
+			};
+			stripEditorField.RegisterValueChangedCallback(evt => {
+				Settings.instance.StripInEditor = evt.newValue;
+				Settings.instance.Save();
+			});
+			folderSection.Add(stripEditorField);
+
+			folderSection.Add(Space(6f));
+
+			EnumField disabledFolderMethodField = new EnumField("Disabled Folder Strip", Settings.instance.DisabledFolderStripMethod) {
+				tooltip = "What should happen with a folder's content when it's disabled and stripped from the scene",
+			};
+			disabledFolderMethodField.RegisterValueChangedCallback(evt => {
+				Settings.instance.DisabledFolderStripMethod = (HierarchyFolderProcessor.DisabledFolderStripMethod)evt.newValue;
+				Settings.instance.Save();
+			});
+			folderSection.Add(disabledFolderMethodField);
 
 			rootVisualElement.Add(folderSection);
 		}
@@ -88,12 +99,14 @@ namespace Jackey.HierarchyOrganizer.Editor {
 		private VisualElement CreateSection(string header) {
 			VisualElement section = new() {
 				style = {
-					paddingBottom = EditorGUIUtility.standardVerticalSpacing, paddingLeft = EditorGUIUtility.standardVerticalSpacing, paddingRight = EditorGUIUtility.standardVerticalSpacing, paddingTop = EditorGUIUtility.standardVerticalSpacing,
+					paddingBottom = EditorGUIUtility.standardVerticalSpacing,
+					paddingTop = EditorGUIUtility.standardVerticalSpacing,
 				},
 			};
 
 			section.Add(new Label(header) {
 				style = {
+					marginLeft = 3f,
 					marginBottom = EditorGUIUtility.standardVerticalSpacing,
 					unityTextAlign = TextAnchor.MiddleLeft,
 					unityFontStyleAndWeight = FontStyle.Bold,
@@ -103,10 +116,10 @@ namespace Jackey.HierarchyOrganizer.Editor {
 			return section;
 		}
 
-		private VisualElement Separator() {
+		private VisualElement Space(float space) {
 			return new VisualElement() {
 				style = {
-					height = EditorGUIUtility.singleLineHeight,
+					height = space,
 					width = new Length(100f, LengthUnit.Percent),
 				},
 			};
