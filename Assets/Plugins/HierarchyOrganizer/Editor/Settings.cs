@@ -11,11 +11,12 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 		[SerializeField] private bool m_stripOnBuilds = true;
 		[SerializeField] private bool m_stripInEditor;
+		[SerializeField] private HierarchyFolderProcessor.DisabledFolderStripMethod m_disabledFolderStripMethod = HierarchyFolderProcessor.DisabledFolderStripMethod.DestroyChildren;
 
-		internal bool WarnOfDisabledStripBuilds = true;
+		[SerializeField] private bool m_warnOfDisabledStripBuilds = true;
 
-		internal HierarchyDrawer.IndentGuide IndentGuide = HierarchyDrawer.IndentGuide.None;
-		internal Color IndentGuideColor = new(0.39f, 0.4f, 0.39f);
+		[SerializeField] private HierarchyDrawer.IndentGuide m_indentGuide = HierarchyDrawer.IndentGuide.None;
+		[SerializeField] private Color m_indentGuideColor = new(0.39f, 0.4f, 0.39f);
 
 		internal bool StripOnBuilds {
 			get => m_stripOnBuilds;
@@ -31,6 +32,26 @@ namespace Jackey.HierarchyOrganizer.Editor {
 				m_stripInEditor = value;
 				Menu.SetChecked(FOLDER_EDITOR_STRIP_MENU_PATH, value);
 			}
+		}
+
+		internal HierarchyFolderProcessor.DisabledFolderStripMethod DisabledFolderStripMethod {
+			get => m_disabledFolderStripMethod;
+			set => m_disabledFolderStripMethod = value;
+		}
+
+		internal bool WarnOfDisabledStripBuilds {
+			get => m_warnOfDisabledStripBuilds;
+			set => m_warnOfDisabledStripBuilds = value;
+		}
+
+		internal HierarchyDrawer.IndentGuide IndentGuide {
+			get => m_indentGuide;
+			set => m_indentGuide = value;
+		}
+
+		internal Color IndentGuideColor {
+			get => m_indentGuideColor;
+			set => m_indentGuideColor = value;
 		}
 
 		private void Init() {

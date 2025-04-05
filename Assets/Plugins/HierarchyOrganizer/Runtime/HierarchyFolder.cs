@@ -11,23 +11,26 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 	[AddComponentMenu("")]
 	[DisallowMultipleComponent]
 	[ExecuteAlways]
-	internal class HierarchyFolder : MonoBehaviour {
+	public class HierarchyFolder : MonoBehaviour {
 #if UNITY_EDITOR
-		private bool m_preventInitialization;
+		private const HideFlags HIDE_FLAGS = HideFlags.HideInInspector | HideFlags.NotEditable;
+
 		private bool m_initializing;
 		private bool m_initialized;
+		private bool m_inDelayedDestroy;
 
 		private Transform m_preMoveParent;
 
 		internal static event Action<HierarchyFolder> Initialized;
+		internal static event Action<HierarchyFolder> Destroyed;
 
 		// OnValidate is used to initialize the folder due to it being called when
 		// the instance is created or playmode is entered regardless of its GameObject's active state.
 		private void OnValidate() {
-			hideFlags |= HideFlags.HideInInspector | HideFlags.NotEditable;
-			transform.hideFlags |= HideFlags.HideInInspector | HideFlags.NotEditable;
+			hideFlags |= HIDE_FLAGS;
+			transform.hideFlags |= HIDE_FLAGS;
 
-			if (!m_initialized && !m_initializing && !m_preventInitialization) {
+			if (!m_initialized && !m_initializing && !m_inDelayedDestroy) {
 				// The delay is needed due to parent manipulation sending messages which
 				// is not supported in OnValidate and therefore logs warnings
 				EditorApplication.delayCall += Initialize;
@@ -56,7 +59,7 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 					bool stageIsDirty = prefabStage.scene.isDirty;
 
 					EditorUtility.DisplayDialog(
-						"Hierarchy Organizer",
+						PluginInfo.NAME,
 						"A folder should not be included in a prefab. They are only meant to be used within scenes",
 						"Ok"
 					);
@@ -68,15 +71,17 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 							prefabStage.ClearDirtiness();
 					};
 
-					m_preventInitialization = true;
+					m_inDelayedDestroy = true;
 				}
 			}
 		}
 
 		private void OnDestroy() {
 			if (transform) {
-				transform.hideFlags &= ~HideFlags.HideInInspector;
+				transform.hideFlags &= ~HIDE_FLAGS;
 			}
+
+			Destroyed?.Invoke(this);
 		}
 
 		internal void Initialize() {
@@ -94,7 +99,7 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 				Undo.RevertAllInCurrentGroup();
 
 				EditorUtility.DisplayDialog(
-					"Hierarchy Organizer",
+					PluginInfo.NAME,
 					"A folder should not be in a prefab. They are only meant to be used in scenes",
 					"Ok"
 				);
@@ -138,26 +143,36 @@ namespace Jackey.HierarchyOrganizer.Runtime {
 			return depth;
 		}
 
-		#region Flatten
-
 		internal void Flatten() {
-			if (GetComponents<Component>().Length > 2)
-				Debug.LogWarning($"Folder \"{name}\" in scene {gameObject.scene.name} has components on it which is lost during folder stripping", this);
-
-			DetachChildren();
-		}
-
-		private void DetachChildren() {
 			Transform myTransform = transform;
 			Transform parent = myTransform.parent;
-			int childCount = myTransform.childCount;
 
+			int childCount = myTransform.childCount;
 			for (int i = childCount - 1; i >= 0; i--) {
 				myTransform.GetChild(i).SetParent(parent);
 			}
 		}
 
-		#endregion
+		internal void DestroyChildren() {
+			Transform myTransform = transform;
+
+			int childCount = myTransform.childCount;
+			for (int i = childCount - 1; i >= 0; i--) {
+				DestroyImmediate(myTransform.GetChild(i).gameObject);
+			}
+		}
+
+		internal void FlattenAndDisableChildren() {
+			Transform myTransform = transform;
+			Transform parent = myTransform.parent;
+
+			int childCount = myTransform.childCount;
+			for (int i = childCount - 1; i >= 0; i--) {
+				Transform child = myTransform.GetChild(i);
+				child.gameObject.SetActive(false);
+				child.SetParent(parent);
+			}
+		}
 #endif
 	}
 }

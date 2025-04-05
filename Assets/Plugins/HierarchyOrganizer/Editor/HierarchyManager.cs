@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Jackey.HierarchyOrganizer.Runtime;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -16,6 +17,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 			HierarchyDrawer.Init();
 
 			HierarchyFolder.Initialized += RegisterFolder;
+			HierarchyFolder.Destroyed += UnregisterFolder;
 			ObjectFactory.componentWasAdded += OnComponentAdded;
 			ObjectChangeEvents.changesPublished += OnObjectChangesPublished;
 
@@ -27,7 +29,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 		private static void OnComponentAdded(Component component) {
 			if (s_folders.Contains(component.gameObject.GetInstanceID())) {
 				bool dialogResult = EditorUtility.DisplayDialog(
-					"Hierarchy Organizer",
+					PluginInfo.NAME,
 					$"Component ({component.GetType().Name}) was just added to a folder.\n\nA folder should not have any components as all components on a folder will be lost when they are stripped from the scene",
 					"Destroy the component",
 					"Keep the component"
@@ -173,11 +175,96 @@ namespace Jackey.HierarchyOrganizer.Editor {
 			Tools.hidden = true;
 		}
 
+		[MenuItem("GameObject/Convert to Folder(s)", true)]
+		private static bool ValidateMenuConvertToFolder() {
+			foreach (GameObject selectedGo in Selection.gameObjects) {
+				if (CanGameObjectBeFolder(selectedGo))
+					return true;
+			}
+
+			return false;
+		}
+
+		[MenuItem("GameObject/Convert to Folder(s)", priority = 0)]
+		private static void MenuConvertToFolder() {
+			foreach (GameObject selectedGo in Selection.gameObjects) {
+				if (!CanGameObjectBeFolder(selectedGo))
+					continue;
+
+				Undo.AddComponent<HierarchyFolder>(selectedGo);
+			}
+		}
+
+		[MenuItem("GameObject/Remove as Folder(s)", true)]
+		private static bool ValidateMenuRemoveAsFolder() {
+			foreach (GameObject selectedGo in Selection.gameObjects) {
+				if (CanFolderBeRemoved(selectedGo))
+					return true;
+			}
+
+			return false;
+		}
+
+		[MenuItem("GameObject/Remove as Folder(s)", priority = 0)]
+		private static void MenuRemoveAsFolder() {
+			foreach (GameObject selectedGo in Selection.gameObjects) {
+				if (!CanFolderBeRemoved(selectedGo))
+					continue;
+
+				Undo.DestroyObjectImmediate(selectedGo.GetComponent<HierarchyFolder>());
+			}
+		}
+
 		private static GameObject CreateFolder() {
 			GameObject go = new GameObject("Folder", typeof(HierarchyFolder));
 			Undo.RegisterCreatedObjectUndo(go, "");
 
 			return go;
+		}
+
+		private static bool CanGameObjectBeFolder(GameObject go) {
+			if (EditorUtility.IsPersistent(go))
+				return false;
+
+			if (PrefabUtility.IsPartOfAnyPrefab(go))
+				return false;
+
+			if (IsFolder(go.GetInstanceID()))
+				return false;
+
+			if (go.GetComponentCount() > 1)
+				return false;
+
+			Transform parent = go.transform.parent;
+			if (parent == null)
+				return true;
+
+			GameObject parentGo = parent.gameObject;
+			if (IsFolder(parentGo.GetInstanceID()) || (Selection.gameObjects.Contains(parentGo) && CanGameObjectBeFolder(parentGo)))
+				return true;
+
+			return false;
+		}
+
+		private static bool CanFolderBeRemoved(GameObject go) {
+			if (!IsFolder(go.GetInstanceID()))
+				return false;
+
+			Transform transform = go.transform;
+			int childCount = transform.childCount;
+
+			for (int i = 0; i < childCount; i++) {
+				Transform child = transform.GetChild(i);
+
+				if (!child.TryGetComponent(out HierarchyFolder _))
+					return true;
+
+				GameObject childGo = child.gameObject;
+				if (!Selection.gameObjects.Contains(childGo) || !CanFolderBeRemoved(childGo))
+					return false;
+			}
+
+			return true;
 		}
 
 		private static void BeginObjectRename(GameObject go) {
@@ -203,6 +290,12 @@ namespace Jackey.HierarchyOrganizer.Editor {
 			int folderID = folder.gameObject.GetInstanceID();
 
 			s_folders.Add(folderID);
+		}
+
+		private static void UnregisterFolder(HierarchyFolder folder) {
+			int folderID = folder.gameObject.GetInstanceID();
+
+			s_folders.Remove(folderID);
 		}
 
 		public static bool IsFolder(int instanceID) {
