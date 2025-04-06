@@ -32,7 +32,7 @@ Everything in this repository is free to use and modify however you see fit. If 
 	- [Other Utilities](#other-utilities)
 
 # Packages
-All work on my packages can be found in separate branches following the naming convention of `plugin/{name of package}`. Though the most stable versions will be present on the `master` branch. Everything that is needed to use a package is available in their respective [Plugins](Assets/Plugins/) folder. You can also find the latest version of each package on the `master` branch as unity packages in the [_Releases](Assets/Plugins/_Releases/) folder.
+All work on my packages can be found in separate branches following the naming convention of `plugin/{name of package}`. Though the most stable versions will be present on the `master` branch. Everything that is needed to use a package is available in their respective [Plugins](Assets/Plugins/) folder. You can also find the latest version of each package on the `master` branch as Unity packages in the [Releases](Assets/Plugins/_Releases/) folder.
 
 ## Object Behaviours | [Link](Assets/Plugins/Behaviours)
 
@@ -51,7 +51,7 @@ One of many object pool implementations out there. This one is designed to look 
 
 Aside from Unity objects, there is also `ObjectPool.New()` and `ObjectPool.Delete()` for normal C# objects. 
 
-All pools are global and shared by default, either based on the original `UnityEngine.Object` or the C# type. They also have additional features like automatically returning objects when a condition is true and callbacks on the objects themself when they are touched by their pool.
+All pools are global and shared by default, either based on the original `UnityEngine.Object` or the C# type. They also have additional features like automatically returning objects when a condition is true and callbacks on the objects themself when their pool interacts with them.
 
 It also comes with an editor window to display all global pools and their objects. This lets you see in realtime how objects are shuffled around and make sure that they are properly returned.
 
@@ -75,7 +75,7 @@ This package also has settings to enable drawing indent guides in the hierarchy 
 
 ## Event Bus | [Link](Assets/Plugins/EventBus/)
 
-The `EventBus` is an globally accessed interface for sending events. It is especially useful for many -> many events which can be hard to properly subscribe to and unsubscribe from.
+The `EventBus` is a globally accessed interface for sending events. It is especially useful for many -> many events which can be hard to properly subscribe to and unsubscribe from.
 
 It uses an `IEvent` interface to mark types as passable events. Each event can contain whatever data it requires and anything can listen to it. Just implement `IEventBusListener<>` or subscribe with a delegate.
 
@@ -118,9 +118,9 @@ public struct ExampleEvent : IEvent {
 
 It also comes with an editor window showing all events as well as their listeners and callbacks currently subscribed to it. This can for example give you hints if something doesn't unsubscribe correctly. 
 
-> Events show up in the list once if have been used once.
-
 ![](.github/Resources/Images/EventBusInspector.png)
+
+> Events show up in the list if they have been used once.
 
 ## Selection History | [Link](Assets/Plugins/SelectionHistory/)
 
@@ -146,7 +146,7 @@ public class ExampleMonoBehaviour : MonoBehaviour {
 
 ### ResourceReference | [Link](Assets/Scripts/Utilities/Unity/ResourceReference.cs)
 
-`ResourceReference` allows for weak references to assets located within `Resources/` folders instead of relying on a string field having to match its name. It shows up as a normal Object field but it will highlight if the asset is not within a `Resources/` folder so you can take necessary action.
+`ResourceReference` allows for weak references to assets located within `Resources/` folders instead of relying on a string field having to match its name. It shows up as a normal Object field but will highlight if the asset is not within a `Resources/` folder so you can take necessary action.
 
 ```cs
 public class ExampleMonoBehaviour : MonoBehaviour { 
@@ -159,11 +159,11 @@ public class ExampleMonoBehaviour : MonoBehaviour {
 
 ### Autofill | [Link](Assets/Scripts/Utilities/Attributes/AutofillAttribute.cs)
 
-`Autofill` searches and fills in empty Unity object references in MonoBehaviours as long is the component is being inspected. Great to reduce drag and dropping if you are expecting a certain structure in your game object hierarchies and helps ensuring that necessary fields don't end up empty and forgotten.
+`Autofill` searches and fills in empty Unity object references in MonoBehaviours as long is the component is being inspected. Great to reduce drag and dropping if you are expecting a certain structure in your game object hierarchies and helps ensure that necessary fields don't end up empty and forgotten.
 
 ### If Attributes | [Link](Assets/Scripts/Utilities/Attributes/IfAttribute.cs)
 
-If attributes let you add conditional rendering of fields based on the values of other fields. The current if attributes are `EnableIf` and `ShowIf`. These can check against object fields, bools as well as numbers.
+If attributes let you add conditional rendering of fields based on the values of other fields. The current if attributes are `EnableIf` and `ShowIf`. These can check against Unity objects, bools as well as numbers.
 
 ```cs
 public bool ExampleBool;
@@ -187,9 +187,9 @@ public int EnableIfLessThan1;
 
 ### ReadOnly | [Link](Assets/Scripts/Utilities/Attributes/ReadOnlyAttribute.cs)
 
-The `ReadOnly` lets you control whether a field can be edited in the normal inspector. It takes a parameter to allow control for when it's unable to be edited, for example only in play mode. 
+The `ReadOnly` attribute lets you control whether a field can be edited in the normal inspector. It takes a parameter to optionally allow editing in different environments, for example enable editing in edit mode but disable it in play mode.
 
-> Note that fields with this attribute can still be edited in the inspector's debug view.
+> Note that fields with this attribute can still always be edited in the inspector's debug view.
 
 ### ExposeObject | [Link](Assets/Scripts/Utilities/Attributes/ExposeObjectAttribute.cs)
 
@@ -201,11 +201,13 @@ The `ExposeObject` attribute lets you edit the properties of any assigned Unity 
 
 ### HideInNormalInspector | [Link](Assets/Scripts/Utilities/Attributes/HideInNormalInspectorAttribute.cs)
 
-Unity's built-in `HideInInspector` attribute hides the field from the inspector completely. This makes it not even visible in the inspector's debug view. This `HideInNormalInspector` attribute instead hides it in the normal inspector but keeps it visible in the debug view.
+Unity's built-in `HideInInspector` attribute hides the field from the inspector completely. This makes it not even visible in the inspector's debug view. The `HideInNormalInspector` attribute instead hides it in the normal inspector but keeps it visible in the debug view.
 
 ### Validator | [Link](Assets/Scripts/Utilities/Attributes/ValidatorAttribute.cs)
 
-The `Validator` attributes lets you assign a validation method for a specific field when changed in the inspector as an alternative to `OnValidate`. It can also be used to run code whenever a field changes without having to create another field to hold the old value and check against it in `OnValidate`.
+The `Validator` attributes lets you assign a validation method for a specific field when it changes in the inspector as an alternative to `OnValidate`. For value types it also tells you the change without having to create another field to hold the old value and check against it in `OnValidate`. 
+
+It can also be used to just run code whenever a field changes. 
 
 ```cs
 [Validator(nameof(ValidateStruct))] 
@@ -236,7 +238,7 @@ public MonoBehaviour Example;
 
 ### Inline | [Link](Assets/Scripts/Utilities/Attributes/InlineAttribute.cs)
 
-The `Inline` attributes draws the fields child properties on a single line. On custom serializable classes it removes the foldout that normally appears. This is mostly intended for types with 2-3 fields but it's usable on types with more than 3.
+The `Inline` attribute draws a field's child properties on a single line. On custom serializable classes it removes the foldout that normally appears. This is mostly intended for types with 2-3 fields, as they can get very small, but it's usable on types with more.
 
 ```cs
 [Inline]
@@ -257,7 +259,7 @@ public class CustomSerializableClass {
 
 ### Layer | [Link](Assets/Scripts/Utilities/Attributes/LayerAttribute.cs)
 
-The `Layer` attribute transforms a int field to a layer field letting you select a layer available in the project. Like a `LayerMask` but only one layer can be assigned.
+The `Layer` attribute transforms an int field to a layer field letting you select a layer available in the project. Like a `LayerMask` but only one layer can be assigned.
 
 ![](.github/Resources/Images/Layer.png)
 
@@ -269,13 +271,13 @@ The `Tag` attribute transforms a string field into a dropdown that only accepts 
 
 ### NavMeshAreaMask | [Link](Assets/Scripts/Utilities/Attributes/NavMeshAreaMaskAttribute.cs)
 
-The `NavMeshAreaMask` attribute transforms a int field into a mask of the available NavMeshAreas in the project.
+The `NavMeshAreaMask` attribute transforms an int field into a mask of the available NavMeshAreas in the project.
 
 ![](.github/Resources/Images/NavMeshAreaMask.png)
 
 ### CurveSettings | [Link](Assets/Scripts/Utilities/Attributes/CurveSettingsAttribute.cs)
 
-`CurveSettings` lets you decide a range of valid values for an animation curve on both the x and y axis.
+The `CurveSettings` attribute lets you decide a range of valid values for an animation curve on both the x and y axis.
 
 ```cs
 [CurveSettings(0f, 1f, -1f, 1f)]
@@ -286,8 +288,8 @@ public AnimationCurve ExampleCurve;
 
 ### DisplayName | [Link](Assets/Scripts/Utilities/Attributes/DisplayNameAttribute.cs)
 
-Adding a `DisplayName` attribute to a field lets you override the label of the field when drawn in the inspector.
+The `DisplayName` attribute on a field overrides the label of the field when drawn in the inspector.
 
 ## Other Utilities
 
-Aside from the utilities described above, I also have some other mixed ones in the [Assets/Scripts/Utilities/](Assets/Scripts/Utilities/) folder. These are mostly simple quality of life extension methods and static utility methods but also some other useful things like a SerializableGUID.
+Aside from the utilities described above, I also have some other mixed ones in the [Assets/Scripts/Utilities/](Assets/Scripts/Utilities/) folder. These are mostly simple quality of life extension methods and static utility methods but also some other useful things like a `SerializableGUID` type.
