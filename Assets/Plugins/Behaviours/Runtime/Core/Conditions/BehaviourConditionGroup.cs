@@ -9,10 +9,13 @@ namespace Jackey.Behaviours.Core.Conditions {
 		[SerializeReference] internal BehaviourCondition[] m_conditions;
 		[SerializeField] private bool m_invert;
 
-#if UNITY_EDITOR
 		public string Editor_Info {
 			get {
+#if UNITY_EDITOR
 				string policyString = UnityEditor.ObjectNames.NicifyVariableName(m_policy.ToString());
+#else
+				string policyString = m_policy.ToString();
+#endif
 				string output = InfoUtilities.AlignCenter(m_invert ? $"<b>not {policyString}</b>\n" : $"<b>{policyString}</b>\n");
 
 				if (m_conditions != null) {
@@ -32,7 +35,6 @@ namespace Jackey.Behaviours.Core.Conditions {
 				return output;
 			}
 		}
-#endif
 
 	public void Enable(BehaviourOwner owner) {
 		int conditionCount = m_conditions.Length;
