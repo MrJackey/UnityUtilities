@@ -20,7 +20,6 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		public bool IsVariable => m_mode is Mode.Variable;
 		public bool IsEmptyVariable => m_mode is Mode.Variable && m_variableGuid == default;
 
-#if UNITY_EDITOR
 		public string Editor_Info {
 			get {
 				switch (m_mode) {
@@ -38,7 +37,6 @@ namespace Jackey.Behaviours.Core.Blackboard {
 				}
 			}
 		}
-#endif
 
 		public T GetValue() {
 			return m_mode switch {
