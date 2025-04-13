@@ -25,26 +25,25 @@ namespace Jackey.Behaviours.BT.Decorators {
 		}
 #endif
 
-		protected override ExecutionStatus OnTick() {
+		protected override ExecutionStatus OnEnter() {
 			float time = UnscaledTime ? Time.unscaledTime : Time.time;
-
-			// Reset cooldown on delayed child finish
-			if (m_child.IsFinished) {
-				m_nextTime = time + Duration.GetValue();
-				return (ExecutionStatus)m_child.Status;
-			}
-
 			if (time < m_nextTime)
 				return ExecutionStatus.Failure;
 
-			Debug.Assert(m_child.Status == ActionStatus.Inactive);
-			ExecutionStatus enterStatus = m_child.EnterSequence();
+			ExecutionStatus childStatus = m_child.EnterSequence();
 
-			// Reset cooldown on instant child finish
+			// Reset cooldown on instant finish
 			if (m_child.IsFinished)
 				m_nextTime = time + Duration.GetValue();
 
-			return enterStatus;
+			return childStatus;
+		}
+
+		protected override ExecutionStatus OnChildFinished() {
+			float time = UnscaledTime ? Time.unscaledTime : Time.time;
+			m_nextTime = time + Duration.GetValue();
+
+			return (ExecutionStatus)m_child.Status;
 		}
 	}
 }

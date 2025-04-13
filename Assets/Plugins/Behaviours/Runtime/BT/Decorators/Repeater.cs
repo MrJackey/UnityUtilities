@@ -38,15 +38,21 @@ namespace Jackey.Behaviours.BT.Decorators {
 			if (m_policy == Policy.WhileConditions)
 				m_conditions.Enable(Owner);
 
-			return ExecutionStatus.Running;
+			return Repeat();
 		}
 
 		protected override ExecutionStatus OnTick() {
-			if (m_isTicking) {
-				DisableTicking();
-				m_isTicking = false;
-			}
+			DisableTicking();
+			m_isTicking = false;
 
+			return Repeat();
+		}
+
+		protected override ExecutionStatus OnChildFinished() {
+			return Repeat();
+		}
+
+		private ExecutionStatus Repeat() {
 			ExecutionStatus repeatStatus;
 
 			switch (m_policy) {
@@ -56,7 +62,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 					if (m_completedIterations >= m_iterations)
 						return ExecutionStatus.Success;
 
-					repeatStatus = RepeatOnce();
+					repeatStatus = RepeatChild();
 
 					if (repeatStatus != ExecutionStatus.Running && m_completedIterations + 1 >= m_iterations) {
 #if UNITY_EDITOR
@@ -70,7 +76,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 					if ((ActionResult)m_child.Status == m_result)
 						return ExecutionStatus.Success;
 
-					repeatStatus = RepeatOnce();
+					repeatStatus = RepeatChild();
 
 					if ((ActionResult)repeatStatus == m_result)
 						return ExecutionStatus.Success;
@@ -80,14 +86,14 @@ namespace Jackey.Behaviours.BT.Decorators {
 					if (!m_conditions.Evaluate())
 						return ExecutionStatus.Success;
 
-					repeatStatus = RepeatOnce();
+					repeatStatus = RepeatChild();
 
 					if (repeatStatus != ExecutionStatus.Running && !m_conditions.Evaluate())
 						return ExecutionStatus.Success;
 
 					break;
 				case Policy.Forever:
-					repeatStatus = RepeatOnce();
+					repeatStatus = RepeatChild();
 					break;
 				default:
 					throw new ArgumentOutOfRangeException();
@@ -101,7 +107,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 			return ExecutionStatus.Running;
 		}
 
-		private ExecutionStatus RepeatOnce() {
+		private ExecutionStatus RepeatChild() {
 			if (m_child.IsFinished)
 				m_child.Reset();
 

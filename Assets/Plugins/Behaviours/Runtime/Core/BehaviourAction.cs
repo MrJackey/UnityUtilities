@@ -57,13 +57,26 @@ namespace Jackey.Behaviours.Core {
 		}
 
 		/// <summary>
-		/// Actions are ticked once when entered (if not already finished) and whenever a direct child finishes.
-		/// To be ticked over multiple frames, use <see cref="EnableTicking"/>
+		/// Invoked whenever the behaviour is ticked if <see cref="EnableTicking"/> has been called.
+		/// Use <see cref="DisableTicking"/> to stop ticking this action
 		/// </summary>
-		/// <returns></returns>
 		protected virtual ExecutionStatus OnTick() => ExecutionStatus.Running;
 
-		internal void Interrupt() {
+		internal ExecutionStatus OnTraversal() {
+			if (IsFinished)
+				return (ExecutionStatus)Status;
+
+			ExecutionStatus continueStatus = OnChildFinished();
+			Status = (ActionStatus)continueStatus;
+
+			return continueStatus;
+		}
+		protected virtual ExecutionStatus OnChildFinished() => ExecutionStatus.Success;
+
+		/// <summary>
+		/// Interrupt this action and all of its children
+		/// </summary>
+		public void Interrupt() {
 			InterruptChildren();
 			Status = ActionStatus.Failure;
 
@@ -73,7 +86,9 @@ namespace Jackey.Behaviours.Core {
 		internal virtual void InterruptChildren() { }
 
 		/// <summary>
-		/// Actions are interrupted when an action with lower index earlier in the tree finishes with still running actions.
+		/// Actions are interrupted when any of their ancestors interrupts their running children.
+		/// This can be a composite like <see cref="Jackey.Behaviours.BT.Composites.Parallel"/> or a decorator like <see cref="Jackey.Behaviours.BT.Decorators.Interruptor"/>.
+		/// <br/>
 		/// <see cref="OnExit"/> is invoked directly afterwards
 		/// </summary>
 		protected virtual void OnInterrupt() { }
@@ -84,10 +99,9 @@ namespace Jackey.Behaviours.Core {
 		}
 
 		/// <summary>
-		/// This is invoked when an action is finishes OnEnter or OnTick with a result.
+		/// This is invoked when an action finishes from any of OnEnter/OnTick/OnChildFinished with a result.
 		/// <see cref="OnExit"/> is invoked directly afterwards
 		/// </summary>
-		/// <param name="result">The result of the action execution</param>
 		protected virtual void OnResult(ActionResult result) { }
 
 		internal void Exit() {
@@ -100,10 +114,21 @@ namespace Jackey.Behaviours.Core {
 		/// </summary>
 		protected virtual void OnExit() { }
 
+		/// <summary>
+		/// Enable ticking of this action whenever it's behaviour is ticked.
+		/// </summary>
+		/// <remarks>
+		/// If the behaviour is starting, the first tick will occur after the first behaviour tick.<br/>
+		/// If the behaviour is being ticked, the first tick will occur the next behaviour tick
+		/// </remarks>
 		public void EnableTicking() {
 			m_runtimeBehaviour.EnableTicking(this);
 		}
 
+		/// <summary>
+		/// Disable ticking of this action.
+		/// Does nothing if ticking is not already enabled
+		/// </summary>
 		public void DisableTicking() {
 			m_runtimeBehaviour.DisableTicking(this);
 		}
@@ -122,9 +147,11 @@ namespace Jackey.Behaviours.Core {
 
 			if (IsFinished) {
 				Result((ActionResult)enterStatus);
-				return enterStatus;
 			}
+			return enterStatus;
+		}
 
+		internal ExecutionStatus TickSequence() {
 			ExecutionStatus tickStatus = Tick();
 
 			if (IsFinished) {
@@ -134,14 +161,14 @@ namespace Jackey.Behaviours.Core {
 			return tickStatus;
 		}
 
-		public ExecutionStatus TickSequence() {
-			ExecutionStatus tickStatus = Tick();
+		internal ExecutionStatus TraversalSequence() {
+			ExecutionStatus traversalStatus = OnTraversal();
 
 			if (IsFinished) {
-				Result((ActionResult)tickStatus);
+				Result((ActionResult)traversalStatus);
 			}
 
-			return tickStatus;
+			return traversalStatus;
 		}
 
 #if UNITY_EDITOR

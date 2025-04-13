@@ -17,6 +17,12 @@ namespace Jackey.Behaviours.BT.Decorators {
 
 		protected override ExecutionStatus OnEnter() {
 			m_conditions.Enable(Owner);
+
+			if (m_conditions.Evaluate()) {
+				m_conditions.Disable();
+				return m_child?.EnterSequence() ?? ExecutionStatus.Success;
+			}
+
 			EnableTicking();
 			m_isTicking = true;
 
@@ -24,9 +30,6 @@ namespace Jackey.Behaviours.BT.Decorators {
 		}
 
 		protected override ExecutionStatus OnTick() {
-			if (m_child?.IsFinished ?? false)
-				return (ExecutionStatus)m_child.Status;
-
 			if (m_conditions.Evaluate()) {
 				m_conditions.Disable();
 				DisableTicking();

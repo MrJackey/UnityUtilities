@@ -1,5 +1,4 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Core.Conditions;
 using UnityEngine;
 
@@ -21,16 +20,11 @@ namespace Jackey.Behaviours.BT.Composites {
 			m_runningIndex = m_conditions.Evaluate() ? 0 : 1;
 			m_conditions.Disable();
 
-			return ExecutionStatus.Running;
+			return m_children[m_runningIndex].EnterSequence();
 		}
 
-		protected override ExecutionStatus OnTick() {
-			BehaviourAction runningChild = m_children[m_runningIndex];
-			if (runningChild.IsFinished)
-				return (ExecutionStatus)runningChild.Status;
-
-			Debug.Assert(runningChild.Status == ActionStatus.Inactive);
-			return runningChild.EnterSequence();
+		protected override ExecutionStatus OnChildFinished() {
+			return (ExecutionStatus)m_children[m_runningIndex].Status;
 		}
 	}
 }

@@ -19,13 +19,9 @@ namespace Jackey.Behaviours.BT.Decorators {
 		                                      $"{m_exitOperations?.Editor_Info}";
 #endif
 
-		protected override ExecutionStatus OnTick() {
-			if (!m_child.IsFinished) {
-				m_enterOperations.Execute(Owner);
-				return m_child.EnterSequence();
-			}
-
-			return (ExecutionStatus)m_child.Status;
+		protected override ExecutionStatus OnEnter() {
+			m_enterOperations.Execute(Owner);
+			return m_child.EnterSequence();
 		}
 
 		protected override void OnExit() {
