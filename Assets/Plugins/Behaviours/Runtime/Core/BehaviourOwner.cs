@@ -13,48 +13,96 @@ namespace Jackey.Behaviours {
 		[SerializeField] private Blackboard m_blackboard;
 
 		[Space]
-		[SerializeField] private StartMode m_startMode;
-		[SerializeField] private UpdateMode m_updateMode;
-		[SerializeField] private RepeatMode m_repeatMode;
+		[SerializeField] private StartOption m_startMode;
+		[SerializeField] private UpdateOption m_updateMode;
+		[SerializeField] private RepeatOption m_repeatMode;
 
 		private List<IBehaviourEventListener> m_eventListeners = new();
+
+		private bool m_isRunning;
 
 		public ObjectBehaviour Behaviour => m_behaviour;
 		public Blackboard Blackboard => m_blackboard;
 
-		private void Awake() {
-			if (m_behaviour == null && m_updateMode != UpdateMode.Manual) {
-				enabled = false;
-			}
+		public StartOption StartMode {
+			get => m_startMode;
+			set => m_startMode = value;
+		}
+
+		public UpdateOption UpdateMode {
+			get => m_updateMode;
+			set => m_updateMode = value;
+		}
+
+		public RepeatOption RepeatMode {
+			get => m_repeatMode;
+			set => m_repeatMode = value;
 		}
 
 		private void Start() {
-			SetBehaviourInstance(Instantiate(m_behaviour));
+			if (m_startMode != StartOption.Start) return;
 
-			if (m_startMode == StartMode.Start)
-				StartBehaviour();
+			if (m_behaviour == null) {
+				Debug.LogWarning($"BehaviourOwner \"{name}\" is set to start but is missing a behaviour", this);
+				return;
+			}
+
+			SetRuntimeBehaviourInstance(Instantiate(m_behaviour));
+			StartBehaviour();
 		}
 
 		private void Update() {
-			if (m_updateMode != UpdateMode.Update) return;
+			if (!m_isRunning) return;
+			if (m_updateMode != UpdateOption.Update) return;
 
 			TickBehaviour();
 		}
 
 		private void FixedUpdate() {
-			if (m_updateMode != UpdateMode.FixedUpdate) return;
+			if (!m_isRunning) return;
+			if (m_updateMode != UpdateOption.FixedUpdate) return;
 
 			TickBehaviour();
 		}
 
 		private void LateUpdate() {
-			if (m_updateMode != UpdateMode.LateUpdate) return;
+			if (!m_isRunning) return;
+			if (m_updateMode != UpdateOption.LateUpdate) return;
 
 			TickBehaviour();
 		}
 
-		public void SetBehaviour(ObjectBehaviour behaviour) => SetBehaviourInstance(Instantiate(behaviour));
-		public void SetBehaviourInstance(ObjectBehaviour instance) {
+		private void OnDestroy() {
+			if (m_behaviour != null) {
+				m_behaviour.Stop();
+				m_isRunning = false;
+			}
+		}
+
+#if UNITY_EDITOR
+		/// <summary>
+		/// Directly set the behaviour field without any initialization done.
+		/// </summary>
+		/// <remarks>
+		///	This method is only available in the editor. For runtime, see <see cref="SetRuntimeBehaviour"/> and <see cref="SetRuntimeBehaviourInstance"/>
+		/// </remarks>
+		public void Editor_SetBehaviour(ObjectBehaviour behaviour) {
+			m_behaviour = behaviour;
+		}
+#endif
+
+		/// <summary>
+		/// Set the runtime behaviour of the object. This will create a new instance of the input behaviour
+		/// and initialize it with this as its owner.<br/>
+		/// Use this if you are assigning an asset
+		/// </summary>
+		public void SetRuntimeBehaviour(ObjectBehaviour behaviour) => SetRuntimeBehaviourInstance(Instantiate(behaviour));
+
+		/// <summary>
+		/// Set the runtime behaviour of the object. This will also initialize it with this as its owner.
+		/// Use this only if you already have created an instance yourself. Otherwise use <see cref="SetRuntimeBehaviour"/>
+		/// </summary>
+		public void SetRuntimeBehaviourInstance(ObjectBehaviour instance) {
 			m_behaviour = instance;
 
 			m_blackboard.MergeInto(m_behaviour.Blackboard);
@@ -63,6 +111,7 @@ namespace Jackey.Behaviours {
 
 		public void StartBehaviour() {
 			m_behaviour.Start();
+			m_isRunning = true;
 		}
 
 		public void TickBehaviour() {
@@ -71,13 +120,14 @@ namespace Jackey.Behaviours {
 			if (tickStatus != ExecutionStatus.Running) {
 				StopBehaviour();
 
-				if (m_repeatMode == RepeatMode.Repeat)
+				if (m_repeatMode == RepeatOption.Repeat)
 					StartBehaviour();
 			}
 		}
 
 		public void StopBehaviour() {
 			m_behaviour.Stop();
+			m_isRunning = false;
 		}
 
 		public void AddEventListener(IBehaviourEventListener listener) {
@@ -113,19 +163,19 @@ namespace Jackey.Behaviours {
 			return true;
 		}
 
-		private enum StartMode {
+		public enum StartOption {
 			Start,
 			Manual,
 		}
 
-		private enum UpdateMode {
+		public enum UpdateOption {
 			Update,
 			LateUpdate,
 			FixedUpdate,
 			Manual,
 		}
 
-		private enum RepeatMode {
+		public enum RepeatOption {
 			Repeat,
 			Stop,
 		}
