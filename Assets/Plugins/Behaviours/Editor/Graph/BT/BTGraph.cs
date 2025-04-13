@@ -118,8 +118,10 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 			btNode.AddManipulator(new ContextualMenuManipulator(ShowNodeContext));
 
-			ConnectionSocket outSocket = btNode.OutSocket;
-			outSocket.RegisterCallback<MouseDownEvent, IConnectionSocket>(OnSocketMouseDown, outSocket);
+			if (m_isEditable) {
+				ConnectionSocket outSocket = btNode.OutSocket;
+				outSocket.RegisterCallback<MouseDownEvent, IConnectionSocket>(OnSocketMouseDown, outSocket);
+			}
 		}
 
 		protected override void OnNodeRemoval(Node node) {
