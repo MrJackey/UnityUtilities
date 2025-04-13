@@ -429,6 +429,10 @@ namespace Jackey.Behaviours.Editor {
 		#endregion
 
 		private void OnPlayModeStateChanged(PlayModeStateChange stateChange) {
+			// If viewing a runtime instance, clear everything as the instance is now destroyed
+			if (stateChange == PlayModeStateChange.EnteredEditMode && m_activeGraph != null && m_activeGraph.Behaviour == null)
+				RecreateGUI();
+
 			// The window hasn't called CreateGUI, it's open but probably in a hidden tab
 			if (!m_hasCreatedGUI)
 				return;
