@@ -78,7 +78,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 				}
 			}
 
-			UpdateEditorData();
+			if (m_isEditable)
+				UpdateEditorData();
 
 			EditorUtility.SetDirty(m_serializedBehaviour.targetObject);
 		}

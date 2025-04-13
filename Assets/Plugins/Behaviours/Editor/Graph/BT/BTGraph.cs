@@ -75,6 +75,14 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				AddGroup(new GraphGroup(group.Rect));
 		}
 
+		protected override void UpdateEditorData() {
+			base.UpdateEditorData();
+
+			foreach (BTNode node in m_nodes) {
+				node.UpdateEditorData();
+			}
+		}
+
 		#region Node CRUD
 
 		public override void BeginNodeCreation(Vector2 GUIPosition) {
