@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Jackey.Behaviours.BT;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
@@ -89,7 +90,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			base.BeginNodeCreation(GUIPosition);
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(GUIPosition);
-			TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>();
+			IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract);
 
 			TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => CreateNode(type));
 		}
@@ -260,7 +261,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				"Decorate",
 				menuAction => {
 					Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(menuAction.eventInfo.mousePosition);
-					TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<Decorator>();
+					IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<Decorator>().Where(type => !type.IsAbstract);
 
 					TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => DecorateNode(btNode, type));
 				},
@@ -361,7 +362,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			SaveCreatePosition();
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-			TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>();
+			IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract);
 
 			TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => {
 				BTNode toNode = CreateNode(type);

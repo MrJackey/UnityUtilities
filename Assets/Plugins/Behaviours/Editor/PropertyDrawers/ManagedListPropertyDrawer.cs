@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Utilities;
 using UnityEditor;
@@ -81,7 +82,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		private void CreateItem() {
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-			TypeCache.TypeCollection types = TypeCache.GetTypesDerivedFrom(typeof(T));
+			IEnumerable<Type> types = TypeCache.GetTypesDerivedFrom(typeof(T)).Where(type => !type.IsAbstract);
 
 			TypeProvider.Instance.AskForType(mouseScreenPosition, types, type => {
 				int nextIndex = m_listItemProperties.Count;
