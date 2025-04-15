@@ -54,7 +54,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		internal bool IsAssignableTo(Type type) {
 			Type serializedType = GetSerializedType();
 
-			return type == serializedType || BlackboardConverter.IsConvertible(serializedType, type);
+			return serializedType.IsAssignableFrom(type) || BlackboardConverter.IsConvertible(serializedType, type);
 		}
 
 		internal abstract class BlackboardValue {
