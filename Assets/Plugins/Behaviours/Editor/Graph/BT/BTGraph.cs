@@ -376,7 +376,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				BehaviourAction parentAction = parentNode.Action;
 
 				foreach (Connection childConnection in nodeConnections) {
-					if (parentNode.OutSocket.OutgoingConnections >= parentAction.Editor_MaxChildCount)
+					if (parentAction.Editor_MaxChildCount > -1 && parentNode.OutSocket.OutgoingConnections >= parentAction.Editor_MaxChildCount)
 						return;
 
 					BehaviourAction connectedAction = ((BTNode)childConnection.End.Element).Action;
