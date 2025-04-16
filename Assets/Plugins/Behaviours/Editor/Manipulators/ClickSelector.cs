@@ -44,16 +44,16 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 					return;
 
 				m_manager.ReplaceSelection(selectableTarget);
+				return;
 			}
-			else {
-				if (selectableTarget is not IGroupSelectable)
-					return;
 
-				if (m_manager.SelectedElements.Contains(selectableTarget))
-					m_manager.RemoveFromSelection(selectableTarget);
-				else
-					m_manager.AddToSelection(selectableTarget);
-			}
+			if (selectableTarget is not IGroupSelectable)
+				return;
+
+			if (m_manager.SelectedElements.Contains(selectableTarget))
+				m_manager.RemoveFromSelection(selectableTarget);
+			else
+				m_manager.AddToSelection(selectableTarget);
 
 			m_manager.OnSelectionChange();
 		}
