@@ -18,8 +18,16 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		private VisualElement m_itemInspector;
 		private Label m_inspectorLabel;
 
-		protected void CreateListGUI(VisualElement rootVisualElement, SerializedProperty property, string createButtonText) {
+		protected abstract string CreateButtonText { get; }
+
+		protected void CreateListGUI(VisualElement rootVisualElement, SerializedProperty property) {
 			rootVisualElement.RegisterCallback<MouseDownEvent>(evt => evt.StopImmediatePropagation());
+			rootVisualElement.RegisterCallback<AttachToPanelEvent, ManagedListPropertyDrawer<T>>((evt, args) => {
+				Undo.undoRedoPerformed += args.OnUndoRedo;
+			}, this);
+			rootVisualElement.RegisterCallback<DetachFromPanelEvent, ManagedListPropertyDrawer<T>>((evt, args) => {
+				Undo.undoRedoPerformed -= args.OnUndoRedo;
+			}, this);
 
 			m_listProperty = property;
 			ResetProperties();
@@ -38,7 +46,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			rootVisualElement.Add(new Button(CreateItem) {
 				name = "CreateButton",
-				text = createButtonText,
+				text = CreateButtonText,
 			});
 
 			rootVisualElement.Add(m_itemInspector = new VisualElement() {
@@ -162,6 +170,19 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			m_itemInspector.style.display = DisplayStyle.None;
 			m_listView.selectedIndex = -1;
+		}
+
+		private void OnUndoRedo() {
+			int selectedIndex = m_listView.selectedIndex;
+
+			m_listProperty.serializedObject.Update();
+			ResetProperties();
+			m_listView.RefreshItems();
+
+			if (selectedIndex != -1 && selectedIndex < m_listItemProperties.Count)
+				m_listView.selectedIndex = selectedIndex;
+			else
+				ClearInspection();
 		}
 	}
 }
