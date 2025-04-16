@@ -96,6 +96,12 @@ namespace Jackey.Behaviours.Editor {
 		}
 
 		private void Update() {
+			// Reset the window if the active behaviour has been destroyed
+			if (m_activeGraph != null && m_activeGraph.Behaviour == null) {
+				RecreateGUI();
+				return;
+			}
+
 			m_activeGraph?.Tick();
 		}
 
