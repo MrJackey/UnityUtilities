@@ -55,10 +55,12 @@ namespace Jackey.Behaviours.Editor {
 
 		private void OnEnable() {
 			EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+			Undo.undoRedoPerformed += OnUndoRedo;
 		}
 
 		private void OnDisable() {
 			EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+			Undo.undoRedoPerformed -= OnUndoRedo;
 		}
 
 		private void CreateGUI() {
@@ -188,7 +190,6 @@ namespace Jackey.Behaviours.Editor {
 							m_activeGraph.DeleteSelection();
 
 						break;
-					// TODO: Remove this
 					case KeyCode.R when evt.shift:
 						m_isKeyUsed = true;
 
@@ -439,6 +440,10 @@ namespace Jackey.Behaviours.Editor {
 
 			if (stateChange == PlayModeStateChange.EnteredEditMode)
 				OnSelectionChange();
+		}
+
+		private void OnUndoRedo() {
+			m_activeGraph?.UndoRedo();
 		}
 	}
 }

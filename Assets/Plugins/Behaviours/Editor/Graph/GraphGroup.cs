@@ -95,7 +95,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			}
 		}
 
-		private void Reposition(Rect rect) {
+		public void Reposition(Rect rect) {
 			transform.position = rect.min;
 			style.width = rect.width;
 			style.height = rect.height;
