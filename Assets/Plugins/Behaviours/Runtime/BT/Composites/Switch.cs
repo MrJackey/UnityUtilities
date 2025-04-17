@@ -7,8 +7,7 @@ using UnityEngine;
 namespace Jackey.Behaviours.BT.Composites {
 	[SearchPath("Composites/Switch")]
 	public class Switch : Composite {
-		[BlackboardOnly]
-		[SerializeField] private BlackboardRef<int> m_index;
+		[SerializeField] private BlackboardOnlyRef<int> m_index;
 		[SerializeField] private bool m_dynamic;
 
 		private int m_activeIndex;

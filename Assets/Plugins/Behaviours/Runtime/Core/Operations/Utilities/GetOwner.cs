@@ -4,8 +4,7 @@ using Jackey.Behaviours.Core.Blackboard;
 namespace Jackey.Behaviours.Core.Operations.Utilities {
 	[SearchPath("Utilities/Get Owner")]
 	public class GetOwner : Operation {
-		[BlackboardOnly]
-		public BlackboardRef<BehaviourOwner> Out;
+		public BlackboardOnlyRef<BehaviourOwner> Out;
 
 		public override string Editor_Info => $"Set {Out.Editor_Info} to Owner";
 

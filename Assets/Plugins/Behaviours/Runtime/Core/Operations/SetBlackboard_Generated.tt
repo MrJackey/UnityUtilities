@@ -27,8 +27,7 @@ namespace Jackey.Behaviours.Core.Operations {<#
 	[DisplayName(""Set {name}"")]
 	[SearchPath(""Blackboard/Set {name}"")]
 	public class Set{name} : Operation {{
-		[BlackboardOnly]
-		[SerializeField] private BlackboardRef<{type}> m_variable;
+		[SerializeField] private BlackboardOnlyRef<{type}> m_variable;
 		[SerializeField] private BlackboardRef<{type}> m_value;
 
 		public override string Editor_Info => $""Set {{m_variable.Editor_Info}} to {{m_value.Editor_Info}}"";

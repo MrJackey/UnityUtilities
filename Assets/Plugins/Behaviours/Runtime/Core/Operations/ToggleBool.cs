@@ -5,8 +5,7 @@ namespace Jackey.Behaviours.Core.Operations {
 	[DisplayName("Toggle Bool")]
 	[SearchPath("Blackboard/Toggle Bool")]
 	public class ToggleBool : Operation {
-		[BlackboardOnly]
-		public BlackboardRef<bool> Variable;
+		public BlackboardOnlyRef<bool> Variable;
 
 #if UNITY_EDITOR
 		public override string Editor_Info => $"Toggle {Variable.Editor_Info}";
