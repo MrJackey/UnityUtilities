@@ -115,29 +115,24 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		}
 
 		private BTNode CreateNode(Type type) {
+			int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
+			Undo.RecordObject(m_behaviour, $"Create {type.Name} node");
+
 			BehaviourAction action = (BehaviourAction)Activator.CreateInstance(type);
-			BTNode node = CreateNode(action);
+			BTNode node = new BTNode(action);
+			m_behaviour.m_allActions.Add(action);
 
 			Vector2 createPosition = this.ChangeCoordinatesTo(contentContainer, m_createNodePosition);
 			createPosition.x -= Node.DEFAULT_WIDTH / 2f;
 			createPosition.y -= Node.DEFAULT_HEIGHT / 2f;
 			node.transform.position = createPosition;
 
-			this.ReplaceSelection(node);
-
-			return node;
-		}
-
-		public BTNode CreateNode(BehaviourAction action) {
-			BTNode node = new BTNode(action);
-
-			Undo.RecordObject(m_behaviour, $"Create {action.GetType().Name} node");
-
-			m_behaviour.m_allActions.Add(action);
-
+			node.UpdateEditorData();
 			ApplyChanges();
+			Undo.CollapseUndoOperations(undoGroup);
 
 			AddNode(node);
+			this.ReplaceSelection(node);
 
 			return node;
 		}
@@ -152,8 +147,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				ConnectionSocket outSocket = btNode.OutSocket;
 				outSocket.RegisterCallback<MouseDownEvent, IConnectionSocket>(OnSocketMouseDown, outSocket);
 			}
-
-			btNode.UpdateEditorData();
 		}
 
 		public override void DeleteNode(Node node) {
