@@ -128,8 +128,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		private void RemoveItemAtIndex(int index) {
-			if (index == m_listView.selectedIndex)
-				ClearInspection();
+			int selectedIndex = m_listView.selectedIndex;
 
 			m_listItemProperties.RemoveAt(index);
 			m_listProperty.DeleteArrayElementAtIndex(index);
@@ -137,6 +136,11 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			ResetProperties();
 			m_listView.RefreshItems();
+
+			if (index == selectedIndex)
+				ClearInspection();
+			else if (index < selectedIndex)
+				m_listView.selectedIndex = selectedIndex - 1;
 		}
 
 		private void InspectItemWithIndex(int index) {
@@ -173,13 +177,14 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		private void OnUndoRedo() {
+			int listCount = m_listItemProperties.Count;
 			int selectedIndex = m_listView.selectedIndex;
 
 			m_listProperty.serializedObject.Update();
 			ResetProperties();
 			m_listView.RefreshItems();
 
-			if (selectedIndex != -1 && selectedIndex < m_listItemProperties.Count)
+			if (m_listItemProperties.Count == listCount)
 				m_listView.selectedIndex = selectedIndex;
 			else
 				ClearInspection();
