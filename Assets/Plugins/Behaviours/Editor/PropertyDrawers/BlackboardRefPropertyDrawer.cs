@@ -53,6 +53,12 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_root = new VisualElement() {
 				name = "BlackboardRef",
 			};
+			m_root.RegisterCallback<AttachToPanelEvent, BlackboardRefPropertyDrawer>((evt, args) => {
+				Undo.undoRedoPerformed += args.OnUndoRedo;
+			}, this);
+			m_root.RegisterCallback<DetachFromPanelEvent, BlackboardRefPropertyDrawer>((evt, args) => {
+				Undo.undoRedoPerformed -= args.OnUndoRedo;
+			}, this);
 
 			m_fieldRow = new VisualElement() {
 				name = "FieldRow",
@@ -64,7 +70,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			SerializedProperty behaviourProperty = property.FindPropertyRelative("m_behaviour");
 			behaviourProperty.objectReferenceValue ??= EditorWindow.GetWindow<BehaviourEditorWindow>().OpenBehaviour;
-			property.serializedObject.ApplyModifiedProperties();
+			property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
 
 			m_modeProperty = property.FindPropertyRelative("m_mode");
 			int mode = m_blackboardOnly ? VARIABLE_MODE : m_modeProperty.enumValueIndex;
@@ -205,6 +211,12 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_modeProperty.enumValueIndex = newValue;
 			m_modeProperty.serializedObject.ApplyModifiedProperties();
 
+			SetModeFields(newValue);
+
+			m_property.serializedObject.ApplyModifiedProperties();
+		}
+
+		private void SetModeFields(int mode) {
 			if (mode == FIELD_MODE) {
 				m_dropdownField.RemoveFromHierarchy();
 
@@ -257,6 +269,22 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			else {
 				m_convertLabel.RemoveFromHierarchy();
 			}
+		}
+
+		private void OnUndoRedo() {
+			// If the root is detached here, the drawer has been removed
+			// (from an undo callback). Hence no need to update anything
+			if (m_root.panel == null) return;
+
+			int currentMode = m_dropdownField.parent != null ? VARIABLE_MODE : FIELD_MODE;
+			int expectedMode = m_blackboardOnly ? VARIABLE_MODE : m_modeProperty.enumValueIndex;
+			if (currentMode != expectedMode)
+				SetModeFields(expectedMode);
+
+			m_property.serializedObject.Update();
+
+			if (expectedMode == VARIABLE_MODE)
+				m_dropdownField.SetValueWithoutNotify(m_variableNameProperty.stringValue);
 		}
 	}
 }
