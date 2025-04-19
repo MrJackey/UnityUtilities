@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Utilities;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -48,7 +49,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				};
 
 				if (Application.IsPlaying(property.serializedObject.targetObject))
-					SetupRuntimeObjectField(field, unityObjectProperty);
+					SetupRuntimeField(field, unityObjectProperty);
 				else
 					field.BindProperty(unityObjectProperty);
 
@@ -96,57 +97,65 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				return ManagedField<Vector2Field, Vector2>(boxedValueProperty);
 
 			if (valueType == typeof(Vector2Int))
-				return ManagedField<Vector2IntField, Vector2Int>(boxedValueProperty);
+				return JsonField<Vector2IntField, Vector2Int>(primitiveValueProperty);
 
 			if (valueType == typeof(Vector3))
 				return ManagedField<Vector3Field, Vector3>(boxedValueProperty);
 
 			if (valueType == typeof(Vector3Int))
-				return ManagedField<Vector3IntField, Vector3Int>(boxedValueProperty);
+				return JsonField<Vector3IntField, Vector3Int>(primitiveValueProperty);
 
 			if (valueType == typeof(Vector4))
 				return ManagedField<Vector4Field, Vector4>(boxedValueProperty);
 
 			// Geometry
 			if (valueType == typeof(Rect))
-				return ManagedField<RectField, Rect>(boxedValueProperty);
+				return JsonField<RectField, Rect>(primitiveValueProperty);
 
 			if (valueType == typeof(RectInt))
-				return ManagedField<RectIntField, RectInt>(boxedValueProperty);
+				return JsonField<RectIntField, RectInt>(primitiveValueProperty);
 
 			if (valueType == typeof(Bounds))
-				return ManagedField<BoundsField, Bounds>(boxedValueProperty);
+				return JsonField<BoundsField, Bounds>(primitiveValueProperty);
 
 			if (valueType == typeof(BoundsInt))
-				return ManagedField<BoundsIntField, BoundsInt>(boxedValueProperty);
+				return JsonField<BoundsIntField, BoundsInt>(primitiveValueProperty);
 
 			// Others
 			if (valueType == typeof(Color))
-				return ManagedField<ColorField, Color>(boxedValueProperty);
+				return JsonField<ColorField, Color>(primitiveValueProperty);
 
-			if (valueType == typeof(Gradient))
-				return ManagedField<GradientField, Gradient>(boxedValueProperty);
+			if (valueType == typeof(Gradient)) {
+				GradientField field = JsonField<GradientField, Gradient>(primitiveValueProperty);
+				field.TrackPropertyValue(primitiveValueProperty, valueProperty => {
+					// For some reason the gradient field does not clear its background on null values... So I'll do it myself
+					if (string.IsNullOrEmpty(valueProperty.stringValue))
+						field.Q<VisualElement>(null, "unity-gradient-field__content").style.backgroundImage = null;
+				});
+
+				return field;
+			}
 
 			if (valueType == typeof(LayerMask))
-				return ManagedField<LayerMaskField, int>(boxedValueProperty);
+				return JsonField<LayerMaskField, int>(primitiveValueProperty);
 
 			if (valueType == typeof(AnimationCurve))
-				return ManagedField<CurveField, AnimationCurve>(boxedValueProperty);
+				return JsonField<CurveField, AnimationCurve>(primitiveValueProperty);
 
 			if (valueType == typeof(Hash128))
-				return ManagedField<Hash128Field, Hash128>(boxedValueProperty);
+				return JsonField<Hash128Field, Hash128>(primitiveValueProperty);
 
 			return new Label(valueType?.Name ?? "<color=red>Unknown Type</color>") { name = "UserType" };
 		}
 
-		private VisualElement PrimitiveField<TField, TType>(SerializedProperty valueProperty) where TField : BaseField<TType>, new() {
+		private TField PrimitiveField<TField, TType>(SerializedProperty valueProperty) where TField : BaseField<TType>, new() {
 			TField field = new TField() { value = !string.IsNullOrEmpty(valueProperty.stringValue) ? (TType)Convert.ChangeType(valueProperty.stringValue, typeof(TType)) : default };
 			TrackPrimitiveValueChanges(field, valueProperty);
 
 			return field;
 		}
 
-		private VisualElement EnumField(Type enumType, SerializedProperty valueProperty) {
+		private EnumField EnumField(Type enumType, SerializedProperty valueProperty) {
 			EnumField field = new EnumField((Enum)Enum.ToObject(enumType, 0));
 
 			string propertyValue = valueProperty.stringValue;
@@ -155,19 +164,12 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			else
 				field.value = (Enum)Enum.Parse(enumType, propertyValue);
 
-			TrackEnumValueChanges(field, valueProperty);
+			TrackEnumValueChanges(field, valueProperty, enumType);
 
 			return field;
 		}
 
-		private VisualElement ManagedField<TField, TType>(SerializedProperty valueProperty) where TField : BaseField<TType>, new() {
-			TField field = new TField() { value = (TType)(valueProperty.managedReferenceValue ?? default(TType)) };
-			TrackValueChanges(field, valueProperty);
-
-			return field;
-		}
-
-		private VisualElement EnumFlagsField(Type enumType, SerializedProperty valueProperty) {
+		private EnumFlagsField EnumFlagsField(Type enumType, SerializedProperty valueProperty) {
 			EnumFlagsField field = new EnumFlagsField((Enum)Enum.ToObject(enumType, 0));
 
 			string propertyValue = valueProperty.stringValue;
@@ -176,7 +178,22 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			else
 				field.value = (Enum)Enum.Parse(enumType, propertyValue);
 
-			TrackEnumValueChanges(field, valueProperty);
+			TrackEnumValueChanges(field, valueProperty, enumType);
+
+			return field;
+		}
+
+		private TField ManagedField<TField, TType>(SerializedProperty valueProperty) where TField : BaseField<TType>, new() {
+			TField field = new TField() { value = (TType)(valueProperty.managedReferenceValue ?? default(TType)) };
+			TrackManagedValueChanges(field, valueProperty);
+
+			return field;
+		}
+
+		private TField JsonField<TField, TType>(SerializedProperty valueProperty) where TField : BaseField<TType>, new() {
+			object propertyValue = JsonUtility.FromJson(valueProperty.stringValue, typeof(JsonWrapper<TType>));
+			TField field = new TField() { value = propertyValue != null ? ((JsonWrapper<TType>)propertyValue).Value : default };
+			TrackJsonValueChanges(field, valueProperty);
 
 			return field;
 		}
@@ -195,10 +212,16 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 					EditorUtility.SetDirty(serializedObject.targetObject);
 				});
+
+				// Undo
+				field.TrackPropertyValue(valueProperty, property => {
+					string value = property.stringValue;
+					field.SetValueWithoutNotify(!string.IsNullOrEmpty(value) ? (T)Convert.ChangeType(value, typeof(T)) : default);
+				});
 			}
 		}
 
-		private void TrackEnumValueChanges<T>(BaseField<T> field, SerializedProperty valueProperty) where T : Enum {
+		private void TrackEnumValueChanges<T>(BaseField<T> field, SerializedProperty valueProperty, Type enumType) where T : Enum {
 			if (Application.IsPlaying(valueProperty.serializedObject.targetObject)) { // Runtime
 				SetupRuntimeField(field, valueProperty);
 			}
@@ -212,10 +235,29 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 					EditorUtility.SetDirty(serializedObject.targetObject);
 				});
+
+				// Undo
+				field.TrackPropertyValue(valueProperty, property => {
+					string propertyValue = property.stringValue;
+
+					if (string.IsNullOrEmpty(propertyValue)) {
+						field.SetValueWithoutNotify(default);
+					}
+					else {
+						switch (field) {
+							case EnumField enumField:
+								enumField.SetValueWithoutNotify((Enum)Enum.Parse(enumType, propertyValue));
+								break;
+							case EnumFlagsField enumFlagsField:
+								enumFlagsField.SetValueWithoutNotify((Enum)Enum.Parse(enumType, propertyValue));
+								break;
+						}
+					}
+				});
 			}
 		}
 
-		private void TrackValueChanges<T>(BaseField<T> field, SerializedProperty valueProperty) {
+		private void TrackManagedValueChanges<T>(BaseField<T> field, SerializedProperty valueProperty) {
 			if (Application.IsPlaying(valueProperty.serializedObject.targetObject)) { // Runtime
 				SetupRuntimeField(field, valueProperty);
 			}
@@ -229,22 +271,35 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 					EditorUtility.SetDirty(serializedObject.targetObject);
 				});
+
+				// Undo
+				field.TrackPropertyValue(valueProperty, property => {
+					field.SetValueWithoutNotify((T)(property.managedReferenceValue ?? default(T)));
+				});
 			}
 		}
 
-		private void SetupRuntimeObjectField(ObjectField field, SerializedProperty property) {
-			BlackboardVar variable = GetBlackboardVariable(property);
+		private void TrackJsonValueChanges<T>(BaseField<T> field, SerializedProperty valueProperty) {
+			if (Application.IsPlaying(valueProperty.serializedObject.targetObject)) { // Runtime
+				SetupRuntimeField(field, valueProperty);
+			}
+			else { // Edit
+				field.RegisterValueChangedCallback(evt => {
+					SerializedObject serializedObject = valueProperty.serializedObject;
 
-			if (variable == null)
-				return;
+					serializedObject.Update();
+					valueProperty.stringValue = JsonUtility.ToJson(new JsonWrapper<T>(evt.newValue));
+					serializedObject.ApplyModifiedProperties();
 
-			field.schedule.Execute(() => {
-				field.value = variable.GetValue<Object>();
-			}).Every(1/60L);
+					EditorUtility.SetDirty(serializedObject.targetObject);
+				});
 
-			field.RegisterValueChangedCallback(evt => {
-				variable.SetValue(evt.newValue);
-			});
+				// Undo
+				field.TrackPropertyValue(valueProperty, property => {
+					object propertyValue = JsonUtility.FromJson(property.stringValue, typeof(JsonWrapper<T>));
+					field.SetValueWithoutNotify(propertyValue != null ? ((JsonWrapper<T>)propertyValue).Value : default);
+				});
+			}
 		}
 
 		private void SetupRuntimeField<T>(BaseField<T> field, SerializedProperty property) {

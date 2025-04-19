@@ -113,12 +113,22 @@ namespace Jackey.Behaviours.Core.Blackboard {
 			Type valueType = typeof(BlackboardValue<>).MakeGenericType(serializedType);
 			m_value = (BlackboardValue)Activator.CreateInstance(valueType);
 
-			if (typeof(Object).IsAssignableFrom(serializedType))
-				m_value.SetValueBoxed(m_unityObjectValue.GetType() != typeof(Object) ? m_unityObjectValue : null); // Ensure Unity's fake null isn't set as value. If it is, the cast when setting boxed value fails. Unity null / missing are of type Object
-			else if (!string.IsNullOrEmpty(m_primitiveValue) && (serializedType == typeof(string) || serializedType.IsPrimitive))
-				m_value.SetValueBoxed(Convert.ChangeType(m_primitiveValue, serializedType));
-			else if (m_boxedValue != null && serializedType.IsInstanceOfType(m_boxedValue))
+			if (typeof(Object).IsAssignableFrom(serializedType)) {
+				// Ensure Unity's fake null isn't set as value. If it is, the cast when setting boxed value fails. Unity null / missing are of type Object
+				m_value.SetValueBoxed(m_unityObjectValue.GetType() != typeof(Object) ? m_unityObjectValue : null);
+			}
+			else if (!string.IsNullOrEmpty(m_primitiveValue)) {
+				if (serializedType == typeof(string) || serializedType.IsPrimitive) {
+					m_value.SetValueBoxed(Convert.ChangeType(m_primitiveValue, serializedType));
+				}
+				else {
+					object jsonValue = JsonUtility.FromJson(m_primitiveValue, typeof(JsonWrapper<>).MakeGenericType(serializedType));
+					m_value.SetValueBoxed(((IJsonWrapper)jsonValue).BoxedValue);
+				}
+			}
+			else if (m_boxedValue != null && serializedType.IsInstanceOfType(m_boxedValue)) {
 				m_value.SetValueBoxed(m_boxedValue);
+			}
 		}
 
 		#endregion
