@@ -59,6 +59,7 @@ BlackboardInspector #SecondaryBlackboard {
 	width: 20px;
 	height: 20px;
 	flex-shrink: 0;
+	align-self: center;
 }
 
 .BlackboardDrawer #UserType {

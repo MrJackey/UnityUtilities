@@ -40,11 +40,12 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				reorderable = true,
 				reorderMode = ListViewReorderMode.Animated,
 				selectionType = SelectionType.None,
+				virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight,
 			});
 
-			m_listView.RegisterCallback<FocusEvent, BlackboardPropertyDrawer>((_, self) => s_lastFocusedDrawer = self, this);
 			m_listView.TrackPropertyValue(m_variablesProperty, OnPropertyChanged);
 			m_listView.itemIndexChanged += OnVariableMoved;
+			m_listView.RegisterCallback<FocusEvent, BlackboardPropertyDrawer>((_, self) => s_lastFocusedDrawer = self, this);
 			m_listView.schedule.Execute(() => m_listView.Focus());
 
 			rootVisualElement.Add(new Button(CreateVariable) {
