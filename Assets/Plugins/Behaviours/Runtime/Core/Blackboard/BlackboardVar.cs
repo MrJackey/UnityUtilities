@@ -80,6 +80,11 @@ namespace Jackey.Behaviours.Core.Blackboard {
 			}
 
 			public override bool TrySetValue<TValue>(TValue value) {
+				if (value == null) {
+					Value = default;
+					return true;
+				}
+
 				if (value is T val) {
 					Value = val;
 					return true;
