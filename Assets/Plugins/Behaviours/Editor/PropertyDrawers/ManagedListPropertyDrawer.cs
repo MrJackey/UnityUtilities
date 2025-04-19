@@ -22,12 +22,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		protected void CreateListGUI(VisualElement rootVisualElement, SerializedProperty property) {
 			rootVisualElement.RegisterCallback<MouseDownEvent>(evt => evt.StopImmediatePropagation());
-			rootVisualElement.RegisterCallback<AttachToPanelEvent, ManagedListPropertyDrawer<T>>((evt, args) => {
-				Undo.undoRedoPerformed += args.OnUndoRedo;
-			}, this);
-			rootVisualElement.RegisterCallback<DetachFromPanelEvent, ManagedListPropertyDrawer<T>>((evt, args) => {
-				Undo.undoRedoPerformed -= args.OnUndoRedo;
-			}, this);
+			rootVisualElement.TrackPropertyValue(property, _ => OnPropertyChanged());
 
 			m_listProperty = property;
 			ResetProperties();
@@ -176,7 +171,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_listView.selectedIndex = -1;
 		}
 
-		private void OnUndoRedo() {
+		private void OnPropertyChanged() {
 			int listCount = m_listItemProperties.Count;
 			int selectedIndex = m_listView.selectedIndex;
 
