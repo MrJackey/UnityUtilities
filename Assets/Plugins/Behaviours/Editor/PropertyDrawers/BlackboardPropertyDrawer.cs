@@ -159,6 +159,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 				ResetProperties();
 				m_listView.RefreshItems();
+
+				// Focus on the just created variable's name for easy editing
+				m_listView.GetRootElementForIndex(m_variableProperties.Count - 1).Q<TextField>().Focus();
 			});
 		}
 
