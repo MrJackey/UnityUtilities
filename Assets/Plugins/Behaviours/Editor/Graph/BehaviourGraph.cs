@@ -258,7 +258,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			group.GroupDragger.Moved += OnElementMoved;
 			group.Resizer.Resized += OnElementResized;
 
-			group.AutoSizeChanged += OnGroupAutosizeChanged;
+			group.Modified += OnGroupModified;
 
 			group.AddManipulator(new ClickSelector(this));
 			group.SelectionManager = this;
@@ -366,8 +366,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 			ApplyChanges();
 		}
 
-		private void OnGroupAutosizeChanged() {
-			Undo.RecordObject(m_serializedBehaviour.targetObject, "Toggle group autosize");
+		private void OnGroupModified() {
+			Undo.RecordObject(m_serializedBehaviour.targetObject, "Modify group");
 			ApplyChanges();
 		}
 

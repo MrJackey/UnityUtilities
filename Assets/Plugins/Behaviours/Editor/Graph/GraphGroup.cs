@@ -24,7 +24,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		public string Label {
 			get => m_label.value;
-			set => m_label.value = value;
+			set => m_label.SetValueWithoutNotify(value);
 		}
 		public bool AutoSize => m_autoSize;
 
@@ -38,7 +38,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public GroupDragger GroupDragger => m_groupDragger;
 		public Resizer Resizer => m_resizer;
 
-		public event Action AutoSizeChanged;
+		public event Action Modified;
 
 		public GraphGroup(Rect rect) {
 			usageHints = UsageHints.DynamicTransform;
@@ -47,13 +47,17 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 			Reposition(rect);
 
-			Add(m_label = new TextField());
+			Add(m_label = new TextField() { isDelayed = true });
+			m_label.RegisterValueChangedCallback(evt => Modified?.Invoke());
 
 			VisualElement statusBar = new VisualElement() { name = "StatusBar" };
 			Add(statusBar);
 
 			statusBar.Add(m_autoSizeImage = new Image() { name = "AutoSizeToggle", scaleMode = ScaleMode.ScaleToFit });
-			m_autoSizeImage.AddManipulator(new Clickable(() => SetAutoSize(!m_autoSize)));
+			m_autoSizeImage.AddManipulator(new Clickable(() => {
+				SetAutoSize(!m_autoSize);
+				Modified?.Invoke();
+			}));
 
 			m_resizer = new Resizer();
 			m_dragger = new Dragger();
@@ -147,7 +151,6 @@ namespace Jackey.Behaviours.Editor.Graph {
 			if (value == m_autoSize) return;
 
 			SetAutoSize_Internal(value);
-			AutoSizeChanged?.Invoke();
 		}
 
 		private void SetAutoSize_Internal(bool value) {
