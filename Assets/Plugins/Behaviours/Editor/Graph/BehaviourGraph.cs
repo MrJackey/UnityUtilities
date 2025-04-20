@@ -79,9 +79,6 @@ namespace Jackey.Behaviours.Editor.Graph {
 				}
 			}
 
-			if (m_isEditable)
-				UpdateEditorData();
-
 			EditorUtility.SetDirty(m_serializedBehaviour.targetObject);
 		}
 		protected virtual void UpdateEditorData() { }
@@ -128,8 +125,13 @@ namespace Jackey.Behaviours.Editor.Graph {
 			node.AddManipulator(doubleClickManipulator);
 
 			if (m_isEditable) {
-				node.AddManipulator(new SelectionDragger(this));
-				node.AddManipulator(new Dragger());
+				SelectionDragger selectionDragger = new SelectionDragger(this);
+				selectionDragger.Moved += OnElementMoved;
+				node.AddManipulator(selectionDragger);
+
+				Dragger dragger = new Dragger();
+				dragger.Moved += OnElementMoved;
+				node.AddManipulator(dragger);
 			}
 
 			node.AddManipulator(new ClickSelector(this));
@@ -239,13 +241,10 @@ namespace Jackey.Behaviours.Editor.Graph {
 		#region Group
 
 		private void OnGroupCreated(GraphGroup group) {
-			m_groups.Add(group);
-			group.SendToBack();
-
-			group.AddManipulator(new ClickSelector(this));
-			group.SelectionManager = this;
-
 			OnGroupCreate(group);
+			AddGroup(group);
+
+			ApplyChanges();
 		}
 		protected virtual void OnGroupCreate(GraphGroup group) { }
 
@@ -254,6 +253,12 @@ namespace Jackey.Behaviours.Editor.Graph {
 		/// </summary>
 		public void AddGroup(GraphGroup group) {
 			Debug.Assert(!m_groups.Contains(group));
+
+			group.Dragger.Moved += OnElementMoved;
+			group.GroupDragger.Moved += OnElementMoved;
+			group.Resizer.Resized += OnElementResized;
+
+			group.AutoSizeChanged += OnGroupAutosizeChanged;
 
 			group.AddManipulator(new ClickSelector(this));
 			group.SelectionManager = this;
@@ -348,6 +353,24 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		#endregion
 
+		private void OnElementMoved(VisualElement _, Vector2 from, Vector2 to) {
+			// Ignore creating undo for minor moves. They can quickly become annoying
+			if (Vector2.SqrMagnitude(to - from) > 10 * 10)
+				Undo.RecordObject(m_serializedBehaviour.targetObject, "Move element(s)");
+
+			ApplyChanges();
+		}
+
+		private void OnElementResized() {
+			Undo.RecordObject(m_serializedBehaviour.targetObject, "Resize element");
+			ApplyChanges();
+		}
+
+		private void OnGroupAutosizeChanged() {
+			Undo.RecordObject(m_serializedBehaviour.targetObject, "Toggle group autosize");
+			ApplyChanges();
+		}
+
 		public void OnSelectionChange() {
 			if (SelectedElements.Count != 1) {
 				ClearInspection();
@@ -371,6 +394,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public void ClearInspection() => m_inspector.ClearInspection();
 
 		protected void ApplyChanges() {
+			UpdateEditorData();
 			m_serializedBehaviour.ApplyModifiedPropertiesWithoutUndo();
 			m_serializedBehaviour.Update();
 		}
@@ -410,7 +434,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 				dataGroup.Label = graphGroup.Label;
 				dataGroup.AutoSize = graphGroup.AutoSize;
-				dataGroup.Rect = new Rect(graphGroup.transform.position, graphGroup.layout.size);
+				dataGroup.Rect = new Rect(graphGroup.transform.position, new Vector2(graphGroup.style.width.value.value, graphGroup.style.height.value.value));
 			}
 		}
 
@@ -439,6 +463,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			m_behaviour.Editor_Data.Groups.RemoveAt(groupIndex);
 
 			RemoveGroup(group);
+			ApplyChanges();
 		}
 	}
 }

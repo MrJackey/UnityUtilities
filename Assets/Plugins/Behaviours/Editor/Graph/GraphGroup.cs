@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Jackey.Behaviours.Editor.Manipulators;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -32,6 +33,12 @@ namespace Jackey.Behaviours.Editor.Graph {
 		}
 
 		VisualElement ISelectableElement.Element => this;
+
+		public Dragger Dragger => m_dragger;
+		public GroupDragger GroupDragger => m_groupDragger;
+		public Resizer Resizer => m_resizer;
+
+		public event Action AutoSizeChanged;
 
 		public GraphGroup(Rect rect) {
 			usageHints = UsageHints.DynamicTransform;
@@ -140,6 +147,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			if (value == m_autoSize) return;
 
 			SetAutoSize_Internal(value);
+			AutoSizeChanged?.Invoke();
 		}
 
 		private void SetAutoSize_Internal(bool value) {
@@ -147,6 +155,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 				this.RemoveManipulator(m_resizer);
 				this.RemoveManipulator(m_dragger);
 				this.AddManipulator(m_groupDragger);
+
+				UpdateAutoSize();
 			}
 			else {
 				this.AddManipulator(m_resizer);

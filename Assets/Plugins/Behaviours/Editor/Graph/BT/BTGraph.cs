@@ -71,6 +71,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				BTNode node = GetNodeOfAction(action);
 				Debug.Assert(node != null);
 
+				node.transform.position = action.Editor_Data.Position;
 				node.SetEntry(m_behaviour.m_entry == action);
 
 				switch (action) {
@@ -101,6 +102,12 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			foreach (BTNode node in m_nodes) {
 				node.UpdateEditorData();
 			}
+
+			// Order after updating ALL data to ensure up-to-date information
+			foreach (BTNode node in m_nodes) {
+				if (node.Action is Composite composite)
+					composite.Editor_OrderChildren();
+			}
 		}
 
 		#region Node CRUD
@@ -127,11 +134,11 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			createPosition.y -= Node.DEFAULT_HEIGHT / 2f;
 			node.transform.position = createPosition;
 
-			node.UpdateEditorData();
+			AddNode(node);
+
 			ApplyChanges();
 			Undo.CollapseUndoOperations(undoGroup);
 
-			AddNode(node);
 			this.ReplaceSelection(node);
 
 			return node;
@@ -504,6 +511,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 						break;
 				}
 			}
+
+			ApplyChanges();
 		}
 
 		private void OnConnectionRemoved(Connection connection, IConnectionSocket start, IConnectionSocket end) {
@@ -533,6 +542,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			}
 
 			m_connections.Remove(connection);
+			ApplyChanges();
 		}
 
 		#endregion

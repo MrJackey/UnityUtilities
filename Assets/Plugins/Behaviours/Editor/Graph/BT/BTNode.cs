@@ -145,10 +145,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 		public void UpdateEditorData() {
 			m_action.Editor_Data.Position = transform.position;
-
-			if (m_action is Composite composite) {
-				composite.Editor_OrderChildren();
-			}
 		}
 
 		public void SetEntry(bool isEntry) {

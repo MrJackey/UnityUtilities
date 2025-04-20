@@ -1,12 +1,16 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Manipulators {
 	public class Dragger : MouseManipulator {
 		private bool m_active;
 		private Vector2 m_start;
+		private Vector3 m_startTransform;
 
 		public bool ConstrainToParent { get; set; } = false;
+
+		public event Action<VisualElement, Vector2, Vector2> Moved;
 
 		public Dragger() {
 			activators.Add(new ManipulatorActivationFilter() {
@@ -39,6 +43,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 				return;
 
 			m_start = evt.localMousePosition;
+			m_startTransform = target.transform.position;
 			m_active = true;
 			target.CaptureMouse();
 			evt.StopPropagation();
@@ -82,6 +87,8 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			m_active = false;
 			target.ReleaseMouse();
 			evt.StopPropagation();
+
+			Moved?.Invoke(target, m_startTransform, target.transform.position);
 		}
 	}
 }

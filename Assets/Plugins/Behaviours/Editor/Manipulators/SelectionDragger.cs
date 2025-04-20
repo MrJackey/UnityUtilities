@@ -1,16 +1,24 @@
-﻿using Jackey.Behaviours.Editor.Graph;
+﻿using System;
+using Jackey.Behaviours.Editor.Graph;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Manipulators {
-	public class SelectionDragger : Dragger {
+	public class SelectionDragger : MouseManipulator {
 		private ISelectionManager m_manager;
 
 		private bool m_active;
 		private Vector2 m_start;
+		private Vector3 m_startTransform;
+
+		public event Action<VisualElement, Vector2, Vector2> Moved;
 
 		public SelectionDragger(ISelectionManager manager) {
 			m_manager = manager;
+
+			activators.Add(new ManipulatorActivationFilter() {
+				button = MouseButton.LeftMouse
+			});
 		}
 
 		protected override void RegisterCallbacksOnTarget()
@@ -43,6 +51,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 				return;
 
 			m_start = evt.localMousePosition;
+			m_startTransform = target.transform.position;
 			m_active = true;
 			target.CaptureMouse();
 			evt.StopImmediatePropagation();
@@ -66,6 +75,8 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			m_active = false;
 			target.ReleaseMouse();
 			evt.StopPropagation();
+
+			Moved?.Invoke(target, m_startTransform, target.transform.position);
 		}
 	}
 }

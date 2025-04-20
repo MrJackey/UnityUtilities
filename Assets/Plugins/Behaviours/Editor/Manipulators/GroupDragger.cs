@@ -1,20 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Jackey.Behaviours.Editor.Graph;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Manipulators {
-	public class GroupDragger : Dragger {
+	public class GroupDragger : MouseManipulator {
 		private GraphGroup m_group;
 		private List<IGroupableElement> m_groupElements = new();
 
 		private bool m_active;
 		private Vector2 m_start;
+		private Vector2 m_startTransform;
 
 		public bool Active => m_active;
 
+		public event Action<VisualElement, Vector2, Vector2> Moved;
+
 		public GroupDragger(GraphGroup group) {
 			m_group = group;
+
+			activators.Add(new ManipulatorActivationFilter() {
+				button = MouseButton.LeftMouse
+			});
 		}
 
 		protected override void RegisterCallbacksOnTarget()
@@ -44,6 +52,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			m_group.GetGroupedElements(m_groupElements);
 
 			m_start = evt.localMousePosition;
+			m_startTransform = target.transform.position;
 			m_active = true;
 			target.CaptureMouse();
 			evt.StopImmediatePropagation();
@@ -70,6 +79,8 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			m_active = false;
 			target.ReleaseMouse();
 			evt.StopPropagation();
+
+			Moved?.Invoke(target, m_startTransform, target.transform.position);
 		}
 	}
 }

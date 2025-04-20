@@ -16,6 +16,8 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 		private Vector3 m_startPosition;
 		private Vector2 m_startSize;
 
+		public event Action Resized;
+
 		public Resizer() {
 			activators.Add(new ManipulatorActivationFilter() {
 				button = MouseButton.LeftMouse,
@@ -138,6 +140,8 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			m_active = false;
 			target.ReleaseMouse();
 			evt.StopPropagation();
+
+			Resized?.Invoke();
 		}
 
 		private Vector2 GetPointerPosition(IMouseEvent evt) {
