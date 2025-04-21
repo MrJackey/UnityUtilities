@@ -184,6 +184,7 @@ Inspector {
 Inspector > Label {
 	align-self: center;
 	font-size: 16px;
+	-unity-font-style: bold;
 	margin-top: 5px;
 }
 
