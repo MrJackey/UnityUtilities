@@ -138,6 +138,9 @@ namespace Jackey.Behaviours.Core.Blackboard {
 				if (serializedType == typeof(string) || serializedType.IsPrimitive) {
 					m_value.SetValueBoxed(Convert.ChangeType(m_primitiveValue, serializedType));
 				}
+				else if (serializedType.IsEnum) {
+					m_value.SetValueBoxed(Enum.Parse(serializedType, m_primitiveValue));
+				}
 				else {
 					object jsonValue = JsonUtility.FromJson(m_primitiveValue, typeof(JsonWrapper<>).MakeGenericType(serializedType));
 					m_value.SetValueBoxed(((IJsonWrapper)jsonValue).BoxedValue);
