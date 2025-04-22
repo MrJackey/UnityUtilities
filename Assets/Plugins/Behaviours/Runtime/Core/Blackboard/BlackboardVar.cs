@@ -10,6 +10,13 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		[SerializeField] private string m_variableName;
 		[SerializeField] private string m_serializedTypeName;
 		[SerializeField] private SerializedGUID m_guid;
+#if UNITY_EDITOR
+		// For some reason the SerializedGUID field is not properly written to when redoing creation of a BlackboardVar.
+		// My guess is due to it being a fixed buffer.
+		// The backup solution is this field which always contain the same guid to recreate the efficient struct in case it's lost.
+		// This field never be used aside from that.
+		[SerializeField] private string m_guidString;
+#endif
 
 		[SerializeField] private Object m_unityObjectValue;
 		[SerializeReference] private object m_boxedValue;
@@ -105,8 +112,13 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		void ISerializationCallbackReceiver.OnBeforeSerialize() { }
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize() {
-			Type serializedType = Type.GetType(m_serializedTypeName);
+#if UNITY_EDITOR
+			// Recreate guid in case it's lost
+			if (m_guid == default && !string.IsNullOrEmpty(m_guidString))
+				SerializedGUID.TryParse(m_guidString, out m_guid);
+#endif
 
+			Type serializedType = Type.GetType(m_serializedTypeName);
 			if (serializedType == null)
 				return;
 

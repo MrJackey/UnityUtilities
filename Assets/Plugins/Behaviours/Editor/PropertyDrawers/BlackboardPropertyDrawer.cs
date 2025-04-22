@@ -149,7 +149,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				newProperty.serializedObject.Update();
 
 				// Set default values
-				SerializedGUID.Editor_WriteToProperty(newProperty.FindPropertyRelative("m_guid"), SerializedGUID.Generate());
+				SerializedGUID guid = SerializedGUID.Generate();
+				SerializedGUID.Editor_WriteToProperty(newProperty.FindPropertyRelative("m_guid"), guid);
+				newProperty.FindPropertyRelative("m_guidString").stringValue = guid.ToString();
 				newProperty.FindPropertyRelative("m_variableName").stringValue = $"new {type.Name} Variable";
 				newProperty.FindPropertyRelative("m_serializedTypeName").stringValue = type.AssemblyQualifiedName;
 				newProperty.FindPropertyRelative("m_boxedValue").managedReferenceValue = null;
