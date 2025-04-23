@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using Microsoft.CodeAnalysis;
@@ -104,7 +105,7 @@ namespace Jackey.Behaviours.BT.Generated {{
 	private static readonly DiagnosticDescriptor GENERATE_COMPONENT_ACTION_USAGE_ERROR_DIAGNOSTIC = new(
 		"BEHAVIOUR001",
 		"Class must implement IComponentAction to generate implementation",
-		"A method attributed with GenerateComponentAction must implement *either* IComponentAction or IComponentAction<T>",
+		"A type attributed with GenerateComponentAction must implement IComponentAction or IComponentAction<T>",
 		"usage",
 		DiagnosticSeverity.Error, true);
 
@@ -133,19 +134,19 @@ namespace Jackey.Behaviours.BT.Generated {{
 		SymbolDisplayGenericsOptions.None);
 
 	public void Initialize(IncrementalGeneratorInitializationContext context) {
-		IncrementalValuesProvider<GeneratorItem> componentActions = context.SyntaxProvider.ForAttributeWithMetadataName(
+		IncrementalValuesProvider<EquatableArray<GeneratorItem>> componentActions = context.SyntaxProvider.ForAttributeWithMetadataName(
 			GENERATE_COMPONENT_ACTION_ATTRIBUTE_QUALIFIED_NAME,
 			(node, ct) => node is TypeDeclarationSyntax,
 			TransformComponentActions
 		);
 
-		IncrementalValuesProvider<GeneratorItem> operations = context.SyntaxProvider.ForAttributeWithMetadataName(
+		IncrementalValuesProvider<EquatableArray<GeneratorItem>> operations = context.SyntaxProvider.ForAttributeWithMetadataName(
 			BEHAVIOUR_OPERATION_ATTRIBUTE_QUALIFIED_NAME,
 			(node, ct) => node is MethodDeclarationSyntax,
 			TransformBehaviourOperation
 		);
 
-		IncrementalValuesProvider<GeneratorItem> conditions = context.SyntaxProvider.ForAttributeWithMetadataName(
+		IncrementalValuesProvider<EquatableArray<GeneratorItem>> conditions = context.SyntaxProvider.ForAttributeWithMetadataName(
 			BEHAVIOUR_CONDITION_ATTRIBUTE_QUALIFIED_NAME,
 			(node, ct) => node is MethodDeclarationSyntax,
 			TransformBehaviourCondition
@@ -156,104 +157,114 @@ namespace Jackey.Behaviours.BT.Generated {{
 		context.RegisterSourceOutput(conditions, GenerateOutput);
 	}
 
-	private static GeneratorItem TransformBehaviourOperation(
+	private static EquatableArray<GeneratorItem> TransformBehaviourOperation(
 		GeneratorAttributeSyntaxContext context, CancellationToken ct) {
 		IMethodSymbol methodSymbol = (IMethodSymbol)context.TargetSymbol;
 		if (methodSymbol.DeclaredAccessibility != Accessibility.Public ||
 		    methodSymbol.ReturnType.SpecialType != SpecialType.System_Void ||
 		    methodSymbol.Parameters.Length > 1) {
 			Diagnostic diagnostic = Diagnostic.Create(BEHAVIOUR_OPERATION_USAGE_ERROR_DIAGNOSTIC, context.TargetNode.GetLocation());
-			return new GeneratorItem(ItemKind.BehaviourOperation, "", "", "", "", "", diagnostic);
+			return new EquatableArray<GeneratorItem>([
+				new GeneratorItem(ItemKind.BehaviourOperation, "", "", "", "", "", diagnostic)]);
 		}
 
 		if (methodSymbol.Parameters.Length == 0) {
-			return new GeneratorItem(
-				ItemKind.BehaviourOperation,
-				methodSymbol.ContainingType.Name,
-				methodSymbol.ContainingType.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
-				"",
-				"",
-				methodSymbol.Name,
-				null);
+			return new EquatableArray<GeneratorItem>([
+				new GeneratorItem(
+					ItemKind.BehaviourOperation,
+					methodSymbol.ContainingType.Name,
+					methodSymbol.ContainingType.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
+					"",
+					"",
+					methodSymbol.Name,
+					null)]);
 		}
 		else {
-			return new GeneratorItem(
-				ItemKind.BehaviourOperationArg,
-				methodSymbol.ContainingType.Name,
-				methodSymbol.ContainingType.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
-				methodSymbol.Parameters[0].Type.Name,
-				methodSymbol.Parameters[0].Type.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
-				methodSymbol.Name,
-				null);
+			return new EquatableArray<GeneratorItem>([
+				new GeneratorItem(
+					ItemKind.BehaviourOperationArg,
+					methodSymbol.ContainingType.Name,
+					methodSymbol.ContainingType.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
+					methodSymbol.Parameters[0].Type.Name,
+					methodSymbol.Parameters[0].Type.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
+					methodSymbol.Name,
+					null)]);
 		}
 	}
 
-	private static GeneratorItem TransformBehaviourCondition(
+	private static EquatableArray<GeneratorItem> TransformBehaviourCondition(
 		GeneratorAttributeSyntaxContext context, CancellationToken ct) {
 		IMethodSymbol methodSymbol = (IMethodSymbol)context.TargetSymbol;
 		if (methodSymbol.DeclaredAccessibility != Accessibility.Public ||
 		    methodSymbol.ReturnType.SpecialType != SpecialType.System_Boolean ||
 		    methodSymbol.Parameters.Length > 1) {
 			Diagnostic diagnostic = Diagnostic.Create(BEHAVIOUR_CONDITION_USAGE_ERROR_DIAGNOSTIC, context.TargetNode.GetLocation());
-			return new GeneratorItem(ItemKind.BehaviourOperation, "", "", "", "", "", diagnostic);
+			return new EquatableArray<GeneratorItem>([
+				new GeneratorItem(ItemKind.BehaviourOperation, "", "", "", "", "", diagnostic)]);
 		}
 
 		if (methodSymbol.Parameters.Length == 0) {
-			return new GeneratorItem(
-				ItemKind.BehaviourCondition,
-				methodSymbol.ContainingType.Name,
-				methodSymbol.ContainingType.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
-				"",
-				"",
-				methodSymbol.Name,
-				null);
+			return new EquatableArray<GeneratorItem>([
+				new GeneratorItem(
+					ItemKind.BehaviourCondition,
+					methodSymbol.ContainingType.Name,
+					methodSymbol.ContainingType.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
+					"",
+					"",
+					methodSymbol.Name,
+					null)]);
 		}
 		else {
-			return new GeneratorItem(
-				ItemKind.BehaviourConditionArg,
-				methodSymbol.ContainingType.Name,
-				methodSymbol.ContainingType.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
-				methodSymbol.Parameters[0].Type.Name,
-				methodSymbol.Parameters[0].Type.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
-				methodSymbol.Name,
-				null);
+			return new EquatableArray<GeneratorItem>([
+				new GeneratorItem(
+					ItemKind.BehaviourConditionArg,
+					methodSymbol.ContainingType.Name,
+					methodSymbol.ContainingType.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
+					methodSymbol.Parameters[0].Type.Name,
+					methodSymbol.Parameters[0].Type.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
+					methodSymbol.Name,
+					null)]);
 		}
 	}
 
-	private static GeneratorItem TransformComponentActions(
+	private static EquatableArray<GeneratorItem> TransformComponentActions(
 		GeneratorAttributeSyntaxContext context, CancellationToken ct) {
 		ITypeSymbol typeSymbol = (ITypeSymbol)context.TargetSymbol;
 
-		if (!FindComponentInterface(typeSymbol.Interfaces, out INamedTypeSymbol interfaceType)) {
+		List<INamedTypeSymbol> interfaceTypes = new();
+		if (!FindComponentInterfaces(typeSymbol.Interfaces, interfaceTypes)) {
 			Diagnostic diagnostic = Diagnostic.Create(GENERATE_COMPONENT_ACTION_USAGE_ERROR_DIAGNOSTIC, context.TargetNode.GetLocation());
-			return new GeneratorItem(ItemKind.ComponentAction, "", "", "", "", "", diagnostic);
+			return new EquatableArray<GeneratorItem>([
+				new GeneratorItem(ItemKind.ComponentAction, "", "", "", "", "", diagnostic)]);
 		}
 
-		if (!interfaceType.IsGenericType) {
-			return new GeneratorItem(
-				ItemKind.ComponentAction,
-				typeSymbol.Name,
-				typeSymbol.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
-				"",
-				"",
-				"",
-				null);
-		}
-		else {
-			return new GeneratorItem(
-				ItemKind.ComponentActionArg,
-				typeSymbol.Name,
-				typeSymbol.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
-				interfaceType.TypeArguments[0].Name,
-				interfaceType.TypeArguments[0].ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
-				"",
-				null);
+		GeneratorItem[] items = new GeneratorItem[interfaceTypes.Count];
+		for (int i = 0; i < interfaceTypes.Count; i++) {
+			if (!interfaceTypes[i].IsGenericType) {
+				items[i] = new GeneratorItem(
+					ItemKind.ComponentAction,
+					typeSymbol.Name,
+					typeSymbol.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
+					"",
+					"",
+					"",
+					null);
+			}
+			else {
+				items[i] = new GeneratorItem(
+					ItemKind.ComponentActionArg,
+					typeSymbol.Name,
+					typeSymbol.ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
+					interfaceTypes[i].TypeArguments[0].Name,
+					interfaceTypes[i].TypeArguments[0].ToDisplayString(SIMPLE_QUALIFIED_TYPE_NAME_FORMAT),
+					"",
+					null);
+			}
 		}
 
-		static bool FindComponentInterface(ImmutableArray<INamedTypeSymbol> types, out INamedTypeSymbol interfaceType) {
-			interfaceType = null!;
-			INamedTypeSymbol? found = null;
+		return items;
 
+		static bool FindComponentInterfaces(ImmutableArray<INamedTypeSymbol> types, List<INamedTypeSymbol> outInterfaceTypes) {
 			foreach (INamedTypeSymbol typeSymbol in types) {
 				if (typeSymbol.ContainingNamespace.ToString() != COMPONENT_ACTION_INTERFACE_NAMESPACE)
 					continue;
@@ -262,19 +273,17 @@ namespace Jackey.Behaviours.BT.Generated {{
 
 				if (typeSymbol.Name == COMPONENT_ACTION_INTERFACE_NAME &&
 				    (!typeSymbol.IsGenericType || typeSymbol.TypeArguments.Length == 1)) {
-					if (found != null) // multiple matches are not allowed
-						return false;
-
-					found = typeSymbol;
+					outInterfaceTypes.Add(typeSymbol);
 				}
 			}
 
-			if (found != null) {
-				interfaceType = found;
-				return true;
-			}
+			return outInterfaceTypes.Count > 0;
+		}
+	}
 
-			return false;
+	private static void GenerateOutput(SourceProductionContext context, EquatableArray<GeneratorItem> items) {
+		foreach (GeneratorItem item in items.Value) {
+			GenerateOutput(context, item);
 		}
 	}
 
@@ -296,7 +305,7 @@ namespace Jackey.Behaviours.BT.Generated {{
 				break;
 			}
 			case ItemKind.ComponentActionArg: {
-				string className = item.QualifiedTargetType.Replace('.', '_') + item.QualifiedArgType.Replace('.', '_');
+				string className = $"{item.QualifiedTargetType.Replace('.', '_')}_{item.QualifiedArgType.Replace('.', '_')}";
 				string source = string.Format(
 					ARGS_ACTION_TEMPLATE,
 					$"{item.TargetType}<{item.ArgType}>",
@@ -373,7 +382,7 @@ namespace Jackey.Behaviours.BT.Generated {{
 	// The choice of using a record here is very intentional, the incremental generator needs the data model to be
 	// deterministically IEquatable in order to properly detect changes. The record construct implements IEquatable for
 	// us and the data we store is only basic comparable types.
-	private record GeneratorItem(
+	private record struct GeneratorItem(
 		ItemKind Kind,
 		string TargetType,
 		string QualifiedTargetType,
@@ -381,4 +390,24 @@ namespace Jackey.Behaviours.BT.Generated {{
 		string QualifiedArgType,
 		string MethodName,
 		Diagnostic? Diagnostic);
+
+	private readonly struct EquatableArray<T>(T[] array) : IEquatable<EquatableArray<T>> where T : IEquatable<T> {
+		public readonly T[] Value = array;
+
+		public override bool Equals(object? obj) => obj is EquatableArray<T> other && Equals(other);
+		public bool Equals(EquatableArray<T> other) => Value.AsSpan().SequenceEqual(other.Value);
+
+		public override int GetHashCode() {
+			int hash = Value.Length;
+			foreach (T item in Value) {
+				hash = unchecked(hash * 31 + item.GetHashCode());
+			}
+
+			return hash;
+		}
+
+		public static bool operator ==(EquatableArray<T> left, EquatableArray<T> right) => left.Equals(right);
+		public static bool operator !=(EquatableArray<T> left, EquatableArray<T> right) => !left.Equals(right);
+		public static implicit operator EquatableArray<T>(T[] array) => new(array);
+	}
 }
