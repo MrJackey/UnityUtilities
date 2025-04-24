@@ -256,7 +256,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			Debug.Assert(variableType != null);
 
 			if (BlackboardConverter.IsConvertible(variableType, m_refType)) {
-				m_convertLabel.text = $"{variableType.Name} => {m_refType.Name}";
+				m_convertLabel.text = $"{variableType.Name} → {m_refType.Name}";
 
 				if (m_convertLabel.parent == null)
 					m_root.Add(m_convertLabel);
