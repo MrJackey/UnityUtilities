@@ -64,7 +64,7 @@ namespace Jackey.Behaviours.Editor {
 		}
 
 		private void CreateGUI() {
-			titleContent = new GUIContent("Behaviour Editor");
+			titleContent = new GUIContent("Behaviour Editor", EditorGUIUtility.IconContent("d_SceneViewTools").image);
 
 			rootVisualElement.Add(m_toolbar = new Toolbar());
 			m_toolbar.Add(m_toolbarBreadcrumbs = new ToolbarBreadcrumbs());
