@@ -80,6 +80,12 @@ BlackboardInspector #PrimaryBlackboard {
 	-unity-text-align: middle-center;
 }
 
+.BlackboardDrawer #UnknownType {
+	cursor: link;
+	color: #8D0000;
+	-unity-font-style: bold;
+}
+
 .BlackboardDrawer .unity-list-view__reorderable-item__container {
 	padding-left: 0;
 }

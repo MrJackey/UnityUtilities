@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.Core.Blackboard;
@@ -12,7 +13,8 @@ using UnityEngine.UIElements;
 namespace Jackey.Behaviours.Editor.PropertyDrawers {
 	[CustomPropertyDrawer(typeof(Blackboard))]
 	public class BlackboardPropertyDrawer : PropertyDrawer {
-		private static BlackboardPropertyDrawer s_lastFocusedDrawer;
+		internal static readonly IEnumerable<TypeProvider.SearchEntry> s_blackboardSearchTypes = TypeProvider.StandardTypes.Concat(TypeProvider.TypesToSearch(TypeCache.GetTypesWithAttribute(typeof(BehaviourTypeAttribute))));
+		internal static BlackboardPropertyDrawer s_lastFocusedDrawer;
 		private static int s_moveFrame;
 
 		private SerializedProperty m_variablesProperty;
@@ -114,19 +116,19 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		private void ShowVariableContext(int index) {
 			GenericMenu menu = new GenericMenu();
+			Vector2 mousePosition = Event.current.mousePosition;
 
 			menu.AddDisabledItem(new GUIContent(m_variableProperties[index].FindPropertyRelative("m_variableName").stringValue));
 			menu.AddSeparator(string.Empty);
 
-			menu.AddItem(new GUIContent("Delete"), false, () => {
-					m_variableProperties.RemoveAt(index);
-					m_variablesProperty.DeleteArrayElementAtIndex(index);
-					m_variablesProperty.serializedObject.ApplyModifiedProperties();
+			menu.AddItem(new GUIContent("Change Type"), false, () => {
+				TypeProvider.Instance.AskForType(GUIUtility.GUIToScreenPoint(mousePosition), s_blackboardSearchTypes, type => {
+					ChangeVariableType(index, type);
+				});
+			});
+			menu.AddSeparator(string.Empty);
 
-					ResetProperties();
-					m_listView.RefreshItems();
-				}
-			);
+			menu.AddItem(new GUIContent("Delete"), false, () => DeleteVariable(index));
 
 			menu.ShowAsContext();
 		}
@@ -134,10 +136,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		private void CreateVariable() {
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
 
-			TypeCache.TypeCollection userTypes = TypeCache.GetTypesWithAttribute(typeof(BehaviourTypeAttribute));
-			IEnumerable<TypeProvider.SearchEntry> blackboardSearchTypes = TypeProvider.StandardTypes.Concat(TypeProvider.TypesToSearch(userTypes));
-
-			TypeProvider.Instance.AskForType(mouseScreenPosition, blackboardSearchTypes, type => {
+			TypeProvider.Instance.AskForType(mouseScreenPosition, s_blackboardSearchTypes, type => {
 				int nextIndex = m_variableProperties.Count;
 
 				m_variablesProperty.InsertArrayElementAtIndex(nextIndex);
@@ -154,9 +153,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				newProperty.FindPropertyRelative("m_guidString").stringValue = guid.ToString();
 				newProperty.FindPropertyRelative("m_variableName").stringValue = $"new {type.Name} Variable";
 				newProperty.FindPropertyRelative("m_serializedTypeName").stringValue = type.AssemblyQualifiedName;
-				newProperty.FindPropertyRelative("m_boxedValue").managedReferenceValue = null;
-				newProperty.FindPropertyRelative("m_unityObjectValue").objectReferenceValue = null;
-				newProperty.FindPropertyRelative("m_primitiveValue").stringValue = null;
+				SetDefaultVariableValues(newProperty);
 				newProperty.serializedObject.ApplyModifiedProperties();
 
 				ResetProperties();
@@ -167,11 +164,38 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			});
 		}
 
+		private static void SetDefaultVariableValues(SerializedProperty property) {
+			property.FindPropertyRelative("m_boxedValue").managedReferenceValue = null;
+			property.FindPropertyRelative("m_unityObjectValue").objectReferenceValue = null;
+			property.FindPropertyRelative("m_primitiveValue").stringValue = null;
+		}
+
 		private void OnVariableMoved(int from, int to) {
 			m_variablesProperty.MoveArrayElement(from, to);
 			m_variablesProperty.serializedObject.ApplyModifiedProperties();
 
 			s_moveFrame = Time.frameCount;
+
+			ResetProperties();
+			m_listView.RefreshItems();
+		}
+
+		internal void ChangeVariableType(int index, Type type) {
+			SerializedProperty variableProperty = m_variableProperties[index];
+
+			variableProperty.FindPropertyRelative("m_serializedTypeName").stringValue = type.AssemblyQualifiedName;
+			SetDefaultVariableValues(variableProperty);
+
+			m_variablesProperty.serializedObject.ApplyModifiedProperties();
+			m_variablesProperty.serializedObject.Update();
+
+			m_listView.RefreshItems();
+		}
+
+		internal void DeleteVariable(int index) {
+			m_variableProperties.RemoveAt(index);
+			m_variablesProperty.DeleteArrayElementAtIndex(index);
+			m_variablesProperty.serializedObject.ApplyModifiedProperties();
 
 			ResetProperties();
 			m_listView.RefreshItems();

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Utilities;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -145,7 +146,10 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			if (valueType == typeof(Hash128))
 				return JsonField<Hash128Field, Hash128>(primitiveValueProperty);
 
-			return new Label(valueType?.Name ?? "<color=red>Unknown Type</color>") { name = "UserType" };
+			if (valueType != null)
+				return new Label(valueType.Name) { name = "UserType" };
+
+			return new Button(() => HandleUnknownType(property)) { name = "UnknownType", text = "Unknown Type..." };
 		}
 
 		private TField PrimitiveField<TField, TType>(SerializedProperty valueProperty) where TField : BaseField<TType>, new() {
@@ -317,6 +321,49 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			});
 		}
 
+		private void HandleUnknownType(SerializedProperty property) {
+			string fromTypeName = property.FindPropertyRelative("m_serializedTypeName").stringValue;
+
+			int namespaceClassLength = fromTypeName.IndexOf(',');
+			int namespaceLength = fromTypeName.LastIndexOf('.', namespaceClassLength, namespaceClassLength);
+			int assemblyEnd = fromTypeName.IndexOf(',', namespaceClassLength + 1);
+
+			string assembly = fromTypeName[(namespaceClassLength + 2)..assemblyEnd];
+			string ns = string.Empty;
+			string typeName;
+
+			if (namespaceLength != -1) {
+				ns = fromTypeName[0..namespaceLength];
+				typeName = fromTypeName[(namespaceLength + 1)..namespaceClassLength];
+			}
+			else {
+				typeName = fromTypeName[0..namespaceClassLength];
+			}
+
+			int option = EditorUtility.DisplayDialogComplex(
+				"Unknown Blackboard Variable Type",
+				$"Assembly: {assembly}\nNamespace: {ns}\nType: {typeName}",
+				"Fix",
+				"Cancel",
+				"Delete"
+			);
+
+			switch (option) {
+				case 0: // Fix
+					TypeProvider.Instance.AskForType(EditorGUIUtility.GetMainWindowPosition().center, BlackboardPropertyDrawer.s_blackboardSearchTypes, type => {
+						Debug.Assert(BlackboardPropertyDrawer.s_lastFocusedDrawer != null);
+						BlackboardPropertyDrawer.s_lastFocusedDrawer.ChangeVariableType(GetVariableIndex(property), type);
+					});
+					break;
+				case 1: // Cancel
+					return;
+				case 2: // Delete
+					Debug.Assert(BlackboardPropertyDrawer.s_lastFocusedDrawer != null);
+					BlackboardPropertyDrawer.s_lastFocusedDrawer.DeleteVariable(GetVariableIndex(property));
+					break;
+			}
+		}
+
 		private BlackboardVar GetBlackboardVariable(SerializedProperty property) {
 			Object targetObject = property.serializedObject.targetObject;
 
@@ -329,10 +376,14 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			if (blackboard == null)
 				return null;
 
-			string propertyPath = property.propertyPath;
-			int varIndex = Convert.ToInt32(propertyPath[(propertyPath.LastIndexOf('[') + 1)..propertyPath.LastIndexOf(']')]);
+			int variableIndex = GetVariableIndex(property);
 
-			return blackboard.m_variables[varIndex];
+			return blackboard.m_variables[variableIndex];
+		}
+
+		private int GetVariableIndex(SerializedProperty property) {
+			string propertyPath = property.propertyPath;
+			return Convert.ToInt32(propertyPath[(propertyPath.LastIndexOf('[') + 1)..propertyPath.LastIndexOf(']')]);
 		}
 	}
 }
