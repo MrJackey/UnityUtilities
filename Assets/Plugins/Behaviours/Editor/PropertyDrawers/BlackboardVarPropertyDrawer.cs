@@ -208,6 +208,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			}
 			else { // Edit
 				field.RegisterValueChangedCallback(evt => {
+					Debug.Assert(BlackboardPropertyDrawer.s_lastFocusedDrawer != null);
+					BlackboardPropertyDrawer.s_lastFocusedDrawer.RecordVariableChange();
+
 					SerializedObject serializedObject = valueProperty.serializedObject;
 
 					serializedObject.Update();
@@ -234,6 +237,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			}
 			else { // Edit
 				field.RegisterValueChangedCallback(evt => {
+					Debug.Assert(BlackboardPropertyDrawer.s_lastFocusedDrawer != null);
+					BlackboardPropertyDrawer.s_lastFocusedDrawer.RecordVariableChange();
+
 					SerializedObject serializedObject = valueProperty.serializedObject;
 
 					serializedObject.Update();
@@ -273,6 +279,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			}
 			else { // Edit
 				field.RegisterValueChangedCallback(evt => {
+					Debug.Assert(BlackboardPropertyDrawer.s_lastFocusedDrawer != null);
+					BlackboardPropertyDrawer.s_lastFocusedDrawer.RecordVariableChange();
+
 					SerializedObject serializedObject = valueProperty.serializedObject;
 
 					serializedObject.Update();
@@ -298,6 +307,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			}
 			else { // Edit
 				field.RegisterValueChangedCallback(evt => {
+					Debug.Assert(BlackboardPropertyDrawer.s_lastFocusedDrawer != null);
+					BlackboardPropertyDrawer.s_lastFocusedDrawer.RecordVariableChange();
+
 					SerializedObject serializedObject = valueProperty.serializedObject;
 
 					serializedObject.Update();

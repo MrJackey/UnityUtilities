@@ -15,15 +15,17 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 	public class BlackboardPropertyDrawer : PropertyDrawer {
 		internal static readonly IEnumerable<TypeProvider.SearchEntry> s_blackboardSearchTypes = TypeProvider.StandardTypes.Concat(TypeProvider.TypesToSearch(TypeCache.GetTypesWithAttribute(typeof(BehaviourTypeAttribute))));
 		internal static BlackboardPropertyDrawer s_lastFocusedDrawer;
-		private static int s_moveFrame;
 
 		private SerializedProperty m_variablesProperty;
 		private List<SerializedProperty> m_variableProperties = new();
 		private List<Clickable> m_contextManipulators = new();
 
 		private ListView m_listView;
+		private int m_variableChanges;
 
 		public override VisualElement CreatePropertyGUI(SerializedProperty property) {
+			m_variableChanges = 0;
+
 			VisualElement rootVisualElement = new VisualElement();
 			rootVisualElement.AddToClassList("BlackboardDrawer");
 
@@ -62,22 +64,17 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		private void OnPropertyChanged(SerializedProperty _) {
+			// Only update if property was changed by the user not manually editing fields
+			if (m_variableChanges > 0) {
+				m_variableChanges--;
+				return;
+			}
+
 			// Property was added or removed
-			if (m_variablesProperty.arraySize != m_variableProperties.Count) {
+			if (m_variablesProperty.arraySize != m_variableProperties.Count)
 				ResetProperties();
-				m_listView.RefreshItems();
-				return;
-			}
 
-			// Property was moved
-			if (Time.frameCount == s_moveFrame || Time.frameCount == s_moveFrame + 1) {
-				m_listView.RefreshItems();
-				return;
-			}
-
-			// Property was changed in another drawer
-			if (s_lastFocusedDrawer != this)
-				m_listView.RefreshItems();
+			m_listView.RefreshItems();
 		}
 
 		private void ResetProperties() {
@@ -176,8 +173,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		private void OnVariableMoved(int from, int to) {
 			m_variablesProperty.MoveArrayElement(from, to);
 			m_variablesProperty.serializedObject.ApplyModifiedProperties();
-
-			s_moveFrame = Time.frameCount;
+			m_variablesProperty.serializedObject.Update();
 
 			ResetProperties();
 			m_listView.RefreshItems();
@@ -202,6 +198,10 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			ResetProperties();
 			m_listView.RefreshItems();
+		}
+
+		internal void RecordVariableChange() {
+			m_variableChanges++;
 		}
 	}
 }
