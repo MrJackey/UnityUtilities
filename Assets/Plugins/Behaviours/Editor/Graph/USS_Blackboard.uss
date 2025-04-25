@@ -93,3 +93,11 @@ BlackboardInspector #PrimaryBlackboard {
 .BlackboardDrawer .unity-list-view__reorderable-item {
 	align-items: center;
 }
+
+.BlackboardDrawer .unity-base-field__inspector-field {
+	margin-right: 0;
+}
+
+.BlackboardDrawer .unity-base-field__inspector-field.unity-composite-field__field {
+	flex-shrink: 1;
+}
