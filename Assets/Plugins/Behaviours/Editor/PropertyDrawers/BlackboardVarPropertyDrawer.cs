@@ -219,6 +219,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 				// Undo
 				field.TrackPropertyValue(valueProperty, property => {
+					// If the blackboard removes this drawer due to property change, do nothing
+					if (field.panel == null) return;
+
 					string value = property.stringValue;
 					field.SetValueWithoutNotify(!string.IsNullOrEmpty(value) ? (T)Convert.ChangeType(value, typeof(T)) : default);
 				});
@@ -242,6 +245,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 				// Undo
 				field.TrackPropertyValue(valueProperty, property => {
+					// If the blackboard removes this drawer due to property change, do nothing
+					if (field.panel == null) return;
+
 					string propertyValue = property.stringValue;
 
 					if (string.IsNullOrEmpty(propertyValue)) {
@@ -278,6 +284,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 				// Undo
 				field.TrackPropertyValue(valueProperty, property => {
+					// If the blackboard removes this drawer due to property change, do nothing
+					if (field.panel == null) return;
+
 					field.SetValueWithoutNotify((T)(property.managedReferenceValue ?? default(T)));
 				});
 			}
@@ -300,6 +309,9 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 				// Undo
 				field.TrackPropertyValue(valueProperty, property => {
+					// If the blackboard removes this drawer due to property change, do nothing
+					if (field.panel == null) return;
+
 					object propertyValue = JsonUtility.FromJson(property.stringValue, typeof(JsonWrapper<T>));
 					field.SetValueWithoutNotify(propertyValue != null ? ((JsonWrapper<T>)propertyValue).Value : default);
 				});

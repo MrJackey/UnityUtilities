@@ -35,7 +35,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_variablesProperty = property.FindPropertyRelative(nameof(Blackboard.m_variables));
 			ResetProperties();
 
-			rootVisualElement.Add(m_listView = new ListView(m_variableProperties) {
+			rootVisualElement.Add(m_listView = new ListView() {
 				makeItem = MakeListItem,
 				bindItem = BindListItem,
 				unbindItem = UnbindListItem,
@@ -44,11 +44,14 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				selectionType = SelectionType.None,
 				virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight,
 			});
-
 			m_listView.TrackPropertyValue(m_variablesProperty, OnPropertyChanged);
 			m_listView.itemIndexChanged += OnVariableMoved;
 			m_listView.RegisterCallback<FocusEvent, BlackboardPropertyDrawer>((_, self) => s_lastFocusedDrawer = self, this);
-			m_listView.schedule.Execute(() => m_listView.Focus());
+
+			// Assign after property tracker to ensure BlackboardVar's own tracker is after this one so their tracker invokes
+			// after the blackboard. (Assigning the source creates and binds available items)
+			// This is to let them handle if they have been detached from their panel
+			m_listView.itemsSource = m_variableProperties;
 
 			rootVisualElement.Add(new Button(CreateVariable) {
 				name = "CreateButton",
