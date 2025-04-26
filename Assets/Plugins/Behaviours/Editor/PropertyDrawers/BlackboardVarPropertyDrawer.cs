@@ -22,10 +22,20 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			};
 
 			SerializedProperty nameProperty = property.FindPropertyRelative("m_variableName");
-			PropertyField nameField = new PropertyField(nameProperty) {
-				label = string.Empty,
-				style = { width = Length.Percent(50f) },
+			TextField nameField = new TextField() {
+				name = "VariableName",
+				value = nameProperty.stringValue,
 			};
+			nameField.RegisterValueChangedCallback(evt => {
+				Debug.Assert(BlackboardPropertyDrawer.s_lastFocusedDrawer != null);
+				BlackboardPropertyDrawer.s_lastFocusedDrawer.RecordVariableChange();
+
+				nameProperty.serializedObject.Update();
+				nameProperty.stringValue = evt.newValue;
+				nameProperty.serializedObject.ApplyModifiedProperties();
+
+				EditorUtility.SetDirty(nameProperty.serializedObject.targetObject);
+			});
 			root.Add(nameField);
 
 			VisualElement valueField = CreateValueField(property);

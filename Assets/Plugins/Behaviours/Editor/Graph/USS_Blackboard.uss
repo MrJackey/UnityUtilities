@@ -49,10 +49,16 @@ BlackboardInspector #PrimaryBlackboard {
 
 .BlackboardDrawer #VariableRoot {
 	flex-direction: row;
+	align-items: center;
 }
 
 .BlackboardDrawer #VariableRoot PropertyField {
 	width: 100%;
+}
+
+.BlackboardDrawer #VariableName {
+	flex-shrink: 1;
+	width: 50%;
 }
 
 .BlackboardDrawer #VariableRoot > PropertyField > VisualElement > * {
