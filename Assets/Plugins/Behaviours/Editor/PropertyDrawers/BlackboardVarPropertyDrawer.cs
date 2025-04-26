@@ -164,6 +164,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		private TField PrimitiveField<TField, TType>(SerializedProperty valueProperty) where TField : BaseField<TType>, new() {
 			TField field = new TField() { value = !string.IsNullOrEmpty(valueProperty.stringValue) ? (TType)Convert.ChangeType(valueProperty.stringValue, typeof(TType)) : default };
+			TrySetDelayed(field);
 			TrackPrimitiveValueChanges(field, valueProperty);
 
 			return field;
@@ -207,9 +208,15 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		private TField JsonField<TField, TType>(SerializedProperty valueProperty) where TField : BaseField<TType>, new() {
 			object propertyValue = JsonUtility.FromJson(valueProperty.stringValue, typeof(JsonWrapper<TType>));
 			TField field = new TField() { value = propertyValue != null ? ((JsonWrapper<TType>)propertyValue).Value : default };
+			TrySetDelayed(field);
 			TrackJsonValueChanges(field, valueProperty);
 
 			return field;
+		}
+
+		private void TrySetDelayed<T>(BaseField<T> field) {
+			if (field is TextInputBaseField<T> delayedField)
+				delayedField.isDelayed = true;
 		}
 
 		private void TrackPrimitiveValueChanges<T>(BaseField<T> field, SerializedProperty valueProperty) {
@@ -347,12 +354,23 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				return;
 
 			field.schedule.Execute(() => {
-				field.value = variable.GetValue<T>();
+				if (IsEditingDelayedField(field))
+					return;
+
+				field.SetValueWithoutNotify(variable.GetValue<T>());
 			}).Every(1/60L);
 
 			field.RegisterValueChangedCallback(evt => {
 				variable.SetValue(evt.newValue);
 			});
+		}
+
+		private bool IsEditingDelayedField<T>(BaseField<T> field) {
+			if (field is not TextInputBaseField<T> delayedField)
+				return false;
+
+			PropertyInfo isFocusedProperty = typeof(TextInputBaseField<T>).GetProperty("hasFocus", BindingFlags.NonPublic | BindingFlags.Instance);
+			return (bool)isFocusedProperty.GetValue(delayedField);
 		}
 
 		private void HandleUnknownType(SerializedProperty property) {
