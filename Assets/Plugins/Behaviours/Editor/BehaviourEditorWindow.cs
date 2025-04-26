@@ -280,6 +280,7 @@ namespace Jackey.Behaviours.Editor {
 
 		private void EditBehaviour(ObjectBehaviour behaviour) {
 			if (!IsBehaviourValid(behaviour)) {
+				m_toolbar.visible = false;
 				m_activeGraph?.RemoveFromHierarchy();
 				m_activeGraph = null;
 
@@ -298,6 +299,8 @@ namespace Jackey.Behaviours.Editor {
 				if (!OnSelectedInstance(behaviour))
 					return;
 			}
+
+			m_toolbar.visible = true;
 
 			Repaint();
 			EditorApplication.delayCall += FrameContent;
