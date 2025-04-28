@@ -1,0 +1,7 @@
+.idea/
+bin/
+obj/
+BehavioursSourceGenerator.Sample
+*.DotSettings.user
+!*.csproj
+!*.sln
