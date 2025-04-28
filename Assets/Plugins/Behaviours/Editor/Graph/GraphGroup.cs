@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Jackey.Behaviours.Editor.Manipulators;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -23,7 +24,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		public string Label {
 			get => m_label.value;
-			set => m_label.value = value;
+			set => m_label.SetValueWithoutNotify(value);
 		}
 		public bool AutoSize => m_autoSize;
 
@@ -33,6 +34,12 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		VisualElement ISelectableElement.Element => this;
 
+		public Dragger Dragger => m_dragger;
+		public GroupDragger GroupDragger => m_groupDragger;
+		public Resizer Resizer => m_resizer;
+
+		public event Action Modified;
+
 		public GraphGroup(Rect rect) {
 			usageHints = UsageHints.DynamicTransform;
 
@@ -40,13 +47,17 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 			Reposition(rect);
 
-			Add(m_label = new TextField());
+			Add(m_label = new TextField() { isDelayed = true });
+			m_label.RegisterValueChangedCallback(evt => Modified?.Invoke());
 
 			VisualElement statusBar = new VisualElement() { name = "StatusBar" };
 			Add(statusBar);
 
 			statusBar.Add(m_autoSizeImage = new Image() { name = "AutoSizeToggle", scaleMode = ScaleMode.ScaleToFit });
-			m_autoSizeImage.AddManipulator(new Clickable(() => SetAutoSize(!m_autoSize)));
+			m_autoSizeImage.AddManipulator(new Clickable(() => {
+				SetAutoSize(!m_autoSize);
+				Modified?.Invoke();
+			}));
 
 			m_resizer = new Resizer();
 			m_dragger = new Dragger();
@@ -95,7 +106,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			}
 		}
 
-		private void Reposition(Rect rect) {
+		public void Reposition(Rect rect) {
 			transform.position = rect.min;
 			style.width = rect.width;
 			style.height = rect.height;
@@ -147,6 +158,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 				this.RemoveManipulator(m_resizer);
 				this.RemoveManipulator(m_dragger);
 				this.AddManipulator(m_groupDragger);
+
+				UpdateAutoSize();
 			}
 			else {
 				this.AddManipulator(m_resizer);

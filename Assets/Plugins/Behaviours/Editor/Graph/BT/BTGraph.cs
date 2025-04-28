@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Jackey.Behaviours.BT;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
@@ -43,14 +44,35 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			OnSelectionChange();
 		}
 
-		protected override void BuildGraph() {
-			base.BuildGraph();
+		protected override void SyncGraph() {
+			base.SyncGraph();
 
-			foreach (BehaviourAction action in m_behaviour.m_allActions)
+			// Remove excess nodes
+			for (int i = m_nodes.Count - 1; i >= 0; i--) {
+				BTNode node = (BTNode)m_nodes[i];
+				if (m_behaviour.m_allActions.Contains(node.Action))
+					continue;
+
+				RemoveNode(node);
+			}
+
+			// Add missing nodes
+			foreach (BehaviourAction action in m_behaviour.m_allActions) {
+				if (GetNodeOfAction(action) != null)
+					continue;
+
 				AddNode(new BTNode(action));
+			}
+
+			// Sync connections by removing and then recreating them
+			RemoveAllConnections();
 
 			foreach (BehaviourAction action in m_behaviour.m_allActions) {
 				BTNode node = GetNodeOfAction(action);
+				Debug.Assert(node != null);
+
+				node.transform.position = action.Editor_Data.Position;
+				node.SetEntry(m_behaviour.m_entry == action);
 
 				switch (action) {
 					case Composite composite:
@@ -64,15 +86,28 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 						break;
 					case Decorator { Child: not null } decorator:
 						AddConnection(new Connection(
-							start: GetNodeOfAction(decorator).OutSocket,
+							start: node.OutSocket,
 							end: GetNodeOfAction(decorator.Child)
 						));
 						break;
 				}
 			}
 
-			foreach (ObjectBehaviour.EditorData.Group group in m_behaviour.Editor_Data.Groups)
-				AddGroup(new GraphGroup(group.Rect));
+			this.ValidateSelection();
+		}
+
+		protected override void UpdateEditorData() {
+			base.UpdateEditorData();
+
+			foreach (BTNode node in m_nodes) {
+				node.UpdateEditorData();
+			}
+
+			// Order after updating ALL data to ensure up-to-date information
+			foreach (BTNode node in m_nodes) {
+				if (node.Action is Composite composite)
+					composite.Editor_OrderChildren();
+			}
 		}
 
 		#region Node CRUD
@@ -81,33 +116,30 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			base.BeginNodeCreation(GUIPosition);
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(GUIPosition);
-			TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>();
+			IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract);
 
 			TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => CreateNode(type));
 		}
 
 		private BTNode CreateNode(Type type) {
+			int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
+			Undo.RecordObject(m_behaviour, $"Create {type.Name} node");
+
 			BehaviourAction action = (BehaviourAction)Activator.CreateInstance(type);
-			BTNode node = CreateNode(action);
+			BTNode node = new BTNode(action);
+			m_behaviour.m_allActions.Add(action);
 
 			Vector2 createPosition = this.ChangeCoordinatesTo(contentContainer, m_createNodePosition);
 			createPosition.x -= Node.DEFAULT_WIDTH / 2f;
 			createPosition.y -= Node.DEFAULT_HEIGHT / 2f;
 			node.transform.position = createPosition;
 
-			this.ReplaceSelection(node);
-
-			return node;
-		}
-
-		public BTNode CreateNode(BehaviourAction action) {
-			BTNode node = new BTNode(action);
-
-			// TODO: Add undo
-			m_behaviour.m_allActions.Add(action);
-			m_serializedBehaviour.Update();
-
 			AddNode(node);
+
+			ApplyChanges();
+			Undo.CollapseUndoOperations(undoGroup);
+
+			this.ReplaceSelection(node);
 
 			return node;
 		}
@@ -118,16 +150,49 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 			btNode.AddManipulator(new ContextualMenuManipulator(ShowNodeContext));
 
-			ConnectionSocket outSocket = btNode.OutSocket;
-			outSocket.RegisterCallback<MouseDownEvent, IConnectionSocket>(OnSocketMouseDown, outSocket);
+			if (m_isEditable) {
+				ConnectionSocket outSocket = btNode.OutSocket;
+				outSocket.RegisterCallback<MouseDownEvent, IConnectionSocket>(OnSocketMouseDown, outSocket);
+			}
+		}
+
+		public override void DeleteNode(Node node) {
+			BTNode btNode = (BTNode)node;
+			BehaviourAction action = btNode.Action;
+
+			Undo.RecordObject(m_behaviour, $"Delete {action.GetType().Name} node");
+
+			if (action == m_behaviour.m_entry)
+				m_behaviour.m_entry = null;
+
+			foreach (BehaviourAction behaviourAction in m_behaviour.m_allActions) {
+				switch (behaviourAction) {
+					case Composite composite:
+						if (composite.Children.Remove(action))
+							goto breakLoop;
+
+						break;
+					case Decorator decorator:
+						if (decorator.Child == action) {
+							decorator.Child = null;
+							goto breakLoop;
+						}
+
+						break;
+				}
+			}
+			breakLoop:;
+
+			bool removed = m_behaviour.m_allActions.Remove(action);
+			Debug.Assert(removed);
+
+			ApplyChanges();
+
+			RemoveNode(node);
 		}
 
 		protected override void OnNodeRemoval(Node node) {
 			BTNode btNode = (BTNode)node;
-			BehaviourAction action = btNode.Action;
-
-			if (action == m_behaviour.m_entry)
-				m_behaviour.m_entry = null;
 
 			for (int i = m_connections.Count - 1; i >= 0; i--) {
 				Connection connection = m_connections[i];
@@ -136,29 +201,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 					RemoveConnection(connection);
 				}
 			}
-
-			bool done = false;
-			foreach (BehaviourAction behaviourAction in m_behaviour.m_allActions) {
-				switch (behaviourAction) {
-					case Composite composite:
-						done = composite.Children.Remove(action);
-						break;
-					case Decorator decorator:
-						if (decorator.Child == action) {
-							done = true;
-							decorator.Child = null;
-						}
-						break;
-				}
-
-				if (done)
-					break;
-			}
-
-			bool removed = m_behaviour.m_allActions.Remove(action);
-			Debug.Assert(removed);
-
-			m_serializedBehaviour.Update();
 		}
 
 		public override void DuplicateSelection() {
@@ -166,6 +208,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 			List<BTNode> originals = new List<BTNode>();
 			List<BTNode> clones = new List<BTNode>();
+
+			Undo.RecordObject(m_behaviour, "Duplicate selected elements");
 
 			// Duplicate Nodes
 			foreach (ISelectableElement selectedElement in SelectedElements) {
@@ -184,7 +228,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				nodeClone.transform.position += Node.DUPLICATE_OFFSET;
 			}
 
-			m_serializedBehaviour.Update();
+			ApplyChanges();
 
 			// Clear/Duplicate Connections
 			for (int i = 0; i < clones.Count; i++) {
@@ -250,7 +294,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				"Decorate",
 				menuAction => {
 					Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(menuAction.eventInfo.mousePosition);
-					TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<Decorator>();
+					IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<Decorator>().Where(type => !type.IsAbstract);
 
 					TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => DecorateNode(btNode, type));
 				},
@@ -274,14 +318,17 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			evt.menu.AppendSeparator();
 			evt.menu.AppendAction(
 				"Smart Delete",
-				_ => SmartDelete(btNode),
+				_ => {
+					SmartDelete(btNode);
+					this.ValidateSelection();
+				},
 				editStatus
 			);
 			evt.menu.AppendAction(
 				"Delete",
 				_ => {
-					RemoveNode(btNode);
-					m_serializedBehaviour.Update();
+					DeleteNode(btNode);
+					this.ValidateSelection();
 				},
 				editStatus
 			);
@@ -329,7 +376,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				BehaviourAction parentAction = parentNode.Action;
 
 				foreach (Connection childConnection in nodeConnections) {
-					if (parentNode.OutSocket.OutgoingConnections >= parentAction.Editor_MaxChildCount)
+					if (parentAction.Editor_MaxChildCount > -1 && parentNode.OutSocket.OutgoingConnections >= parentAction.Editor_MaxChildCount)
 						return;
 
 					BehaviourAction connectedAction = ((BTNode)childConnection.End.Element).Action;
@@ -351,11 +398,15 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			SaveCreatePosition();
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-			TypeCache.TypeCollection actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>();
+			IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract);
 
 			TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => {
+				int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
+
 				BTNode toNode = CreateNode(type);
 				restore.Invoke(connection, toNode);
+
+				Undo.CollapseUndoOperations(undoGroup);
 			});
 		}
 
@@ -393,6 +444,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		}
 
 		private void OnConnectionCreated(Connection connection) {
+			Undo.RecordObject(m_behaviour, "Create connection");
+
 			BTNode start = connection.Start.Element.GetFirstOfType<BTNode>();
 			BTNode child = connection.End.Element.GetFirstOfType<BTNode>();
 
@@ -405,10 +458,12 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 					break;
 			}
 
-			m_serializedBehaviour.Update();
+			ApplyChanges();
 		}
 
 		private void OnConnectionMoved(Connection connection, IConnectionSocket from, IConnectionSocket to) {
+			Undo.RecordObject(m_behaviour, "Move connection");
+
 			BTNode fromNode = from.Element.GetFirstOfType<BTNode>();
 			BTNode toNode = to.Element.GetFirstOfType<BTNode>();
 			Debug.Assert(fromNode != null && toNode != null);
@@ -456,9 +511,13 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 						break;
 				}
 			}
+
+			ApplyChanges();
 		}
 
 		private void OnConnectionRemoved(Connection connection, IConnectionSocket start, IConnectionSocket end) {
+			Undo.RecordObject(m_behaviour, "Delete connection");
+
 			BTNode endNode = end.Element.GetFirstOfType<BTNode>();
 			Debug.Assert(endNode != null);
 
@@ -483,6 +542,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			}
 
 			m_connections.Remove(connection);
+			ApplyChanges();
 		}
 
 		#endregion
@@ -493,6 +553,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			if (m_behaviour.m_entry == node.Action)
 				return;
 
+			Undo.RecordObject(m_behaviour, $"Set {node.Action.GetType().Name} as entry");
+
 			if (m_behaviour.m_entry != null) {
 				BTNode oldStartNode = GetNodeOfAction(m_behaviour.m_entry);
 				Debug.Assert(oldStartNode != null);
@@ -502,11 +564,14 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 			m_behaviour.m_entry = node.Action;
 			node.SetEntry(true);
-			m_serializedBehaviour.Update();
+
+			ApplyChanges();
 		}
 
 		private void DecorateNode(BTNode node, Type type) {
 			m_createNodePosition = node.ChangeCoordinatesTo(this, new Vector2(Node.DEFAULT_WIDTH / 2f, -Node.DEFAULT_HEIGHT * 2.5f));
+
+			int undoGroup = UndoUtilities.CreateGroup($"Decorate {node.Action.GetType().Name} with {type.Name}");
 
 			BTNode decoratorNode = CreateNode(type);
 			Decorator decorator = (Decorator)decoratorNode.Action;
@@ -525,7 +590,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 					case Decorator parentDecorator:
 						parentDecorator.Child = decorator;
 						break;
-
 				}
 
 				toConnection.End = decoratorNode;
@@ -536,12 +600,16 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			decorator.Child = node.Action;
 			AddConnection(new Connection(decoratorNode.OutSocket, node));
 
-			m_serializedBehaviour.Update();
+			Undo.CollapseUndoOperations(undoGroup);
+
+			ApplyChanges();
 		}
 
 		private void ToggleBreakpoint(BTNode node) {
+			Undo.RecordObject(m_behaviour, "Toggle node breakpoint");
+
 			node.ToggleBreakpoint();
-			m_serializedBehaviour.ApplyModifiedProperties();
+			ApplyChanges();
 		}
 
 		#endregion

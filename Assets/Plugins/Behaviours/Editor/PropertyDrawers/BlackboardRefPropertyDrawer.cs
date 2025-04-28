@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Utilities;
 using JetBrains.Annotations;
@@ -10,8 +9,11 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.PropertyDrawers {
-	[CustomPropertyDrawer(typeof(BlackboardRef<>))]
+	[CustomPropertyDrawer(typeof(IBlackboardRef), true)]
 	public class BlackboardRefPropertyDrawer : PropertyDrawer {
+		private const int FIELD_MODE = 0;
+		private const int VARIABLE_MODE = 1;
+
 		private static Texture s_fieldIcon = EditorGUIUtility.IconContent("InputField Icon").image;
 		private static Texture s_blackboardIcon = EditorGUIUtility.IconContent("d_VerticalLayoutGroup Icon").image;
 
@@ -51,27 +53,22 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_root = new VisualElement() {
 				name = "BlackboardRef",
 			};
+			m_root.TrackPropertyValue(property, _ => OnPropertyChanged());
 
 			m_fieldRow = new VisualElement() {
 				name = "FieldRow",
 			};
 			m_root.Add(m_fieldRow);
 
-			m_blackboardOnly = fieldInfo.GetCustomAttribute(typeof(BlackboardOnlyAttribute)) != null;
+			m_blackboardOnly = fieldInfo.FieldType.GetGenericTypeDefinition() == typeof(BlackboardOnlyRef<>);
 			m_canEditField = !fieldInfo.FieldType.GetGenericArguments()[0].IsInterface;
 
 			SerializedProperty behaviourProperty = property.FindPropertyRelative("m_behaviour");
 			behaviourProperty.objectReferenceValue ??= EditorWindow.GetWindow<BehaviourEditorWindow>().OpenBehaviour;
-			property.serializedObject.ApplyModifiedProperties();
+			property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
 
 			m_modeProperty = property.FindPropertyRelative("m_mode");
-
-			if (m_blackboardOnly && m_modeProperty.enumValueIndex != 1) {
-				m_modeProperty.enumValueIndex = 1;
-				m_modeProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
-			}
-
-			int mode = m_modeProperty.enumValueIndex;
+			int mode = m_blackboardOnly ? VARIABLE_MODE : m_modeProperty.enumValueIndex;
 
 			m_fieldProperty = property.FindPropertyRelative("m_fieldValue");
 			m_propertyField = new PropertyField(m_fieldProperty, property.displayName);
@@ -127,7 +124,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_dropdownField.RegisterCallback<PointerDownEvent>(OnDropdownPointerDown, TrickleDown.TrickleDown);
 			m_dropdownField.RegisterValueChangedCallback(OnDropdownValueChanged);
 
-			if (mode == 0)
+			if (mode == FIELD_MODE)
 				m_fieldRow.Add(m_canEditField ? m_propertyField : m_noEditField);
 			else
 				m_fieldRow.Add(m_dropdownField);
@@ -135,7 +132,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			if (!m_blackboardOnly) {
 				Button modeButton = new Button(ToggleMode) { name = "ModeButton" };
 				modeButton.Add(m_modeImage = new Image() {
-					image = mode == 0 ? s_fieldIcon : s_blackboardIcon,
+					image = mode == FIELD_MODE ? s_fieldIcon : s_blackboardIcon,
 					scaleMode = ScaleMode.ScaleAndCrop,
 				});
 				m_fieldRow.Add(modeButton);
@@ -203,13 +200,19 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		private void ToggleMode() {
 			int oldValue = m_modeProperty.enumValueIndex;
-			int newValue = oldValue == 0 ? 1 : 0;
+			int newValue = oldValue == FIELD_MODE ? VARIABLE_MODE : FIELD_MODE;
 
-			m_modeImage.image = newValue == 0 ? s_fieldIcon : s_blackboardIcon;
+			m_modeImage.image = newValue == FIELD_MODE ? s_fieldIcon : s_blackboardIcon;
 			m_modeProperty.enumValueIndex = newValue;
 			m_modeProperty.serializedObject.ApplyModifiedProperties();
 
-			if (newValue == 0) {
+			SetModeFields(newValue);
+
+			m_property.serializedObject.ApplyModifiedProperties();
+		}
+
+		private void SetModeFields(int mode) {
+			if (mode == FIELD_MODE) {
 				m_dropdownField.RemoveFromHierarchy();
 
 				if (m_canEditField) {
@@ -244,7 +247,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		private void RefreshConvertLabel(BlackboardVar referencedVariable) {
-			if (referencedVariable == null || m_modeProperty.enumValueIndex == 0) {
+			if (referencedVariable == null || (!m_blackboardOnly && m_modeProperty.enumValueIndex == FIELD_MODE)) {
 				m_convertLabel.RemoveFromHierarchy();
 				return;
 			}
@@ -253,7 +256,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			Debug.Assert(variableType != null);
 
 			if (BlackboardConverter.IsConvertible(variableType, m_refType)) {
-				m_convertLabel.text = $"{variableType.Name} => {m_refType.Name}";
+				m_convertLabel.text = $"{variableType.Name} → {m_refType.Name}";
 
 				if (m_convertLabel.parent == null)
 					m_root.Add(m_convertLabel);
@@ -261,6 +264,16 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			else {
 				m_convertLabel.RemoveFromHierarchy();
 			}
+		}
+
+		private void OnPropertyChanged() {
+			int currentMode = m_dropdownField.parent != null ? VARIABLE_MODE : FIELD_MODE;
+			int expectedMode = m_blackboardOnly ? VARIABLE_MODE : m_modeProperty.enumValueIndex;
+			if (currentMode != expectedMode)
+				SetModeFields(expectedMode);
+
+			if (expectedMode == VARIABLE_MODE)
+				m_dropdownField.SetValueWithoutNotify(m_variableNameProperty.stringValue);
 		}
 	}
 }

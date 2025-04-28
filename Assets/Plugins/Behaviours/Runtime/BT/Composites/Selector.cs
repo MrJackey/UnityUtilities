@@ -8,21 +8,19 @@ namespace Jackey.Behaviours.BT.Composites {
 
 		protected override ExecutionStatus OnEnter() {
 			m_runningIndex = -1;
-			return ExecutionStatus.Running;
+			return ContinueSequence();
 		}
 
-		protected override ExecutionStatus OnTick() {
-			// Check the running child
-			if (m_runningIndex != -1) {
-				ActionStatus runningStatus = Children[m_runningIndex].Status;
+		protected override ExecutionStatus OnChildFinished() {
+			ActionStatus runningStatus = Children[m_runningIndex].Status;
 
-				if (runningStatus != ActionStatus.Failure)
-					return (ExecutionStatus)runningStatus;
+			if (runningStatus != ActionStatus.Failure)
+				return (ExecutionStatus)runningStatus;
 
-				// Failure
-			}
+			return ContinueSequence();
+		}
 
-			// Check next child in sequence
+		private ExecutionStatus ContinueSequence() {
 			while (m_runningIndex < Children.Count - 1) {
 				m_runningIndex++;
 

@@ -1,17 +1,24 @@
-﻿using Jackey.Behaviours.Attributes;
+﻿using System;
+using Jackey.Behaviours.Attributes;
 
 namespace Jackey.Behaviours.BT.Decorators {
 	[GraphIcon("Inverter")]
 	[SearchPath("Decorators/Inverter")]
 	public class Inverter : Decorator {
-		protected override ExecutionStatus OnTick() {
-			if (!m_child.IsFinished)
-				m_child.EnterSequence();
+		protected override ExecutionStatus OnEnter() {
+			return m_child.EnterSequence() switch {
+				ExecutionStatus.Running => ExecutionStatus.Running,
+				ExecutionStatus.Success => ExecutionStatus.Failure,
+				ExecutionStatus.Failure => ExecutionStatus.Success,
+				_ => throw new ArgumentOutOfRangeException(),
+			};
+		}
 
+		protected override ExecutionStatus OnChildFinished() {
 			return m_child.Status switch {
 				ActionStatus.Success => ExecutionStatus.Failure,
 				ActionStatus.Failure => ExecutionStatus.Success,
-				_ => ExecutionStatus.Running,
+				_ => throw new ArgumentOutOfRangeException(),
 			};
 		}
 	}

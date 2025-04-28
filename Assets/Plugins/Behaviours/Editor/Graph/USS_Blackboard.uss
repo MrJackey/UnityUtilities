@@ -12,15 +12,24 @@ BlackboardInspector {
 BlackboardInspector #Header {
 	align-self: center;
 	font-size: 16px;
+	-unity-font-style: bold;
 	margin-top: 5px;
 }
 
-BlackboardInspector #SecondaryBlackboard {
-	margin-top: 10px;
+BlackboardInspector .BlackboardHeader {
+	width: 80%;
+	align-self: center;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	padding-bottom: 3px;
+	font-size: 14px;
+	-unity-text-align: middle-center;
+	border-bottom-width: 1px;
+	border-bottom-color: rgb(100, 100, 100);
 }
 
-#OwnerBlackboard {
-	margin-top: 15px;
+BlackboardInspector #PrimaryBlackboard {
+	margin-bottom: 3px;
 }
 
 .BlackboardDrawer #RowHeader {
@@ -40,10 +49,16 @@ BlackboardInspector #SecondaryBlackboard {
 
 .BlackboardDrawer #VariableRoot {
 	flex-direction: row;
+	align-items: center;
 }
 
 .BlackboardDrawer #VariableRoot PropertyField {
 	width: 100%;
+}
+
+.BlackboardDrawer #VariableName {
+	flex-shrink: 1;
+	width: 50%;
 }
 
 .BlackboardDrawer #VariableRoot > PropertyField > VisualElement > * {
@@ -59,6 +74,7 @@ BlackboardInspector #SecondaryBlackboard {
 	width: 20px;
 	height: 20px;
 	flex-shrink: 0;
+	align-self: center;
 }
 
 .BlackboardDrawer #UserType {
@@ -70,10 +86,24 @@ BlackboardInspector #SecondaryBlackboard {
 	-unity-text-align: middle-center;
 }
 
+.BlackboardDrawer #UnknownType {
+	cursor: link;
+	color: #8D0000;
+	-unity-font-style: bold;
+}
+
 .BlackboardDrawer .unity-list-view__reorderable-item__container {
 	padding-left: 0;
 }
 
 .BlackboardDrawer .unity-list-view__reorderable-item {
 	align-items: center;
+}
+
+.BlackboardDrawer .unity-base-field__inspector-field {
+	margin-right: 0;
+}
+
+.BlackboardDrawer .unity-base-field__inspector-field.unity-composite-field__field {
+	flex-shrink: 1;
 }

@@ -12,25 +12,13 @@ namespace Jackey.Behaviours.BT.Decorators {
 
 		protected override ExecutionStatus OnEnter() {
 			m_conditions.Enable(Owner);
+			bool condition = m_conditions.Evaluate();
+			m_conditions.Disable();
 
-			if (!m_conditions.Evaluate())
+			if (!condition)
 				return ExecutionStatus.Failure;
 
-			return ExecutionStatus.Running;
-		}
-
-		protected override ExecutionStatus OnTick() {
-			if (m_child.IsFinished)
-				return (ExecutionStatus)m_child.Status;
-
-			Debug.Assert(m_child.Status == ActionStatus.Inactive);
-			ExecutionStatus enterStatus = m_child.EnterSequence();
-
-			return enterStatus;
-		}
-
-		protected override void OnExit() {
-			m_conditions.Disable();
+			return m_child.EnterSequence();
 		}
 	}
 }

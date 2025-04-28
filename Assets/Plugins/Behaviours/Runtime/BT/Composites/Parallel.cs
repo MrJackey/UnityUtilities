@@ -10,7 +10,6 @@ namespace Jackey.Behaviours.BT.Composites {
 		[SerializeField] private Policy m_policy;
 
 		private int m_finishedChildren;
-		private bool m_started;
 
 #if UNITY_EDITOR
 		public override string Editor_Info => UnityEditor.ObjectNames.NicifyVariableName(m_policy.ToString());
@@ -19,20 +18,13 @@ namespace Jackey.Behaviours.BT.Composites {
 
 		protected override ExecutionStatus OnEnter() {
 			m_finishedChildren = 0;
-			m_started = false;
-
-			return ExecutionStatus.Running;
-		}
-
-		private ExecutionStatus Start() {
-			m_started = true;
 
 			int childCount = m_children.Count;
 			for (int i = 0; i < childCount; i++) {
 				BehaviourAction child = m_children[i];
-				child.EnterSequence();
+				ExecutionStatus enterStatus = child.EnterSequence();
 
-				if (child.IsFinished) {
+				if (enterStatus != ExecutionStatus.Running) {
 					m_finishedChildren |= 1 << i;
 
 					if (m_policy == Policy.FirstFinish) {
@@ -48,10 +40,7 @@ namespace Jackey.Behaviours.BT.Composites {
 			return ExecutionStatus.Running;
 		}
 
-		protected override ExecutionStatus OnTick() {
-			if (!m_started)
-				return Start();
-
+		protected override ExecutionStatus OnChildFinished() {
 			// Update the just finished children's bit
 			int childCount = m_children.Count;
 			for (int i = 0; i < childCount; i++) {
@@ -59,15 +48,13 @@ namespace Jackey.Behaviours.BT.Composites {
 					m_finishedChildren |= 1 << i;
 			}
 
-			// Check if this tick fulfills the set policy
+			// Check if the set policy is fulfilled
 			switch (m_policy) {
 				case Policy.FirstFinish:
-					if (m_finishedChildren > 0) {
-						StopChildren();
-						return ExecutionStatus.Success;
-					}
+					Debug.Assert(m_finishedChildren > 0);
+					StopChildren();
 
-					break;
+					return ExecutionStatus.Success;
 				case Policy.AllFinish:
 					if (m_finishedChildren == (1 << childCount) - 1) {
 						StopChildren();

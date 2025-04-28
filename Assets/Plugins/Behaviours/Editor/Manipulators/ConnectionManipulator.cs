@@ -85,12 +85,10 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 		private void OnMouseUp(MouseUpEvent evt) {
 			if (!m_active) return;
 
-			if (m_socket == null) {
+			if (m_socket == null)
 				EndCreate(evt);
-			}
-			else {
+			else
 				EndMove(evt);
-			}
 
 			target.ReleaseMouse();
 			m_connection = null;
@@ -246,6 +244,36 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			return connection.Start != null
 				? ConnectionValidator.Invoke(connection.Start, socket)
 				: ConnectionValidator.Invoke(socket, connection.End);
+		}
+
+		public void Cancel() {
+			if (!m_active) return;
+
+			if (m_socket == null)
+				CancelCreate();
+			else
+				CancelMove();
+
+			target.ReleaseMouse();
+			m_connection = null;
+			m_socket = null;
+			m_active = false;
+		}
+
+		private void CancelCreate() {
+			m_connection.Start.OutgoingConnections--;
+			m_connection.RemoveFromHierarchy();
+		}
+
+		private void CancelMove() {
+			if (m_connection.Start == null) {
+				m_connection.Start = m_socket;
+				m_socket.OutgoingConnections++;
+			}
+			else {
+				m_connection.End = m_socket;
+				m_socket.IncomingConnections++;
+			}
 		}
 	}
 }

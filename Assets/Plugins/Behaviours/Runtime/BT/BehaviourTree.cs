@@ -15,7 +15,7 @@ namespace Jackey.Behaviours.BT {
 		private List<BehaviourAction> m_tickingActions = new();
 		private List<BehaviourAction> m_pendingTickingActions = new();
 
-		private bool m_inTickLoop;
+		private bool m_inTreeTraversal;
 		private int m_tickIndex;
 
 		public ActionStatus Status { get; private set; } = ActionStatus.Inactive;
@@ -38,11 +38,13 @@ namespace Jackey.Behaviours.BT {
 
 			Status = ActionStatus.Running;
 
+			m_inTreeTraversal = true;
 			m_entry.EnterSequence();
+			m_inTreeTraversal = false;
 		}
 
 		internal override ExecutionStatus Tick() {
-			m_inTickLoop = true;
+			m_inTreeTraversal = true;
 			for (m_tickIndex = 0; m_tickIndex < m_tickingActions.Count; m_tickIndex++) {
 				int i = m_tickIndex;
 
@@ -57,13 +59,13 @@ namespace Jackey.Behaviours.BT {
 
 				// The entire tree has finished
 				if (parent == null) {
-					m_inTickLoop = false;
+					m_inTreeTraversal = false;
 					return actionStatus;
 				}
 
 				// Traverse the tree upwards to find the next branch
 				while (true) {
-					ExecutionStatus parentStatus = parent.TickSequence();
+					ExecutionStatus parentStatus = parent.TraversalSequence();
 
 					if (parentStatus == ExecutionStatus.Running)
 						break;
@@ -72,13 +74,13 @@ namespace Jackey.Behaviours.BT {
 
 					// The entire tree has finished
 					if (parent == null) {
-						m_inTickLoop = false;
+						m_inTreeTraversal = false;
 						return parentStatus;
 					}
 				}
 			}
 
-			m_inTickLoop = false;
+			m_inTreeTraversal = false;
 
 			if (m_pendingTickingActions.Count > 0) {
 				foreach (BehaviourAction action in m_pendingTickingActions)
@@ -97,7 +99,7 @@ namespace Jackey.Behaviours.BT {
 		}
 
 		public void EnableTicking(BehaviourAction action) {
-			if (m_inTickLoop) {
+			if (m_inTreeTraversal) {
 				m_pendingTickingActions.Add(action);
 				return;
 			}
@@ -127,8 +129,8 @@ namespace Jackey.Behaviours.BT {
 			int tickingIndex = m_tickingActions.IndexOf(action);
 
 			if (tickingIndex != -1) {
-				// Ensure that any currently ticking or just ticked actions does not skip any actions within the tick loop
-				if (m_inTickLoop && tickingIndex <= m_tickIndex)
+				// Ensure that any currently ticking or just ticked actions does not skip any actions whilst traversing the tree
+				if (m_inTreeTraversal && tickingIndex <= m_tickIndex)
 					m_tickIndex--;
 
 				m_tickingActions.RemoveAt(tickingIndex);

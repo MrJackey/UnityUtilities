@@ -91,7 +91,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 		public void Tick() {
 			RefreshInfo();
-			UpdateEditorData();
 
 			if (EditorApplication.isPlaying)
 				RuntimeTick();
@@ -144,12 +143,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_actionStatus = m_action.Status;
 		}
 
-		private void UpdateEditorData() {
+		public void UpdateEditorData() {
 			m_action.Editor_Data.Position = transform.position;
-
-			if (m_action is Composite composite) {
-				composite.Editor_OrderChildren();
-			}
 		}
 
 		public void SetEntry(bool isEntry) {

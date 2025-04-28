@@ -73,5 +73,19 @@ namespace Jackey.Behaviours.Editor.Graph {
 			manager.AddToSelection(elements);
 			manager.OnSelectionChange();
 		}
+
+		public static void ValidateSelection(this ISelectionManager manager) {
+			bool notifyChange = false;
+
+			for (int i = manager.SelectedElements.Count - 1; i >= 0; i--) {
+				if (manager.SelectedElements[i]?.Element.parent == null) {
+					manager.SelectedElements.RemoveAt(i);
+					notifyChange = true;
+				}
+			}
+
+			if (notifyChange)
+				manager.OnSelectionChange();
+		}
 	}
 }

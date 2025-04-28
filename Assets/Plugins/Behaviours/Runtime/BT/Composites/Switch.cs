@@ -7,8 +7,7 @@ using UnityEngine;
 namespace Jackey.Behaviours.BT.Composites {
 	[SearchPath("Composites/Switch")]
 	public class Switch : Composite {
-		[BlackboardOnly]
-		[SerializeField] private BlackboardRef<int> m_index;
+		[SerializeField] private BlackboardOnlyRef<int> m_index;
 		[SerializeField] private bool m_dynamic;
 
 		private int m_activeIndex;
@@ -33,36 +32,42 @@ namespace Jackey.Behaviours.BT.Composites {
 
 			m_activeIndex = -1;
 
-			if (m_dynamic)
-				EnableTicking();
+			int indexValue = m_index.GetValue();
 
-			return ExecutionStatus.Running;
-		}
-
-		protected override ExecutionStatus OnTick() {
-			if (m_activeIndex != -1) {
-				BehaviourAction activeChild = m_children[m_activeIndex];
-
-				if (activeChild.IsFinished)
-					return (ExecutionStatus)activeChild.Status;
-			}
-
-			int tickValue = m_index.GetValue();
-
-			if (tickValue < 0 || tickValue > m_children.Count - 1) {
-				Debug.LogError($"Behaviour switch ticked with an invalid value: {tickValue}. Valid: [0, {m_children.Count})", Owner);
+			if (indexValue < 0 || indexValue > m_children.Count - 1) {
+				Debug.LogError($"Behaviour switch entered with an invalid value: {indexValue}. Valid: [0, {m_children.Count})", Owner);
 				return ExecutionStatus.Failure;
 			}
 
-			if (tickValue != m_activeIndex)
-				return SwitchChild(tickValue);
+			m_activeIndex = indexValue;
+			ExecutionStatus childStatus = m_children[m_activeIndex].EnterSequence();
+
+			if (m_dynamic && childStatus == ExecutionStatus.Running)
+				EnableTicking();
+
+			return childStatus;
+		}
+
+		protected override ExecutionStatus OnTick() {
+			int indexValue = m_index.GetValue();
+
+			if (indexValue < 0 || indexValue > m_children.Count - 1) {
+				Debug.LogError($"Behaviour switch ticked with an invalid value: {indexValue}. Valid: [0, {m_children.Count})", Owner);
+				return ExecutionStatus.Failure;
+			}
+
+			if (indexValue != m_activeIndex)
+				return SwitchChild(indexValue);
 
 			return ExecutionStatus.Running;
 		}
 
+		protected override ExecutionStatus OnChildFinished() {
+			return (ExecutionStatus)m_children[m_activeIndex].Status;
+		}
+
 		private ExecutionStatus SwitchChild(int to) {
-			if (m_activeIndex != -1)
-				m_children[m_activeIndex].Interrupt();
+			m_children[m_activeIndex].Interrupt();
 
 			m_activeIndex = to;
 			BehaviourAction nextChild = m_children[m_activeIndex];

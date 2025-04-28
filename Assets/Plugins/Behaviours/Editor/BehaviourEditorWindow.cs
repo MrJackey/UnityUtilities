@@ -55,14 +55,16 @@ namespace Jackey.Behaviours.Editor {
 
 		private void OnEnable() {
 			EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+			Undo.undoRedoPerformed += OnUndoRedo;
 		}
 
 		private void OnDisable() {
 			EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+			Undo.undoRedoPerformed -= OnUndoRedo;
 		}
 
 		private void CreateGUI() {
-			titleContent = new GUIContent("Behaviour Editor");
+			titleContent = new GUIContent("Behaviour Editor", EditorGUIUtility.IconContent("d_SceneViewTools").image);
 
 			rootVisualElement.Add(m_toolbar = new Toolbar());
 			m_toolbar.Add(m_toolbarBreadcrumbs = new ToolbarBreadcrumbs());
@@ -94,6 +96,12 @@ namespace Jackey.Behaviours.Editor {
 		}
 
 		private void Update() {
+			// Reset the window if the active behaviour has been destroyed
+			if (m_activeGraph != null && m_activeGraph.Behaviour == null) {
+				RecreateGUI();
+				return;
+			}
+
 			m_activeGraph?.Tick();
 		}
 
@@ -188,7 +196,6 @@ namespace Jackey.Behaviours.Editor {
 							m_activeGraph.DeleteSelection();
 
 						break;
-					// TODO: Remove this
 					case KeyCode.R when evt.shift:
 						m_isKeyUsed = true;
 
@@ -273,6 +280,7 @@ namespace Jackey.Behaviours.Editor {
 
 		private void EditBehaviour(ObjectBehaviour behaviour) {
 			if (!IsBehaviourValid(behaviour)) {
+				m_toolbar.visible = false;
 				m_activeGraph?.RemoveFromHierarchy();
 				m_activeGraph = null;
 
@@ -291,6 +299,8 @@ namespace Jackey.Behaviours.Editor {
 				if (!OnSelectedInstance(behaviour))
 					return;
 			}
+
+			m_toolbar.visible = true;
 
 			Repaint();
 			EditorApplication.delayCall += FrameContent;
@@ -429,12 +439,20 @@ namespace Jackey.Behaviours.Editor {
 		#endregion
 
 		private void OnPlayModeStateChanged(PlayModeStateChange stateChange) {
+			// If viewing a runtime instance, clear everything as the instance is now destroyed
+			if (stateChange == PlayModeStateChange.EnteredEditMode && m_activeGraph != null && m_activeGraph.Behaviour == null)
+				RecreateGUI();
+
 			// The window hasn't called CreateGUI, it's open but probably in a hidden tab
 			if (!m_hasCreatedGUI)
 				return;
 
 			if (stateChange == PlayModeStateChange.EnteredEditMode)
 				OnSelectionChange();
+		}
+
+		private void OnUndoRedo() {
+			m_activeGraph?.UndoRedo();
 		}
 	}
 }

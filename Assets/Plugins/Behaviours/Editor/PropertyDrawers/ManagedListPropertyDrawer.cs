@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Utilities;
 using UnityEditor;
@@ -17,8 +18,11 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		private VisualElement m_itemInspector;
 		private Label m_inspectorLabel;
 
-		protected void CreateListGUI(VisualElement rootVisualElement, SerializedProperty property, string createButtonText) {
+		protected abstract string CreateButtonText { get; }
+
+		protected void CreateListGUI(VisualElement rootVisualElement, SerializedProperty property) {
 			rootVisualElement.RegisterCallback<MouseDownEvent>(evt => evt.StopImmediatePropagation());
+			rootVisualElement.TrackPropertyValue(property, _ => OnPropertyChanged());
 
 			m_listProperty = property;
 			ResetProperties();
@@ -37,7 +41,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			rootVisualElement.Add(new Button(CreateItem) {
 				name = "CreateButton",
-				text = createButtonText,
+				text = CreateButtonText,
 			});
 
 			rootVisualElement.Add(m_itemInspector = new VisualElement() {
@@ -81,7 +85,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		private void CreateItem() {
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-			TypeCache.TypeCollection types = TypeCache.GetTypesDerivedFrom(typeof(T));
+			IEnumerable<Type> types = TypeCache.GetTypesDerivedFrom(typeof(T)).Where(type => !type.IsAbstract);
 
 			TypeProvider.Instance.AskForType(mouseScreenPosition, types, type => {
 				int nextIndex = m_listItemProperties.Count;
@@ -119,8 +123,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		}
 
 		private void RemoveItemAtIndex(int index) {
-			if (index == m_listView.selectedIndex)
-				ClearInspection();
+			int selectedIndex = m_listView.selectedIndex;
 
 			m_listItemProperties.RemoveAt(index);
 			m_listProperty.DeleteArrayElementAtIndex(index);
@@ -128,6 +131,11 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			ResetProperties();
 			m_listView.RefreshItems();
+
+			if (index == selectedIndex)
+				ClearInspection();
+			else if (index < selectedIndex)
+				m_listView.selectedIndex = selectedIndex - 1;
 		}
 
 		private void InspectItemWithIndex(int index) {
@@ -161,6 +169,20 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			m_itemInspector.style.display = DisplayStyle.None;
 			m_listView.selectedIndex = -1;
+		}
+
+		private void OnPropertyChanged() {
+			int listCount = m_listItemProperties.Count;
+			int selectedIndex = m_listView.selectedIndex;
+
+			m_listProperty.serializedObject.Update();
+			ResetProperties();
+			m_listView.RefreshItems();
+
+			if (m_listItemProperties.Count == listCount)
+				m_listView.selectedIndex = selectedIndex;
+			else
+				ClearInspection();
 		}
 	}
 }

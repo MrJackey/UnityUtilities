@@ -38,7 +38,6 @@ namespace Jackey.Behaviours.Editor.TypeSearch {
 
 		public static IEnumerable<SearchEntry> TypesToSearch(IEnumerable<Type> types) {
 			IEnumerable<SearchEntry> results = types
-				.Where(type => !type.IsAbstract)
 				.Select(type => {
 					string path;
 

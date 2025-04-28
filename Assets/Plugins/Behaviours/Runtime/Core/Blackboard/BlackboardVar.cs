@@ -10,6 +10,13 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		[SerializeField] private string m_variableName;
 		[SerializeField] private string m_serializedTypeName;
 		[SerializeField] private SerializedGUID m_guid;
+#if UNITY_EDITOR
+		// For some reason the SerializedGUID field is not properly written to when redoing creation of a BlackboardVar.
+		// My guess is due to it being a fixed buffer.
+		// The backup solution is this field which always contain the same guid to recreate the efficient struct in case it's lost.
+		// This field never be used aside from that.
+		[SerializeField] private string m_guidString;
+#endif
 
 		[SerializeField] private Object m_unityObjectValue;
 		[SerializeReference] private object m_boxedValue;
@@ -54,7 +61,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		internal bool IsAssignableTo(Type type) {
 			Type serializedType = GetSerializedType();
 
-			return type == serializedType || BlackboardConverter.IsConvertible(serializedType, type);
+			return serializedType != null && serializedType.IsAssignableFrom(type) || BlackboardConverter.IsConvertible(serializedType, type);
 		}
 
 		internal abstract class BlackboardValue {
@@ -80,6 +87,11 @@ namespace Jackey.Behaviours.Core.Blackboard {
 			}
 
 			public override bool TrySetValue<TValue>(TValue value) {
+				if (value == null) {
+					Value = default;
+					return true;
+				}
+
 				if (value is T val) {
 					Value = val;
 					return true;
@@ -100,8 +112,13 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		void ISerializationCallbackReceiver.OnBeforeSerialize() { }
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize() {
-			Type serializedType = Type.GetType(m_serializedTypeName);
+#if UNITY_EDITOR
+			// Recreate guid in case it's lost
+			if (m_guid == default && !string.IsNullOrEmpty(m_guidString))
+				SerializedGUID.TryParse(m_guidString, out m_guid);
+#endif
 
+			Type serializedType = Type.GetType(m_serializedTypeName);
 			if (serializedType == null)
 				return;
 
@@ -113,12 +130,25 @@ namespace Jackey.Behaviours.Core.Blackboard {
 			Type valueType = typeof(BlackboardValue<>).MakeGenericType(serializedType);
 			m_value = (BlackboardValue)Activator.CreateInstance(valueType);
 
-			if (typeof(Object).IsAssignableFrom(serializedType))
-				m_value.SetValueBoxed(m_unityObjectValue.GetType() != typeof(Object) ? m_unityObjectValue : null); // Ensure Unity's fake null isn't set as value. If it is, the cast when setting boxed value fails. Unity null / missing are of type Object
-			else if (!string.IsNullOrEmpty(m_primitiveValue) && (serializedType == typeof(string) || serializedType.IsPrimitive))
-				m_value.SetValueBoxed(Convert.ChangeType(m_primitiveValue, serializedType));
-			else if (m_boxedValue != null && serializedType.IsInstanceOfType(m_boxedValue))
+			if (typeof(Object).IsAssignableFrom(serializedType)) {
+				// Ensure Unity's fake null isn't set as value. If it is, the cast when setting boxed value fails. Unity null / missing are of type Object
+				m_value.SetValueBoxed(m_unityObjectValue.GetType() != typeof(Object) ? m_unityObjectValue : null);
+			}
+			else if (!string.IsNullOrEmpty(m_primitiveValue)) {
+				if (serializedType == typeof(string) || serializedType.IsPrimitive) {
+					m_value.SetValueBoxed(Convert.ChangeType(m_primitiveValue, serializedType));
+				}
+				else if (serializedType.IsEnum) {
+					m_value.SetValueBoxed(Enum.Parse(serializedType, m_primitiveValue));
+				}
+				else {
+					object jsonValue = JsonUtility.FromJson(m_primitiveValue, typeof(JsonWrapper<>).MakeGenericType(serializedType));
+					m_value.SetValueBoxed(((IJsonWrapper)jsonValue).BoxedValue);
+				}
+			}
+			else if (m_boxedValue != null && serializedType.IsInstanceOfType(m_boxedValue)) {
 				m_value.SetValueBoxed(m_boxedValue);
+			}
 		}
 
 		#endregion

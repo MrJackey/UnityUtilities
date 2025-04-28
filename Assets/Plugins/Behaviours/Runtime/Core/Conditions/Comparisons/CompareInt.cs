@@ -5,8 +5,7 @@ using Jackey.Behaviours.Utilities;
 namespace Jackey.Behaviours.Core.Conditions.Comparisons {
 	[SearchPath("Blackboard/Compare Int")]
 	public class CompareInt : BehaviourCondition {
-		[BlackboardOnly]
-		public BlackboardRef<int> Comparand;
+		public BlackboardOnlyRef<int> Comparand;
 		public Arithmetic.Comparison Comparison;
 		public BlackboardRef<int> Value;
 
