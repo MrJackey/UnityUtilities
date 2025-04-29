@@ -29,7 +29,7 @@ namespace Jackey.Behaviours.BT.Composites {
 
 		protected override ExecutionStatus OnEnter() {
 			m_conditions.Enable(Owner);
-			m_runningIndex = m_conditions.Evaluate() ? 0 : 1;
+			m_runningIndex = m_conditions.Evaluate() ? 1 : 0;
 
 			if (m_dynamic)
 				EnableTicking();
@@ -40,7 +40,7 @@ namespace Jackey.Behaviours.BT.Composites {
 		}
 
 		protected override ExecutionStatus OnTick() {
-			int index = m_conditions.Evaluate() ? 0 : 1;
+			int index = m_conditions.Evaluate() ? 1 : 0;
 
 			if (index == m_runningIndex)
 				return ExecutionStatus.Running;
