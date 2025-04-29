@@ -345,6 +345,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 		protected virtual void OnSmartDeletion(VisualElement element) { }
 
 		public virtual void DuplicateSelection() { }
+		public virtual void CopySelection() { }
+		public virtual void Paste() { }
 
 		public void UndoRedo() {
 			m_connectionManipulator.Cancel();

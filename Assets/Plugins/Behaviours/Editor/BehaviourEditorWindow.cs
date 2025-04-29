@@ -220,6 +220,18 @@ namespace Jackey.Behaviours.Editor {
 							m_activeGraph.DuplicateSelection();
 
 						break;
+					case KeyCode.C when evt.control:
+						m_isKeyUsed = true;
+
+						m_activeGraph.CopySelection();
+
+						break;
+					case KeyCode.V when evt.control:
+						m_isKeyUsed = true;
+
+						m_activeGraph.Paste();
+
+						break;
 				}
 			}
 		}
