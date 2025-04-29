@@ -109,6 +109,15 @@ namespace Jackey.Behaviours {
 			m_behaviour.Initialize(this);
 		}
 
+		/// <summary>
+		/// Create a new instance of the assigned behaviour, initialize it and start it directly afterwards.
+		/// If you want to start an already assigned runtime behaviour, use <see cref="StartBehaviour"/> instead
+		/// </summary>
+		public void InitializeAndStartBehaviour() {
+			SetRuntimeBehaviour(m_behaviour);
+			StartBehaviour();
+		}
+
 		public void StartBehaviour() {
 			m_behaviour.Start();
 			m_isRunning = true;
