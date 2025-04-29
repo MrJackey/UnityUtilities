@@ -33,7 +33,7 @@ namespace Jackey.Behaviours.Editor.Editors {
 			ObjectBehaviour assignedBehaviour = (ObjectBehaviour)serializedObject.FindProperty("m_behaviour").objectReferenceValue;
 
 			if (assignedBehaviour != null)
-				EditorWindow.GetWindow<BehaviourEditorWindow>().SetBehaviour(assignedBehaviour);
+				EditorWindow.GetWindow<BehaviourEditorWindow>().SetOwnerBehaviour((BehaviourOwner)target);
 		}
 	}
 }
