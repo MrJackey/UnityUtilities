@@ -323,12 +323,27 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		}
 
 		public override void Paste() {
-			CopyPasteData pasteData = JsonUtility.FromJson<CopyPasteData>(GUIUtility.systemCopyBuffer);
+			CopyPasteData pasteData;
+			try {
+				pasteData = JsonUtility.FromJson<CopyPasteData>(GUIUtility.systemCopyBuffer);
+			}
+			catch (ArgumentException) {
+				Debug.LogWarning("Invalid clipboard content. Unable to paste");
+				return;
+			}
+
 			if (pasteData is not { Context: CopyPasteContext.BT }) return;
 
-			Undo.RecordObject(m_behaviour, "Paste nodes");
+			BTCopyData btData;
+			try {
+				btData = JsonUtility.FromJson<BTCopyData>(pasteData.Data);
+			}
+			catch (ArgumentException) {
+				Debug.LogWarning("Invalid clipboard content. Unable to paste");
+				return;
+			}
 
-			BTCopyData btData = JsonUtility.FromJson<BTCopyData>(pasteData.Data);
+			Undo.RecordObject(m_behaviour, "Paste nodes");
 
 			// Create nodes
 			BehaviourAction[] actions = new BehaviourAction[btData.Actions.Length];
