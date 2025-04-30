@@ -63,10 +63,6 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			m_blackboardOnly = fieldInfo.FieldType.GetGenericTypeDefinition() == typeof(BlackboardOnlyRef<>);
 			m_canEditField = !fieldInfo.FieldType.GetGenericArguments()[0].IsInterface;
 
-			SerializedProperty behaviourProperty = property.FindPropertyRelative("m_behaviour");
-			behaviourProperty.objectReferenceValue ??= EditorWindow.GetWindow<BehaviourEditorWindow>().OpenBehaviour;
-			property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
-
 			m_modeProperty = property.FindPropertyRelative("m_mode");
 			int mode = m_blackboardOnly ? VARIABLE_MODE : m_modeProperty.enumValueIndex;
 

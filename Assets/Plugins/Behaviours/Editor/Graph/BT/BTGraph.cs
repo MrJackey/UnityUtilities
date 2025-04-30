@@ -741,6 +741,12 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 		#endregion
 
+		protected override void ApplyChanges() {
+			m_behaviour.ConnectBlackboardRefs();
+
+			base.ApplyChanges();
+		}
+
 		[CanBeNull]
 		private BTNode GetNodeOfAction(BehaviourAction action) {
 			foreach (BTNode node in m_nodes) {

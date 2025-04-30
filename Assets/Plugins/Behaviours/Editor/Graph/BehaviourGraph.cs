@@ -395,7 +395,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		protected virtual void InspectElement(VisualElement element) { }
 		public void ClearInspection() => m_inspector.ClearInspection();
 
-		protected void ApplyChanges() {
+		protected virtual void ApplyChanges() {
 			UpdateEditorData();
 			m_serializedBehaviour.ApplyModifiedPropertiesWithoutUndo();
 			m_serializedBehaviour.Update();
