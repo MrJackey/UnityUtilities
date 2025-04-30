@@ -16,6 +16,9 @@ namespace Jackey.Behaviours.Core.Blackboard {
 			s_conversions.Add((typeof(Component), typeof(Transform)), new Func<Component, Transform>(comp => comp.transform));
 			s_conversions.Add((typeof(Component), typeof(GameObject)), new Func<Component, GameObject>(comp => comp.gameObject));
 
+			s_conversions.Add((typeof(float), typeof(int)), new Func<float, int>(f => (int)f));
+			s_conversions.Add((typeof(int), typeof(float)), new Func<int, float>(i => (float)i));
+
 			s_conversions.Add((typeof(object), typeof(string)), new Func<object, string>(obj => obj.ToString()));
 		}
 
