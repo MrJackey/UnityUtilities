@@ -322,7 +322,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			GUIUtility.systemCopyBuffer = JsonUtility.ToJson(copyData);
 		}
 
-		public override void Paste() {
+		public override void Paste(Vector2 GUIPosition) {
 			CopyPasteData pasteData;
 			try {
 				pasteData = JsonUtility.FromJson<CopyPasteData>(GUIUtility.systemCopyBuffer);
@@ -388,7 +388,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			}
 
 			// Move nodes to cursor location keeping relative offsets
-			Vector2 pasteCenter = this.ChangeCoordinatesTo(contentContainer, Event.current.mousePosition) - new Vector2(Node.DEFAULT_WIDTH / 2f, Node.DEFAULT_HEIGHT / 2f);
+			Vector2 pasteCenter = this.ChangeCoordinatesTo(contentContainer, GUIPosition) - new Vector2(Node.DEFAULT_WIDTH / 2f, Node.DEFAULT_HEIGHT / 2f);
 			Rect pasteRect = new Rect(nodes[0].transform.position, Vector2.zero);
 
 			for (int i = 1; i < nodes.Length; i++) {

@@ -346,7 +346,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		public virtual void DuplicateSelection() { }
 		public virtual void CopySelection() { }
-		public virtual void Paste() { }
+		public virtual void Paste(Vector2 GUIPosition) { }
 
 		public void UndoRedo() {
 			m_connectionManipulator.Cancel();

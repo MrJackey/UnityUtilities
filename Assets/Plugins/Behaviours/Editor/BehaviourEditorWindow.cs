@@ -131,6 +131,16 @@ namespace Jackey.Behaviours.Editor {
 				_ => m_activeGraph.DuplicateSelection(),
 				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
 			);
+			shortcuts.menu.AppendAction(
+				"(Ctrl + C) Copy Selection to Clipboard",
+				_ => m_activeGraph.CopySelection(),
+				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
+				);
+			shortcuts.menu.AppendAction(
+				"(Ctrl + V) Paste from Clipboard",
+				_ => m_activeGraph.Paste(EditorGUIUtility.ScreenToGUIPoint(position.center)),
+				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
+			);
 
 			shortcuts.menu.AppendSeparator();
 
@@ -229,7 +239,7 @@ namespace Jackey.Behaviours.Editor {
 					case KeyCode.V when evt.control:
 						m_isKeyUsed = true;
 
-						m_activeGraph.Paste();
+						m_activeGraph.Paste(Event.current.mousePosition);
 
 						break;
 				}
