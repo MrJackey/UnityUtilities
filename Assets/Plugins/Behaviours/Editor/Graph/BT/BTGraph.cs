@@ -17,6 +17,8 @@ using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Graph.BT {
 	public class BTGraph : BehaviourGraph<BehaviourTree> {
+		internal static readonly Type[] s_actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract).ToArray();
+
 		public BTGraph() {
 			m_connectionManipulator.ConnectionVoided += OnConnectionVoided;
 			m_connectionManipulator.ConnectionCreated += OnConnectionCreated;
@@ -117,9 +119,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			base.BeginNodeCreation(GUIPosition);
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(GUIPosition);
-			IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract);
-
-			TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => CreateNode(type));
+			TypeProvider.Instance.AskForType(mouseScreenPosition, s_actionTypes, type => CreateNode(type));
 		}
 
 		private BTNode CreateNode(Type type) {
@@ -540,9 +540,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			SaveCreatePosition();
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-			IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract);
-
-			TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => {
+			TypeProvider.Instance.AskForType(mouseScreenPosition, s_actionTypes, type => {
 				int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
 
 				BTNode toNode = CreateNode(type);

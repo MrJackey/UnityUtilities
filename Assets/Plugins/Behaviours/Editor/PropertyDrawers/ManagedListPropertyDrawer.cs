@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Utilities;
 using UnityEditor;
@@ -19,6 +18,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		private Label m_inspectorLabel;
 
 		protected abstract string CreateButtonText { get; }
+		protected abstract Type[] CreateTypes { get; }
 
 		protected void CreateListGUI(VisualElement rootVisualElement, SerializedProperty property) {
 			rootVisualElement.RegisterCallback<MouseDownEvent>(evt => evt.StopImmediatePropagation());
@@ -85,9 +85,8 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		private void CreateItem() {
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-			IEnumerable<Type> types = TypeCache.GetTypesDerivedFrom(typeof(T)).Where(type => !type.IsAbstract);
 
-			TypeProvider.Instance.AskForType(mouseScreenPosition, types, type => {
+			TypeProvider.Instance.AskForType(mouseScreenPosition, CreateTypes, type => {
 				int nextIndex = m_listItemProperties.Count;
 
 				m_listProperty.InsertArrayElementAtIndex(nextIndex);

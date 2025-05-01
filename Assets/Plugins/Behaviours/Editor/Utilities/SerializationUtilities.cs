@@ -11,7 +11,7 @@ namespace Jackey.Behaviours.Editor.Utilities {
 		private const string SERIALIZED_MANAGED_TYPE_FORMAT = @"{{class: ({0}),\s+ns: ({1}),\s+asm: ({2})}}";
 		private const string NULL_MANAGED_ENTRY_PATTERN = @"^\s+- rid: -2\n(?!\s+type: {class: , ns: , asm: })";
 
-		public static void RepairMissingManagedTypes(Object asset, ManagedReferenceMissingType missingType, string asm, string ns, string type) {
+		public static void RepairMissingManagedTypes(Object asset, ManagedReferenceMissingType missingType, string asm, string ns, string cls) {
 			string assetPath = AssetDatabase.GetAssetPath(asset);
 			string projectPath = Path.GetDirectoryName(Application.dataPath);
 			string absoluteAssetPath = Path.Join(projectPath, assetPath);
@@ -19,7 +19,7 @@ namespace Jackey.Behaviours.Editor.Utilities {
 			string replacePattern = string.Format(SERIALIZED_MANAGED_TYPE_FORMAT, missingType.className, missingType.namespaceName, missingType.assemblyName);
 
 			string assetContent = File.ReadAllText(absoluteAssetPath);
-			string repairedContent = Regex.Replace(assetContent, replacePattern, _ => $"{{class: {type}, ns: {ns}, asm: {asm}}}");
+			string repairedContent = Regex.Replace(assetContent, replacePattern, _ => $"{{class: {cls}, ns: {ns}, asm: {asm}}}");
 			File.WriteAllText(absoluteAssetPath, repairedContent);
 		}
 
