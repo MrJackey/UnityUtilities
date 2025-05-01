@@ -233,13 +233,15 @@ namespace Jackey.Behaviours.Editor {
 					case KeyCode.C when evt.control:
 						m_isKeyUsed = true;
 
-						m_activeGraph.CopySelection();
+						if (m_activeGraph.IsEditable)
+							m_activeGraph.CopySelection();
 
 						break;
 					case KeyCode.V when evt.control:
 						m_isKeyUsed = true;
 
-						m_activeGraph.Paste(Event.current.mousePosition);
+						if (m_activeGraph.IsEditable)
+							m_activeGraph.Paste(Event.current.mousePosition);
 
 						break;
 				}
