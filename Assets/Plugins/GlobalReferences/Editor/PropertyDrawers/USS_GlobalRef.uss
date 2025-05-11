@@ -1,0 +1,73 @@
+﻿Foldout > .unity-foldout__content {
+    margin-left: 0;
+}
+
+Foldout #PropertyDisplayName {
+    min-width: 133px;
+}
+
+Foldout #AssetName {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-right: 3px;
+    max-width: 54.75%;
+    margin-left: auto;
+}
+
+Foldout #AssetName.Present TextInput {
+    background-color: rgb(0, 66, 0);
+}
+
+Foldout #AssetName TextElement {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+Foldout > Toggle {
+    margin-right: 42px;
+}
+
+Foldout > Button {
+    position: absolute;
+    top: 1px;
+    width: 19px;
+    height: 19px;
+    padding: 1px;
+}
+
+Foldout > #FieldsButton {
+    margin-left: 3px;
+    right: -2px;
+}
+
+Foldout > #ClearButton {
+    right: 20px;
+}
+
+#DescriptionField {
+    max-height: 60px;
+}
+
+ListView {
+    max-height: 100px;
+    margin-left: 3px;
+}
+
+#ListItem {
+    flex-direction: row;
+    align-items: center;
+}
+
+
+#ListItem #GUIDField {
+    margin-right: 5px;
+    width: 40%;
+    max-width: 275px;
+}
+
+#ListItem #Name {
+    margin-left: 1px;
+    padding-left: 4px;
+    border-left-width: 1px;
+    border-left-color: rgb(155, 155, 155);
+}

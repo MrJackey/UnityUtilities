@@ -1,0 +1,48 @@
+﻿#Header {
+    flex-direction: row;
+    justify-content: space-around;
+    font-size: 14px;
+    width: 100%;
+    margin: 4px 0;
+}
+
+#Header > * {
+    flex-grow: 1;
+    -unity-text-align: middle-center;
+}
+
+#GUIDHeader {
+    max-width: 275px;
+}
+
+#ListItem {
+    flex-direction: row;
+    align-items: center;
+}
+
+#ListItem > * {
+    width: 33%;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+#GUIDField {
+    flex-grow: 1;
+    flex-shrink: 1;
+    max-width: 275px;
+}
+
+#NameField {
+    margin-left: 5px;
+    margin-right: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-left-color: rgb(155, 155, 155);
+    border-right-color: rgb(155, 155, 155);
+}
+
+#ListItem ObjectField {
+    opacity: 1;
+}

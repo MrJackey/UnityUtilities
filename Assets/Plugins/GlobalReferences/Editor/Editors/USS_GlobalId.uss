@@ -1,0 +1,50 @@
+﻿#Header {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+#Header Button {
+    flex-grow: 1;
+    height: 22px;
+    align-items: center;
+}
+
+#Header Button Image {
+    width: 22px;
+}
+
+#AssetFields.Override {
+    margin-left: -15px;
+    padding-left: 13px;
+    border-left-width: 2px;
+    border-left-color: #0f80be;
+}
+
+ListView {
+    max-height: 250px;
+    margin-left: 3px;
+    margin-top: 5px;
+}
+
+#ListItem {
+    flex-direction: row;
+    align-items: center;
+}
+
+#ListItem > * {
+    overflow: hidden;
+}
+
+#ListItem #GUIDField {
+    margin-right: 5px;
+    width: 40%;
+    max-width: 275px;
+}
+
+#ListItem #Name {
+    margin-left: 1px;
+    padding-left: 4px;
+    border-left-width: 1px;
+    border-left-color: rgb(155, 155, 155);
+}
