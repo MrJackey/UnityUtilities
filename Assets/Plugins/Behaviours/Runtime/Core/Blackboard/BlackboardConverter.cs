@@ -16,7 +16,20 @@ namespace Jackey.Behaviours.Core.Blackboard {
 			s_conversions.Add((typeof(Component), typeof(Transform)), new Func<Component, Transform>(comp => comp.transform));
 			s_conversions.Add((typeof(Component), typeof(GameObject)), new Func<Component, GameObject>(comp => comp.gameObject));
 
+			s_conversions.Add((typeof(float), typeof(int)), new Func<float, int>(f => (int)f));
+			s_conversions.Add((typeof(int), typeof(float)), new Func<int, float>(i => (float)i));
+
 			s_conversions.Add((typeof(object), typeof(string)), new Func<object, string>(obj => obj.ToString()));
+		}
+
+		/// <summary>
+		/// Add a custom conversion.
+		/// <br/>
+		/// To function properly, make sure to call this with all your conversions before their potential use in both editor and runtime.
+		/// For example use <see cref="UnityEditor.InitializeOnLoadMethodAttribute"/> and <see cref="UnityEngine.RuntimeInitializeOnLoadMethodAttribute"/> respectively
+		/// </summary>
+		public static void AddConversion<TFrom, TTo>(Func<TFrom, TTo> conversion) {
+			s_conversions.TryAdd((typeof(TFrom), typeof(TTo)), conversion);
 		}
 
 		public static bool IsConvertible(Type from, Type to) {

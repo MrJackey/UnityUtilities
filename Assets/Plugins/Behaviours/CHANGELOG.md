@@ -1,3 +1,19 @@
+# 0.3.0 (2025-05-12)
+
+### Features
+- Now remembers the root owner when navigating nested behaviours
+- Swapped branch composite directions i.e. left is false and right is true
+- Added dynamic option on branch composite to reevaluate each tick
+- Added copy-paste support on behaviour nodes via the clipboard
+- Add utility method to initialize and then start a `BehaviourOwner`. Meant to be used together with the manual start mode.
+- Changed how `BlackboardRef<>` and `BlackboardOnlyRef<>` track their assigned behaviour. Now using reflection instead of property drawer
+- Added int to float and float to int blackboard conversions
+- Created an API on `BlackboardConverter` to add custom conversions in runtime
+- Updated behaviour validation panel layout with more info and search functionality
+
+### Fixes
+- Added auto save on all changed behaviours before script reloads. This fixes an issue where repair sometimes seemingly does not work even though you change to a valid type
+
 # 0.2.0 (2025-04-28)
 
 ### Features

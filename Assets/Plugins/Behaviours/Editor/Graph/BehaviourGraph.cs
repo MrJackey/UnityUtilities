@@ -345,6 +345,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 		protected virtual void OnSmartDeletion(VisualElement element) { }
 
 		public virtual void DuplicateSelection() { }
+		public virtual void CopySelection() { }
+		public virtual void Paste(Vector2 GUIPosition) { }
 
 		public void UndoRedo() {
 			m_connectionManipulator.Cancel();
@@ -393,7 +395,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		protected virtual void InspectElement(VisualElement element) { }
 		public void ClearInspection() => m_inspector.ClearInspection();
 
-		protected void ApplyChanges() {
+		protected virtual void ApplyChanges() {
 			UpdateEditorData();
 			m_serializedBehaviour.ApplyModifiedPropertiesWithoutUndo();
 			m_serializedBehaviour.Update();

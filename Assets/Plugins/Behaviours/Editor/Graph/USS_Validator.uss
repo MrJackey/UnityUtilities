@@ -27,19 +27,48 @@ ValidationPanel ListView .unity-list-view__empty-label {
 	-unity-text-align: middle-center;
 }
 
-ValidationPanel #MissingTypeRoot {
-	justify-content: space-around;
-	align-items: flex-start;
-}
-
-ValidationPanel #MissingTypeRoot #TypeRoot {
+ValidationPanel #MissingTypeItem {
 	flex-direction: row;
 }
 
-ValidationPanel #MissingTypeRoot #TypeDeliminator {
-	padding: 0;
+ValidationPanel #TypeControls {
+	align-items: center;
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+ValidationPanel #TypeControls #Status {
 	width: 1px;
-	-unity-text-align: lower-center;
+	height: 1px;
+	border-width: 5px;
+	border-radius: 999px;
+	margin-bottom: 8px;
+}
+
+ValidationPanel #TypeControls #Status.Missing {
+	border-color: red;
+}
+
+ValidationPanel #TypeControls #Status.Unknown {
+	border-color: yellow;
+}
+
+ValidationPanel #TypeControls #Status.Valid {
+	border-color: green;
+}
+
+ValidationPanel #TypeControls Button {
+	align-self: center;
+	align-content: center;
+	justify-content: center;
+	height: 20px;
+	width: 25px;
+	padding: 1px 0;
+}
+
+ValidationPanel #MissingType {
+	justify-content: space-around;
+	align-items: flex-start;
 }
 
 ValidationPanel #Controls {
@@ -48,7 +77,7 @@ ValidationPanel #Controls {
 	height: 45px;
 }
 
-ValidationPanel Button {
+ValidationPanel #Controls Button {
 	width: 80px;
 	font-size: 14px;
 }

@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.BT.Composites;
-using Jackey.Behaviours.BT.Decorators;
 using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Core.Blackboard;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT {
@@ -144,9 +146,13 @@ namespace Jackey.Behaviours.BT {
 
 #if UNITY_EDITOR
 		private void OnValidate() {
-			if (m_entry != null) {
-				ValidateDetachedActions();
-			}
+			if (UnityEditor.SerializationUtility.HasManagedReferencesWithMissingTypes(this))
+				return;
+
+			ConnectBlackboardRefs();
+
+			if (m_entry != null && !m_allActions.Contains(m_entry))
+				m_entry = null;
 
 			for (int i = m_blackboard.m_variables.Count - 1; i >= 0; i--) {
 				if (m_blackboard.m_variables[i] == null)
@@ -154,28 +160,47 @@ namespace Jackey.Behaviours.BT {
 			}
 		}
 
-		private void ValidateDetachedActions() {
-			if (m_entry == null) return;
+		internal void ConnectBlackboardRefs() {
+			void Inner(Type type, object instance) {
+				foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
+					Type fieldType = field.FieldType;
 
-			void Inner(BehaviourAction current) {
-				if (!m_allActions.Contains(current))
-					Debug.LogError("Behaviour Tree detected detached actions!");
+					if (!fieldType.IsSerializable) continue;
+					if (fieldType.IsPrimitive) continue;
 
-				switch (current) {
-					case Composite composite:
-						foreach (BehaviourAction behaviourAction in composite.Children)
-							Inner(behaviourAction);
+					if (fieldType.IsGenericType) {
+						Type typeDefinition = fieldType.GetGenericTypeDefinition();
 
-						break;
-					case Decorator decorator:
-						if (decorator.Child != null)
-							Inner(decorator.Child);
+						if (typeDefinition == typeof(BlackboardRef<>) || typeDefinition == typeof(BlackboardOnlyRef<>)) {
+							FieldInfo behaviourField = fieldType.GetField("m_behaviour", BindingFlags.Instance | BindingFlags.NonPublic);
+							Debug.Assert(behaviourField != null);
 
-						break;
+							object blackboardRefValue = field.GetValue(instance);
+							behaviourField.SetValue(blackboardRefValue, this);
+							field.SetValue(instance, blackboardRefValue);
+						}
+					}
+
+					object fieldValue = field.GetValue(instance);
+					if (fieldValue == null) continue;
+
+					// Only lists and arrays are serializable collections in Unity
+					if (fieldValue is IList list) {
+						foreach (object item in list)
+							Inner(item.GetType(), item);
+					}
+					else {
+						Inner(fieldType, fieldValue);
+
+						if (fieldType.IsValueType)
+							field.SetValue(instance, fieldValue);
+					}
 				}
 			}
 
-			Inner(m_entry);
+			foreach (BehaviourAction action in m_allActions) {
+				Inner(action.GetType(), action);
+			}
 		}
 #endif
 	}

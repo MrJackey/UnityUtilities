@@ -23,6 +23,8 @@ namespace Jackey.Behaviours.Editor {
 		private Toolbar m_toolbar;
 		private ToolbarBreadcrumbs m_toolbarBreadcrumbs;
 		private Stack<ObjectBehaviour> m_depthStack = new();
+		[CanBeNull]
+		private BehaviourOwner m_depthOwner;
 
 		[CanBeNull]
 		private BehaviourGraph m_activeGraph;
@@ -129,6 +131,16 @@ namespace Jackey.Behaviours.Editor {
 				_ => m_activeGraph.DuplicateSelection(),
 				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
 			);
+			shortcuts.menu.AppendAction(
+				"(Ctrl + C) Copy Selection to Clipboard",
+				_ => m_activeGraph.CopySelection(),
+				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
+				);
+			shortcuts.menu.AppendAction(
+				"(Ctrl + V) Paste from Clipboard",
+				_ => m_activeGraph.Paste(EditorGUIUtility.ScreenToGUIPoint(position.center)),
+				_ => m_activeGraph?.IsEditable ?? false ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled
+			);
 
 			shortcuts.menu.AppendSeparator();
 
@@ -218,6 +230,20 @@ namespace Jackey.Behaviours.Editor {
 							m_activeGraph.DuplicateSelection();
 
 						break;
+					case KeyCode.C when evt.control:
+						m_isKeyUsed = true;
+
+						if (m_activeGraph.IsEditable)
+							m_activeGraph.CopySelection();
+
+						break;
+					case KeyCode.V when evt.control:
+						m_isKeyUsed = true;
+
+						if (m_activeGraph.IsEditable)
+							m_activeGraph.Paste(Event.current.mousePosition);
+
+						break;
 				}
 			}
 		}
@@ -241,17 +267,29 @@ namespace Jackey.Behaviours.Editor {
 				SetBehaviour(behaviour);
 			}
 			else if (selectedObject is GameObject selectedGameObject && selectedGameObject.TryGetComponent(out BehaviourOwner owner)) {
-				if (owner.Behaviour == null)
-					return;
-
-				SetBehaviour(owner.Behaviour);
-
-				// Prevent showing owner blackboard in runtime as the variables merge downwards and will thus be shown with the graph
-				if (m_activeGraph != null && EditorUtility.IsPersistent(owner.Behaviour)) {
-					SerializedProperty blackboardProperty = new SerializedObject(owner).FindProperty("m_blackboard");
-					m_activeGraph.BlackboardInspector.SetPrimaryBlackboard(owner.Blackboard, blackboardProperty);
-				}
+				SetOwnerBehaviour(owner);
 			}
+		}
+
+		public void SetOwnerBehaviour(BehaviourOwner owner) {
+			if (owner.Behaviour == null)
+				return;
+
+			// Don't consider owner in runtime as its blackboard merge downwards and will thus be shown with the graph
+			m_depthOwner = EditorUtility.IsPersistent(owner.Behaviour) ? owner : null;
+
+			// If the same as active graph, make sure that the owner blackboard is shown
+			if (m_depthOwner != null && m_activeGraph != null && owner.Behaviour == m_activeGraph.SerializedBehaviour?.targetObject) {
+				SetOwnerBlackboard();
+				return;
+			}
+
+			while (m_toolbarBreadcrumbs.childCount > 0)
+				m_toolbarBreadcrumbs.PopItem();
+
+			m_depthStack.Clear();
+
+			PushBehaviour(owner.Behaviour);
 		}
 
 		public void SetBehaviour(ObjectBehaviour behaviour) {
@@ -262,6 +300,8 @@ namespace Jackey.Behaviours.Editor {
 				m_toolbarBreadcrumbs.PopItem();
 
 			m_depthStack.Clear();
+			m_depthOwner = null;
+
 			PushBehaviour(behaviour);
 		}
 
@@ -304,6 +344,14 @@ namespace Jackey.Behaviours.Editor {
 
 			Repaint();
 			EditorApplication.delayCall += FrameContent;
+
+			if (m_depthOwner != null)
+				SetOwnerBlackboard();
+		}
+
+		private void SetOwnerBlackboard() {
+			SerializedProperty blackboardProperty = new SerializedObject(m_depthOwner).FindProperty("m_blackboard");
+			m_activeGraph!.BlackboardInspector.SetPrimaryBlackboard(m_depthOwner.Blackboard, blackboardProperty);
 		}
 
 		private void GoToDepth(int index) {

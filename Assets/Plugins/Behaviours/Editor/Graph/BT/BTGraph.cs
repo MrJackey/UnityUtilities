@@ -6,6 +6,7 @@ using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
 using Jackey.Behaviours.BT.Nested;
 using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Editor.CopyPaste;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Editor.Utilities;
 using JetBrains.Annotations;
@@ -16,6 +17,8 @@ using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Graph.BT {
 	public class BTGraph : BehaviourGraph<BehaviourTree> {
+		internal static readonly Type[] s_actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract).ToArray();
+
 		public BTGraph() {
 			m_connectionManipulator.ConnectionVoided += OnConnectionVoided;
 			m_connectionManipulator.ConnectionCreated += OnConnectionCreated;
@@ -116,9 +119,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			base.BeginNodeCreation(GUIPosition);
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(GUIPosition);
-			IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract);
-
-			TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => CreateNode(type));
+			TypeProvider.Instance.AskForType(mouseScreenPosition, s_actionTypes, type => CreateNode(type));
 		}
 
 		private BTNode CreateNode(Type type) {
@@ -279,6 +280,131 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			this.ReplaceSelection(clones);
 		}
 
+		public override void CopySelection() {
+			if (SelectedElements.Count == 0) return;
+
+			// Get all selected actions
+			List<BehaviourAction> actions = new List<BehaviourAction>();
+			foreach (ISelectableElement element in SelectedElements) {
+				if (element.Element is BTNode btNode)
+					actions.Add(btNode.Action);
+			}
+
+			if (actions.Count == 0)
+				return;
+
+			// Save their parents if part of selection
+			int[] parentIndices = new int[actions.Count];
+			for (int i = 0; i < actions.Count; i++) {
+				parentIndices[i] = -1;
+
+				BehaviourAction action = actions[i];
+				Connection connection = GetConnectionToNode(GetNodeOfAction(action));
+				if (connection == null) continue;
+
+				BehaviourAction parent = connection.Start.Element.GetFirstAncestorOfType<BTNode>().Action;
+				int parentIndex = actions.IndexOf(parent);
+				if (parentIndex == -1) continue;
+
+				parentIndices[i] = parentIndex;
+			}
+
+			// Save data to clipboard
+			BTCopyData btData = new BTCopyData() {
+				ActionTypes = actions.Select(action => action.GetType().AssemblyQualifiedName).ToArray(),
+				Actions = actions.Select(JsonUtility.ToJson).ToArray(),
+				ParentIndices = parentIndices,
+			};
+			CopyPasteData copyData = new CopyPasteData() {
+				Context = CopyPasteContext.BT,
+				Data = JsonUtility.ToJson(btData),
+			};
+			GUIUtility.systemCopyBuffer = JsonUtility.ToJson(copyData);
+		}
+
+		public override void Paste(Vector2 GUIPosition) {
+			CopyPasteData pasteData;
+			try {
+				pasteData = JsonUtility.FromJson<CopyPasteData>(GUIUtility.systemCopyBuffer);
+			}
+			catch (ArgumentException) {
+				Debug.LogWarning("Invalid clipboard content. Unable to paste");
+				return;
+			}
+
+			if (pasteData is not { Context: CopyPasteContext.BT }) return;
+
+			BTCopyData btData;
+			try {
+				btData = JsonUtility.FromJson<BTCopyData>(pasteData.Data);
+			}
+			catch (ArgumentException) {
+				Debug.LogWarning("Invalid clipboard content. Unable to paste");
+				return;
+			}
+
+			Undo.RecordObject(m_behaviour, "Paste nodes");
+
+			// Create nodes
+			BehaviourAction[] actions = new BehaviourAction[btData.Actions.Length];
+			BTNode[] nodes = new BTNode[btData.Actions.Length];
+			for (int i = 0; i < actions.Length; i++) {
+				BehaviourAction action = (BehaviourAction)JsonUtility.FromJson(btData.Actions[i], Type.GetType(btData.ActionTypes[i]));
+				actions[i] = action;
+				m_behaviour.m_allActions.Add(action);
+
+				switch (action) {
+					case Composite composite:
+						composite.Children.Clear();
+						break;
+					case Decorator decorator:
+						decorator.Child = null;
+						break;
+				}
+
+				BTNode node = new BTNode(action);
+				nodes[i] = node;
+				AddNode(node);
+			}
+
+			// Setup connections
+			for (int i = 0; i < btData.ParentIndices.Length; i++) {
+				int parentIndex = btData.ParentIndices[i];
+				if (parentIndex == -1) continue;
+
+				BehaviourAction parentAction = actions[parentIndex];
+				Debug.Assert(parentAction is Composite or Decorator);
+
+				switch (parentAction) {
+					case Composite composite:
+						composite.Children.Add(actions[i]);
+						break;
+					case Decorator decorator:
+						decorator.Child = actions[i];
+						break;
+				}
+
+				AddConnection(new Connection(nodes[parentIndex].OutSocket, nodes[i]));
+			}
+
+			// Move nodes to cursor location keeping relative offsets
+			Vector2 pasteCenter = this.ChangeCoordinatesTo(contentContainer, GUIPosition) - new Vector2(Node.DEFAULT_WIDTH / 2f, Node.DEFAULT_HEIGHT / 2f);
+			Rect pasteRect = new Rect(nodes[0].transform.position, Vector2.zero);
+
+			for (int i = 1; i < nodes.Length; i++) {
+				Vector3 nodePosition = nodes[i].transform.position;
+				pasteRect.min = Vector2.Min(pasteRect.min, nodePosition);
+				pasteRect.max = Vector2.Max(pasteRect.max, nodePosition);
+			}
+
+			Vector2 offset = pasteCenter - pasteRect.center;
+			foreach (BTNode node in nodes)
+				node.transform.position += (Vector3)offset;
+
+			ApplyChanges();
+			this.ReplaceSelection(nodes);
+		}
+
 		#endregion
 
 		private void ShowNodeContext(ContextualMenuPopulateEvent evt) {
@@ -392,15 +518,29 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			}
 		}
 
+		protected override void InspectElement(VisualElement element) {
+			// TODO: Remove guard?
+			if (m_behaviour == null)
+				return;
+
+			if (element is not BTNode node)
+				return;
+
+			int nodeIndex = m_behaviour.m_allActions.IndexOf(node.Action);
+
+			Debug.Assert(nodeIndex != -1);
+
+			SerializedProperty nodeProperty = m_serializedBehaviour.FindProperty($"{nameof(m_behaviour.m_allActions)}.Array.data[{nodeIndex}]");
+			m_inspector.Inspect(node.Action.GetType(), nodeProperty);
+		}
+
 		#region Connection Callbacks
 
 		private void OnConnectionVoided(Connection connection, Action<Connection, IConnectionSocket> restore) {
 			SaveCreatePosition();
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-			IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract);
-
-			TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => {
+			TypeProvider.Instance.AskForType(mouseScreenPosition, s_actionTypes, type => {
 				int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
 
 				BTNode toNode = CreateNode(type);
@@ -614,6 +754,12 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 		#endregion
 
+		protected override void ApplyChanges() {
+			m_behaviour.ConnectBlackboardRefs();
+
+			base.ApplyChanges();
+		}
+
 		[CanBeNull]
 		private BTNode GetNodeOfAction(BehaviourAction action) {
 			foreach (BTNode node in m_nodes) {
@@ -671,22 +817,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 					Inner(childNode, acc);
 				}
 			}
-		}
-
-		protected override void InspectElement(VisualElement element) {
-			// TODO: Remove guard?
-			if (m_behaviour == null)
-				return;
-
-			if (element is not BTNode node)
-				return;
-
-			int nodeIndex = m_behaviour.m_allActions.IndexOf(node.Action);
-
-			Debug.Assert(nodeIndex != -1);
-
-			SerializedProperty nodeProperty = m_serializedBehaviour.FindProperty($"{nameof(m_behaviour.m_allActions)}.Array.data[{nodeIndex}]");
-			m_inspector.Inspect(node.Action.GetType(), nodeProperty);
 		}
 	}
 }
