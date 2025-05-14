@@ -1,3 +1,15 @@
+# 0.3.1 (2025-05-14)
+
+### Features
+- Now groups multiple instances of a missed type into one entry in the validation panel
+- Added so the validation panel now highlights if manually editing a missing type to an existing type
+- Added per owner cache of targets used by actions/conditions/operations
+
+### Fixes
+- Fixed missing type entries not remembering previous changes if hidden by the scroll view
+- Fixed missing type repair button not working when any list entry was hidden by the scroll view
+- Fix validation panel search not adding declared types in the class name
+
 # 0.3.0 (2025-05-12)
 
 ### Features

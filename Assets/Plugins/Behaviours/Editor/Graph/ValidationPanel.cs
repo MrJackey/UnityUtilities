@@ -13,12 +13,15 @@ using UnityEngine.UIElements;
 namespace Jackey.Behaviours.Editor.Graph {
 	public class ValidationPanel : VisualElement {
 		private BehaviourEditorWindow m_window;
-		private ListView m_missingTypesList;
+		private ListView m_repairListView;
 
 		private ObjectBehaviour m_behaviour;
-		private ManagedReferenceMissingType[] m_missingTypes;
+		private readonly List<RepairInfo> m_typeRepairs = new();
 
-		private readonly List<Action> m_resetMissingTypeActions = new();
+		private readonly List<EventCallback<ChangeEvent<string>>> m_updateRepairAssemblyActions = new();
+		private readonly List<EventCallback<ChangeEvent<string>>> m_updateRepairNamespaceActions = new();
+		private readonly List<EventCallback<ChangeEvent<string>>> m_updateRepairClassActions = new();
+		private readonly List<Action> m_resetTypeRepairActions = new();
 
 		public ValidationPanel(BehaviourEditorWindow window) {
 			this.StretchToParentSize();
@@ -28,7 +31,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 			Add(new Label("Validation Failed") { name = "Header" });
 
 			Add(new Label("Missing Types") { name = "ListHeader" });
-			Add(m_missingTypesList = new ListView() {
+			Add(m_repairListView = new ListView() {
+				itemsSource = m_typeRepairs,
 				makeItem = MakeMissingTypeListItem,
 				bindItem = BindMissingTypeListItem,
 				unbindItem = UnbindMissingTypeListItem,
@@ -45,9 +49,14 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public void Inspect(ObjectBehaviour behaviour) {
 			m_behaviour = behaviour;
 
-			m_missingTypes = SerializationUtility.GetManagedReferencesWithMissingTypes(behaviour);
-			m_missingTypesList.itemsSource = m_missingTypes;
-			m_missingTypesList.RefreshItems();
+			m_typeRepairs.Clear();
+			foreach (ManagedReferenceMissingType missingType in SerializationUtility.GetManagedReferencesWithMissingTypes(behaviour)) {
+				int index = m_typeRepairs.FindIndex(x => x.Assembly == missingType.assemblyName && x.Namespace == missingType.namespaceName && x.Class == missingType.className);
+				if (index != -1) continue;
+
+				m_typeRepairs.Add(new RepairInfo(missingType));
+			}
+			m_repairListView.RefreshItems();
 		}
 
 		private VisualElement MakeMissingTypeListItem() {
@@ -59,11 +68,18 @@ namespace Jackey.Behaviours.Editor.Graph {
 			typeControls.Add(statusElement);
 
 			Button searchButton = new Button(() => {
-				TypeProvider.Instance.AskForType(EditorGUIUtility.GUIToScreenPoint(Event.current.mousePosition), GetAllSearchTypes(), type => {
+				TypeProvider.Instance.AskForType(GUIUtility.GUIToScreenPoint(Event.current.mousePosition), GetAllSearchTypes(), type => {
 					UQueryState<TextField> textFields = rootVisualElement.Query<TextField>().Build();
-					textFields.AtIndex(0).SetValueWithoutNotify(type.Assembly.GetName().Name);
-					textFields.AtIndex(1).SetValueWithoutNotify(type.Namespace);
-					textFields.AtIndex(2).SetValueWithoutNotify(type.Name);
+					textFields.AtIndex(0).value = type.Assembly.GetName().Name;
+					textFields.AtIndex(1).value = type.Namespace;
+
+					string className = type.Name;
+					Type declaringType = type.DeclaringType;
+					while (declaringType != null) {
+						className = $"{declaringType.Name}/{className}";
+						declaringType = declaringType.DeclaringType;
+					}
+					textFields.AtIndex(2).value = className;
 
 					SetStatusClass(statusElement, "Valid");
 				});
@@ -71,9 +87,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			searchButton.Add(new Image() { image = EditorGUIUtility.IconContent("d_Search Icon").image });
 			typeControls.Add(searchButton);
 
-			Button resetButton = new Button(() => {
-				SetStatusClass(statusElement, "Missing");
-			}) { name = "Reset" };
+			Button resetButton = new Button() { name = "Reset" };
 			resetButton.Add(new Image() { image = EditorGUIUtility.IconContent("d_Refresh").image });
 			typeControls.Add(resetButton);
 
@@ -98,33 +112,69 @@ namespace Jackey.Behaviours.Editor.Graph {
 		}
 
 		private void BindMissingTypeListItem(VisualElement element, int index) {
-			ManagedReferenceMissingType missingType = m_missingTypes[index];
+			while (m_resetTypeRepairActions.Count <= index) {
+				m_resetTypeRepairActions.Add(() => ResetMissingTypeListItem(index));
+				m_updateRepairAssemblyActions.Add(evt => UpdateRepairAssembly(evt, index));
+				m_updateRepairNamespaceActions.Add(evt => UpdateRepairNamespace(evt, index));
+				m_updateRepairClassActions.Add(evt => UpdateRepairClass(evt, index));
+			}
 
+			RepairInfo repairInfo = m_typeRepairs[index];
 			UQueryState<TextField> textFields = element.Query<TextField>().Build();
-			textFields.AtIndex(0).SetValueWithoutNotify(missingType.assemblyName);
-			textFields.AtIndex(1).SetValueWithoutNotify(missingType.namespaceName);
-			textFields.AtIndex(2).SetValueWithoutNotify(missingType.className);
 
-			SetStatusClass(element.Q<VisualElement>("Status"), "Missing");
+			TextField assemblyField = textFields.AtIndex(0);
+			assemblyField.RegisterValueChangedCallback(m_updateRepairAssemblyActions[index]);
+			assemblyField.SetValueWithoutNotify(repairInfo.Assembly);
 
-			if (index >= m_resetMissingTypeActions.Count)
-				m_resetMissingTypeActions.Add(() => ResetMissingTypeListItem(index));
+			TextField namespaceField = textFields.AtIndex(1);
+			namespaceField.RegisterValueChangedCallback(m_updateRepairNamespaceActions[index]);
+			namespaceField.SetValueWithoutNotify(repairInfo.Namespace);
 
-			element.Q<Button>("Reset").clicked += m_resetMissingTypeActions[index];
+			TextField classField = textFields.AtIndex(2);
+			classField.RegisterValueChangedCallback(m_updateRepairClassActions[index]);
+			classField.SetValueWithoutNotify(repairInfo.Class);
+
+			SetStatusClass(element.Q<VisualElement>("Status"), repairInfo.HasValidType ? "Valid" : "Missing");
+
+			element.Q<Button>("Reset").clicked += m_resetTypeRepairActions[index];
 		}
 
 		private void UnbindMissingTypeListItem(VisualElement element, int index) {
-			element.Q<Button>("Reset").clicked -= m_resetMissingTypeActions[index];
+			UQueryState<TextField> textFields = element.Query<TextField>().Build();
+			textFields.AtIndex(0).UnregisterValueChangedCallback(m_updateRepairAssemblyActions[index]);
+			textFields.AtIndex(1).UnregisterValueChangedCallback(m_updateRepairNamespaceActions[index]);
+			textFields.AtIndex(2).UnregisterValueChangedCallback(m_updateRepairClassActions[index]);
+
+			element.Q<Button>("Reset").clicked -= m_resetTypeRepairActions[index];
+		}
+
+		private void UpdateRepairAssembly(ChangeEvent<string> evt, int index) {
+			RepairInfo repairInfo = m_typeRepairs[index];
+			repairInfo.Assembly = evt.newValue;
+			SetStatusClass(m_repairListView.GetRootElementForIndex(index).Q<VisualElement>("Status"), repairInfo.HasValidType ? "Valid" : "Unknown");
+		}
+
+		private void UpdateRepairNamespace(ChangeEvent<string> evt, int index) {
+			RepairInfo repairInfo = m_typeRepairs[index];
+			repairInfo.Namespace = evt.newValue;
+			SetStatusClass(m_repairListView.GetRootElementForIndex(index).Q<VisualElement>("Status"), repairInfo.HasValidType ? "Valid" : "Unknown");
+		}
+
+		private void UpdateRepairClass(ChangeEvent<string> evt, int index) {
+			RepairInfo repairInfo = m_typeRepairs[index];
+			repairInfo.Class = evt.newValue;
+			SetStatusClass(m_repairListView.GetRootElementForIndex(index).Q<VisualElement>("Status"), repairInfo.HasValidType ? "Valid" : "Unknown");
 		}
 
 		private void ResetMissingTypeListItem(int index) {
-			VisualElement element = m_missingTypesList.GetRootElementForIndex(index);
-			ManagedReferenceMissingType missingType = m_missingTypes[index];
+			VisualElement element = m_repairListView.GetRootElementForIndex(index);
+			RepairInfo repairInfo = m_typeRepairs[index];
 
 			UQueryState<TextField> textFields = element.Query<TextField>().Build();
-			textFields.AtIndex(0).SetValueWithoutNotify(missingType.assemblyName);
-			textFields.AtIndex(1).SetValueWithoutNotify(missingType.namespaceName);
-			textFields.AtIndex(2).SetValueWithoutNotify(missingType.className);
+			textFields.AtIndex(0).SetValueWithoutNotify(repairInfo.MissingType.assemblyName);
+			textFields.AtIndex(1).SetValueWithoutNotify(repairInfo.MissingType.namespaceName);
+			textFields.AtIndex(2).SetValueWithoutNotify(repairInfo.MissingType.className);
+			repairInfo.Reset();
 
 			SetStatusClass(element.Q<VisualElement>("Status"), "Missing");
 		}
@@ -154,16 +204,13 @@ namespace Jackey.Behaviours.Editor.Graph {
 		}
 
 		private void Repair() {
-			for (int i = 0; i < m_missingTypes.Length; i++) {
-				VisualElement fieldsRoot = m_missingTypesList.GetRootElementForIndex(i);
-				UQueryState<TextField> textFields = fieldsRoot.Query<TextField>().Build();
-
+			foreach (RepairInfo repairInfo in m_typeRepairs) {
 				SerializationUtilities.RepairMissingManagedTypes(
 					m_behaviour,
-					m_missingTypes[i],
-					textFields.AtIndex(0).value,
-					textFields.AtIndex(1).value,
-					textFields.AtIndex(2).value
+					repairInfo.MissingType,
+					repairInfo.Assembly,
+					repairInfo.Namespace,
+					repairInfo.Class
 				);
 			}
 
@@ -190,6 +237,29 @@ namespace Jackey.Behaviours.Editor.Graph {
 			}
 
 			return Enumerable.Empty<TypeProvider.SearchEntry>();
+		}
+
+		private class RepairInfo {
+			public readonly ManagedReferenceMissingType MissingType;
+			public string Assembly;
+			public string Namespace;
+			public string Class;
+
+			public bool HasValidType => Type.GetType($"{Namespace}.{Class}, {Assembly}") != null;
+
+			public RepairInfo(ManagedReferenceMissingType missingType) {
+				MissingType = missingType;
+
+				Assembly = missingType.assemblyName;
+				Namespace = missingType.namespaceName;
+				Class = missingType.className;
+			}
+
+			public void Reset() {
+				Assembly = MissingType.assemblyName;
+				Namespace = MissingType.namespaceName;
+				Class = MissingType.className;
+			}
 		}
 	}
 }

@@ -17,6 +17,8 @@ namespace Jackey.Behaviours {
 		[SerializeField] private UpdateOption m_updateMode;
 		[SerializeField] private RepeatOption m_repeatMode;
 
+		// Contained objects are either UnityEngine.Component or interface
+		private Dictionary<Type, object> m_targetCache = new();
 		private List<IBehaviourEventListener> m_eventListeners = new();
 
 		private bool m_isRunning;
@@ -158,16 +160,27 @@ namespace Jackey.Behaviours {
 			if (target.IsVariable)
 				return true;
 
-			Type targetType = typeof(T);
-			if (!targetType.IsInterface && !typeof(Component).IsAssignableFrom(targetType))
-				return true;
-
 			if (target.GetValue() != null)
 				return true;
+
+			Type targetType = typeof(T);
+			if (m_targetCache.TryGetValue(targetType, out object cacheValue)) {
+				if (cacheValue != null) {
+					T cacheResult = (T)cacheValue;
+					target.SetValue(cacheResult);
+					return true;
+				}
+
+				m_targetCache.Remove(targetType);
+			}
+			else if (!targetType.IsInterface && !typeof(Component).IsAssignableFrom(targetType)) {
+				return true;
+			}
 
 			if (!TryGetComponent(out T component))
 				return false;
 
+			m_targetCache.Add(targetType, component);
 			target.SetValue(component);
 			return true;
 		}
