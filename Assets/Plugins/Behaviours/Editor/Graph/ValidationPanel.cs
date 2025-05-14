@@ -72,7 +72,14 @@ namespace Jackey.Behaviours.Editor.Graph {
 					UQueryState<TextField> textFields = rootVisualElement.Query<TextField>().Build();
 					textFields.AtIndex(0).value = type.Assembly.GetName().Name;
 					textFields.AtIndex(1).value = type.Namespace;
-					textFields.AtIndex(2).value = type.Name;
+
+					string className = type.Name;
+					Type declaringType = type.DeclaringType;
+					while (declaringType != null) {
+						className = $"{declaringType.Name}/{className}";
+						declaringType = declaringType.DeclaringType;
+					}
+					textFields.AtIndex(2).value = className;
 
 					SetStatusClass(statusElement, "Valid");
 				});
