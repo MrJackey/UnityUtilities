@@ -7,32 +7,22 @@ using UnityEngine.UIElements;
 
 namespace Jackey.GlobalReferences.Editor.ObjectPicker {
 	public class GlobalObjectPicker : VisualElement {
-		TextField m_textField;
-		private Image m_clearSearchImage;
+		private static StyleSheet s_styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(AssetDatabase.GUIDToAssetPath("04bac9d34ae64c4ba26fd78ee16e4031"));
+
+		private SearchField m_searchField;
 
 		private ListView m_listView;
 		private List<GlobalObjectAsset> m_list;
 
 		public GlobalObjectPicker(ListView listView, List<GlobalObjectAsset> list) {
+			styleSheets.Add(s_styleSheet);
+
 			m_listView = listView;
 			m_list = list;
 
 			Add(new Image() { name = "SearchIcon", image = EditorGUIUtility.IconContent("d_Search Icon").image });
 
-			m_textField = new TextField();
-			m_textField.RegisterValueChangedCallback(OnSearchValueChanged);
-			Add(m_textField);
-
-			m_clearSearchImage = new Image() {
-				name = "ClearSearch",
-				image = EditorGUIUtility.IconContent("d_winbtn_win_close").image,
-				style = { display = DisplayStyle.None, },
-			};
-			m_clearSearchImage.AddManipulator(new Clickable(() => {
-				m_textField.value = string.Empty;
-				m_textField.Blur();
-			}));
-			m_textField.Add(m_clearSearchImage);
+			Add(m_searchField = new SearchField(OnSearchValueChanged));
 
 			Button newButton = new Button(CreateNewAsset);
 			newButton.Add(new Image() { image = EditorGUIUtility.IconContent("d_Toolbar Plus").image });
@@ -55,7 +45,6 @@ namespace Jackey.GlobalReferences.Editor.ObjectPicker {
 			m_listView.selectedIndex = -1;
 
 			if (string.IsNullOrEmpty(input)) {
-				m_clearSearchImage.style.display = DisplayStyle.None;
 
 				m_list.Clear();
 				foreach (GlobalObjectAsset asset in GlobalObjectDatabase.instance.Assets)
@@ -65,7 +54,6 @@ namespace Jackey.GlobalReferences.Editor.ObjectPicker {
 				return;
 			}
 
-			m_clearSearchImage.style.display = DisplayStyle.Flex;
 
 			if (SerializedGUID.TryParse(input, out SerializedGUID guid)) {
 				m_list.Clear();
@@ -86,16 +74,16 @@ namespace Jackey.GlobalReferences.Editor.ObjectPicker {
 			GlobalObjectAsset asset = GlobalObjectDatabase.CreateAsset();
 
 			m_list.Add(asset);
-			m_textField.value = string.Empty;
 			m_listView.SetSelection(m_list.Count - 1);
+			m_searchField.TextField.value = string.Empty;
 		}
 
 		private void OnPropertyChanged(SerializedProperty _) {
-			SearchWithInput(m_textField.value);
+			SearchWithInput(m_searchField.TextField.value);
 		}
 
 		private void OnAssetsLoaded() {
-			SearchWithInput(m_textField.value);
+			SearchWithInput(m_searchField.TextField.value);
 		}
 	}
 }

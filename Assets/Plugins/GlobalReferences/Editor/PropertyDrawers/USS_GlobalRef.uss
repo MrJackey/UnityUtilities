@@ -7,10 +7,8 @@ Foldout #PropertyDisplayName {
 }
 
 Foldout #AssetName {
-    flex-grow: 1;
-    flex-shrink: 1;
     margin-right: 3px;
-    max-width: 54.75%;
+    width: 54.75%;
     margin-left: auto;
 }
 

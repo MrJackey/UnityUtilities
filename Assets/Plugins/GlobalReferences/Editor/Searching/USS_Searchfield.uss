@@ -1,0 +1,29 @@
+﻿SearchField {
+    flex-direction: row;
+    height: 18px;
+    margin: 3px;
+}
+
+SearchField #SearchIcon {
+    position: absolute;
+    left: 4px;
+    top: 2px;
+    width: 15px;
+    height: 15px;
+}
+
+SearchField TextField {
+    flex-grow: 1;
+    margin-right: 3px;
+}
+
+SearchField TextInput {
+    cursor: arrow;
+    padding-left: 17px;
+}
+
+SearchField #ClearSearch {
+    position: absolute;
+    right: 3px;
+    width: 14px;
+}

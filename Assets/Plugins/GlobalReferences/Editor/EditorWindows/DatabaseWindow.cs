@@ -8,8 +8,7 @@ using UnityEngine.UIElements;
 
 namespace Jackey.GlobalReferences.Editor.EditorWindows {
 	public class DatabaseWindow : EditorWindow {
-		[SerializeField] private StyleSheet m_searchStyleSheet;
-		[SerializeField] private StyleSheet m_windowStyleSheet;
+		[SerializeField] private StyleSheet m_styleSheet;
 
 		private List<GlobalObjectAsset> m_assetList;
 		private ListView m_listView;
@@ -27,8 +26,7 @@ namespace Jackey.GlobalReferences.Editor.EditorWindows {
 		private void CreateGUI() {
 			titleContent = new GUIContent("Global Object Database");
 
-			rootVisualElement.styleSheets.Add(m_searchStyleSheet);
-			rootVisualElement.styleSheets.Add(m_windowStyleSheet);
+			rootVisualElement.styleSheets.Add(m_styleSheet);
 
 			m_assetList = new List<GlobalObjectAsset>();
 			m_listView = new ListView() {
