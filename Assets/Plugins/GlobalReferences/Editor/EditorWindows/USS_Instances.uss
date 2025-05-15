@@ -32,6 +32,10 @@
     max-width: 275px;
 }
 
+#GUIDField.Missing TextInput {
+    background-color: rgb(155, 0, 0);
+}
+
 #NameField {
     margin-left: 5px;
     margin-right: 5px;
@@ -41,6 +45,10 @@
     border-right-width: 1px;
     border-left-color: rgb(155, 155, 155);
     border-right-color: rgb(155, 155, 155);
+}
+
+#NameField.Missing {
+    color: rgb(225, 0, 0);
 }
 
 #ListItem ObjectField {

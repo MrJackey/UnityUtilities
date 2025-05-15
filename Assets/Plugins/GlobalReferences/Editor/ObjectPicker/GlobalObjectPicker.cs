@@ -12,15 +12,13 @@ namespace Jackey.GlobalReferences.Editor.ObjectPicker {
 		private SearchField m_searchField;
 
 		private ListView m_listView;
-		private List<GlobalObjectAsset> m_list;
+		private List<GlobalObjectAsset> m_output;
 
-		public GlobalObjectPicker(ListView listView, List<GlobalObjectAsset> list) {
+		public GlobalObjectPicker(ListView listView, List<GlobalObjectAsset> output) {
 			styleSheets.Add(s_styleSheet);
 
 			m_listView = listView;
-			m_list = list;
-
-			Add(new Image() { name = "SearchIcon", image = EditorGUIUtility.IconContent("d_Search Icon").image });
+			m_output = output;
 
 			Add(m_searchField = new SearchField(OnSearchValueChanged));
 
@@ -28,9 +26,9 @@ namespace Jackey.GlobalReferences.Editor.ObjectPicker {
 			newButton.Add(new Image() { image = EditorGUIUtility.IconContent("d_Toolbar Plus").image });
 			Add(newButton);
 
-			m_list.Clear();
+			m_output.Clear();
 			foreach (GlobalObjectAsset asset in GlobalObjectDatabase.instance.Assets)
-				m_list.Add(asset);
+				m_output.Add(asset);
 
 			this.TrackPropertyValue(GlobalObjectDatabase.AssetsProperty, OnPropertyChanged);
 			RegisterCallback<AttachToPanelEvent, GlobalObjectPicker>((evt, picker) => GlobalObjectDatabase.AssetsLoaded += picker.OnAssetsLoaded, this);
@@ -45,27 +43,25 @@ namespace Jackey.GlobalReferences.Editor.ObjectPicker {
 			m_listView.selectedIndex = -1;
 
 			if (string.IsNullOrEmpty(input)) {
-
-				m_list.Clear();
+				m_output.Clear();
 				foreach (GlobalObjectAsset asset in GlobalObjectDatabase.instance.Assets)
-					m_list.Add(asset);
+					m_output.Add(asset);
 
 				m_listView.RefreshItems();
 				return;
 			}
-
 
 			if (SerializedGUID.TryParse(input, out SerializedGUID guid)) {
-				m_list.Clear();
+				m_output.Clear();
 
 				if (GlobalObjectDatabase.TryGetAsset(guid, out GlobalObjectAsset guidAsset))
-					m_list.Add(guidAsset);
+					m_output.Add(guidAsset);
 
 				m_listView.RefreshItems();
 				return;
 			}
 
-			Search.Execute(GlobalObjectDatabase.instance.Assets, m_list, input);
+			Search.Execute(GlobalObjectDatabase.instance.Assets, m_output, input);
 
 			m_listView.RefreshItems();
 		}
@@ -73,9 +69,9 @@ namespace Jackey.GlobalReferences.Editor.ObjectPicker {
 		private void CreateNewAsset() {
 			GlobalObjectAsset asset = GlobalObjectDatabase.CreateAsset();
 
-			m_list.Add(asset);
-			m_listView.SetSelection(m_list.Count - 1);
+			m_output.Add(asset);
 			m_searchField.TextField.value = string.Empty;
+			m_listView.SetSelection(m_output.Count - 1);
 		}
 
 		private void OnPropertyChanged(SerializedProperty _) {
