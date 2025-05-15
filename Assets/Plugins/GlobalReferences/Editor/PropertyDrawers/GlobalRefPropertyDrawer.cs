@@ -85,7 +85,8 @@ namespace Jackey.GlobalReferences.Editor.PropertyDrawers {
 			};
 			m_assetFieldsRoot.TrackPropertyValue(GlobalObjectDatabase.AssetsProperty, OnPropertyChanged);
 			m_guidField = new TextField("GUID") { name = "GUIDField" };
-			m_guidField.SetEnabled(false);
+			m_guidField.Query<TextElement>().AtIndex(1).SetEnabled(false);
+			m_guidField.AddManipulator(new ContextualMenuManipulator(evt => evt.menu.AppendAction("Copy", _ => EditorGUIUtility.systemCopyBuffer = m_guidField.value )));
 			m_guidField.TrackPropertyValue(m_guidProperty, OnPropertyChanged);
 			m_assetFieldsRoot.Add(m_guidField);
 

@@ -57,7 +57,8 @@ namespace Jackey.GlobalReferences.Editor.Editors {
 			m_assetFieldsRoot = new VisualElement() { name = "AssetFields", style = { display = hasAssignedAsset ? DisplayStyle.Flex : DisplayStyle.None }};
 
 			m_assetFieldsRoot.Add(m_guidField = new TextField("GUID"));
-			m_guidField.SetEnabled(false);
+			m_guidField.Query<TextElement>().AtIndex(1).SetEnabled(false);
+			m_guidField.AddManipulator(new ContextualMenuManipulator(evt => evt.menu.AppendAction("Copy", _ => EditorGUIUtility.systemCopyBuffer = m_guidField.value )));
 
 			m_assetFieldsRoot.Add(m_nameField = new TextField("Name") { isDelayed = true });
 			m_nameField.RegisterValueChangedCallback(OnNameChanged);

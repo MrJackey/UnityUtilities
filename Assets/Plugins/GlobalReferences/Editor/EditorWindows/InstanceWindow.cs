@@ -65,7 +65,8 @@ namespace Jackey.GlobalReferences.Editor.EditorWindows {
 			VisualElement listItem = new VisualElement() { name = "ListItem" };
 
 			TextField guidField = new TextField() { name = "GUIDField" };
-			guidField.SetEnabled(false);
+			guidField.Q<TextElement>().SetEnabled(false);
+			guidField.AddManipulator(new ContextualMenuManipulator(evt => evt.menu.AppendAction("Copy", _ => EditorGUIUtility.systemCopyBuffer = guidField.value )));
 			listItem.Add(guidField);
 
 			listItem.Add(new Label() { name = "NameField" });
