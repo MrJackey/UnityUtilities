@@ -246,21 +246,19 @@ namespace Jackey.GlobalReferences.Editor.PropertyDrawers {
 		}
 
 		private void RefreshInstanceCheck() {
-			if (m_asset != null && GlobalReferenceManager.TryResolve(m_asset.GUID, out _))
-				m_foldOut.Q<TextField>().AddToClassList("Present");
-			else
-				m_foldOut.Q<TextField>().RemoveFromClassList("Present");
+			m_foldOut.Q<TextField>().EnableInClassList("Present", m_asset != null && GlobalReferenceManager.TryResolve(m_asset.GUID, out _));
 		}
 
 		private void OnAssetsLoaded() => OnPropertyChanged(null);
 		private void OnPropertyChanged(SerializedProperty _) {
 			SerializedGUID guid = SerializedGUID.Editor_GetFromProperty(m_guidProperty);
-			if (GlobalObjectDatabase.TryGetAsset(guid, out GlobalObjectAsset asset)) {
-				SetAssetFields(asset);
+			if (GlobalObjectDatabase.TryGetAsset(guid, out m_asset)) {
+				SetAssetFields(m_asset);
 			}
 			else {
 				ToggleFields(true);
 				m_foldOut.Q<TextField>().SetValueWithoutNotify(string.Empty);
+				RefreshInstanceCheck();
 			}
 		}
 	}
