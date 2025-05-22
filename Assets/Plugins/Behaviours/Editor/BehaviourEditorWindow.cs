@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Jackey.Behaviours.BT;
 using Jackey.Behaviours.Editor.Graph;
@@ -31,6 +32,7 @@ namespace Jackey.Behaviours.Editor {
 		private BTGraph m_btGraph;
 		private FSMGraph m_fsmGraph;
 
+		[NonSerialized]
 		private bool m_hasCreatedGUI;
 		private bool m_isLocked;
 		private bool m_isKeyUsed;
