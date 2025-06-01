@@ -6,6 +6,7 @@ namespace Jackey.Utilities.Unity.Coroutines {
 	/// Allows starting coroutines without requiring a MonoBehaviour. It also provides a handle
 	/// to control coroutines started using <see cref="CoroutineManager.StartNew(IEnumerator)"/>
 	/// </summary>
+	[AddComponentMenu("")]
 	public class CoroutineManager : LazySingletonBehaviour<CoroutineManager> {
 		protected override void Awake() {
 			base.Awake();
