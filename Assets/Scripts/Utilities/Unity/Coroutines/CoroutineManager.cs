@@ -29,7 +29,7 @@ namespace Jackey.Utilities.Unity.Coroutines {
 		/// <returns>Returns a <see cref="CoroutineHandle"/> that can be used to control the started coroutine</returns>
 		public static CoroutineHandle StartNew(IEnumerator coroutine, MonoBehaviour owner) {
 			CoroutineHandle handle = new CoroutineHandle(coroutine);
-			owner.StartCoroutine(CoTickRoutine(handle));
+			owner.StartCoroutine(handle);
 
 			return handle;
 		}
@@ -52,15 +52,7 @@ namespace Jackey.Utilities.Unity.Coroutines {
 		/// <returns>Returns a <see cref="CoroutineHandle"/> that can be used to control the started coroutine</returns>
 		public static void StartNew(CoroutineHandle handle, IEnumerator coroutine, MonoBehaviour owner) {
 			handle.Reset(coroutine);
-			owner.StartCoroutine(CoTickRoutine(handle));
-		}
-
-		private static IEnumerator CoTickRoutine(CoroutineHandle handle) {
-			IEnumerator wrapper = handle;
-
-			while (wrapper.MoveNext()) {
-				yield return wrapper.Current;
-			}
+			owner.StartCoroutine(handle);
 		}
 	}
 }
