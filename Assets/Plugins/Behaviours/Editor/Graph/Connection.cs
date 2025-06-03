@@ -7,7 +7,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 	public class Connection : ImmediateModeElement {
 		private const float TANGENT_WEIGHT = 30f;
 		private const float WIDTH = 10f;
-		private const float CLICK_DISTANCE = 15f;
+		private const float CLICK_DISTANCE = 10f;
 
 		public IConnectionSocket Start { get; set; }
 		public IConnectionSocket End { get; set; }
