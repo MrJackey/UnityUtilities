@@ -211,16 +211,11 @@ namespace Jackey.Behaviours.Editor.Graph {
 			if (evt.button != 0) return;
 			if (!m_isEditable) return;
 
-			foreach (Connection connection in m_connections) {
-				if (!connection.CheckClick(evt))
-					continue;
+			evt.StopImmediatePropagation();
 
-				evt.StopImmediatePropagation();
-
-				IConnectionSocket closestSocket = connection.GetClosestSocket(evt);
-				m_connectionManipulator.MoveConnection(connection, closestSocket);
-				break;
-			}
+			Connection connection = (Connection)evt.currentTarget;
+			IConnectionSocket closestSocket = connection.GetClosestSocket(evt);
+			m_connectionManipulator.MoveConnection(connection, closestSocket);
 		}
 
 		protected void MoveConnection(Connection connection, IConnectionSocket from, IConnectionSocket to) {

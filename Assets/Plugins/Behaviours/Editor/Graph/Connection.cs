@@ -73,21 +73,6 @@ namespace Jackey.Behaviours.Editor.Graph {
 			Handles.color = Color.white;
 		}
 
-		public bool CheckClick(MouseDownEvent evt) {
-			(Vector2 start, Vector2 end) = GetPoints();
-			(Vector2 startTangent, Vector2 endTangent) = GetTangents(start, end);
-
-			float distance = HandleUtility.DistancePointBezier(
-				((VisualElement)evt.target).ChangeCoordinatesTo(this, evt.localMousePosition),
-				start,
-				end,
-				start + startTangent,
-				end + endTangent
-			);
-
-			return distance <= CLICK_DISTANCE;
-		}
-
 		public IConnectionSocket GetClosestSocket(MouseDownEvent evt) {
 			(Vector2 start, Vector2 end) = GetPoints();
 			Vector2 mousePosition = ((VisualElement)evt.target).ChangeCoordinatesTo(this, evt.localMousePosition);
@@ -135,6 +120,21 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 			float weight = Mathf.Min(TANGENT_WEIGHT, Vector2.Distance(start, end) / 2f);
 			return (startTangent * weight, endTangent * weight);
+		}
+
+		public override bool ContainsPoint(Vector2 localPoint) {
+			(Vector2 start, Vector2 end) = GetPoints();
+			(Vector2 startTangent, Vector2 endTangent) = GetTangents(start, end);
+
+			float distance = HandleUtility.DistancePointBezier(
+				localPoint,
+				start,
+				end,
+				start + startTangent,
+				end + endTangent
+			);
+
+			return distance <= CLICK_DISTANCE;
 		}
 	}
 }
