@@ -1,3 +1,15 @@
+# 0.4.0 (2025-06-03)
+
+### Features
+- Created `DoUntil` composite which executes its first child until another child either returns running or success
+- Created `WaitForEvent` decorator. Works the same as `WaitUntil` with a `CheckEvent` condition but is more performant if only checking for event
+- Added new `ResetOnTickFinish` policy to `Cooldown` decorators
+- Slightly reduced click area on connections
+
+### Fixes
+- Fixed error when exiting playmode with the editor window as a hidden tab
+- Fixed editor window connections intercepting events in a larger area than intended
+
 # 0.3.1 (2025-05-14)
 
 ### Features

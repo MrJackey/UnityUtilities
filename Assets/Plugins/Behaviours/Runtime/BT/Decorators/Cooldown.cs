@@ -7,8 +7,11 @@ namespace Jackey.Behaviours.BT.Decorators {
 	[GraphIcon("Cooldown")]
 	[SearchPath("Decorators/Cooldown")]
 	public class Cooldown : Decorator {
-		public BlackboardRef<float> Duration;
-		public bool UnscaledTime;
+		[SerializeField] private BlackboardRef<float> m_duration;
+		[SerializeField] private bool m_unscaledTime;
+
+		[Space]
+		[SerializeField] private Policy m_policy;
 
 		private float m_nextTime;
 
@@ -16,34 +19,38 @@ namespace Jackey.Behaviours.BT.Decorators {
 		public override string Editor_Info {
 			get {
 				if (m_runtimeBehaviour == null) // EditMode
-					return $"Cooldown {Duration.Editor_Info}s";
+					return $"Cooldown {m_duration.Editor_Info}s";
 
-				float time = UnscaledTime ? Time.unscaledTime : Time.time;
+				float time = m_unscaledTime ? Time.unscaledTime : Time.time;
 				return $"{InfoUtilities.AlignCenter($"({Mathf.Max(m_nextTime - time, 0f):00.00})")}\n" +
-				       $"Cooldown {Duration.Editor_Info}s";
+				       $"Cooldown {m_duration.Editor_Info}s";
 			}
 		}
 #endif
 
 		protected override ExecutionStatus OnEnter() {
-			float time = UnscaledTime ? Time.unscaledTime : Time.time;
+			float time = m_unscaledTime ? Time.unscaledTime : Time.time;
 			if (time < m_nextTime)
 				return ExecutionStatus.Failure;
 
 			ExecutionStatus childStatus = m_child.EnterSequence();
 
-			// Reset cooldown on instant finish
-			if (m_child.IsFinished)
-				m_nextTime = time + Duration.GetValue();
+			if (m_policy == Policy.ResetOnFinish && m_child.IsFinished)
+				m_nextTime = time + m_duration.GetValue();
 
 			return childStatus;
 		}
 
 		protected override ExecutionStatus OnChildFinished() {
-			float time = UnscaledTime ? Time.unscaledTime : Time.time;
-			m_nextTime = time + Duration.GetValue();
+			float time = m_unscaledTime ? Time.unscaledTime : Time.time;
+			m_nextTime = time + m_duration.GetValue();
 
 			return (ExecutionStatus)m_child.Status;
+		}
+
+		private enum Policy {
+			ResetOnFinish,
+			ResetOnTickFinish,
 		}
 	}
 }
