@@ -1,0 +1,104 @@
+﻿<#@ template language="C#" #>
+<#@ import namespace="System.Linq" #>
+using System.ComponentModel;
+using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
+using UnityEngine;
+
+// ReSharper disable InconsistentNaming
+
+namespace Jackey.Utilities.Extensions {
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static class VectorSwizzles {
+<#
+    S2V("int", "2Int");
+    S2V("int", "3Int");
+
+    S2V("float", "2");
+    S2V("float", "3");
+
+    V2V("2", "2");
+    V2V("2", "3");
+
+    V2V("3", "2");
+    V2V("3", "3");
+#>
+<#
+    const string CHARS = "_xyzw";
+
+    void S2V(string fromStr, string toStr) {
+        string fromArg = fromStr[0].ToString();
+        int to = int.Parse(toStr[0].ToString());
+
+        WriteLine($"#region {fromStr} -> Vector{toStr}");
+
+        bool[] values = new bool[to];
+
+        while (true) {
+            for (int i = 0; i < to; i++) {
+                values[i] = !values[i];
+
+                if (values[i])
+                    break;
+            }
+
+            if (values.All(i => !i))
+                break;
+
+            string name = string.Empty;
+            string impl = string.Empty;
+            for (int i = 0; i < to; i++) {
+                name += values[i] ? CHARS[i + 1].ToString().ToUpperInvariant() : '_';
+
+                if (i == 0)
+                    impl += values[i] ? fromArg : "0";
+                else
+                    impl += values[i] ? $", {fromArg}" : ", 0";
+            }
+
+            WriteLine($"""
+
+                               [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                               [Pure]
+                               public static Vector{toStr} {name}(this {fromStr} {fromArg}) => new({impl});
+                       """);
+        }
+
+        WriteLine("\n#endregion");
+    }
+
+    void V2V(string fromStr, string toStr) {
+        WriteLine($"#region Vector{fromStr} -> Vector{toStr}");
+
+        int from = int.Parse(fromStr[0].ToString());
+        int to = int.Parse(toStr[0].ToString());
+
+        int[] indices = new int[to];
+
+        while (true) {
+            for (int i = 0; i < to; i++) {
+                indices[i] = (indices[i] + 1) % (from + 1);
+
+                if (indices[i] != 0)
+                    break;
+            }
+
+            if (indices.All(i => i == 0))
+                break;
+
+            string name = new string(indices.Select(i => CHARS[i]).ToArray()).ToUpperInvariant();
+            string impl = string.Join(", ", indices.Select(i => i != 0 ? $"v.{CHARS[i]}" : "0f").ToArray());
+
+            WriteLine($"""
+
+                              [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                              [Pure]
+                              public static Vector{toStr} {name}(this Vector{fromStr} v) => new({impl});
+                      """);
+        }
+
+        WriteLine("\n#endregion");
+    }
+#>
+    }
+}
