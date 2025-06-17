@@ -172,11 +172,14 @@ BTNode > ConnectionSocket {
 	height: 20px;
 }
 
-Inspector {
+.FloatingPanel {
 	background-color: rgb(45, 45, 45);
 	border-color: rgb(30, 30, 30);
 	border-width: 4px;
 	border-radius: 10px;
+}
+
+Inspector {
 	width: 350px;
 	min-height: 50px;
 }

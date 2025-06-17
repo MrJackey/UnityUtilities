@@ -21,6 +21,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public GraphMinimap(BehaviourGraph graph) {
 			style.position = Position.Absolute;
 
+			AddToClassList("FloatingPanel");
+
 			m_graph = graph;
 			RegisterCallback<MouseDownEvent>(OnMouseDown);
 			RegisterCallback<MouseMoveEvent>(OnMouseMove);

@@ -15,6 +15,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 			style.position = Position.Absolute;
 			style.maxHeight = Length.Percent(100f);
 
+			AddToClassList("FloatingPanel");
+
 			Add(new Label("Blackboard") { name = "Header" });
 			Add(m_primaryLabel = new Label("Owner") { style = { display = DisplayStyle.None }});
 			m_primaryLabel.AddToClassList("BlackboardHeader");
