@@ -9,8 +9,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 	public class BehaviourGraph : VisualElement, ISelectionManager {
 		protected SerializedObject m_serializedBehaviour;
 
-		protected Inspector m_inspector = new();
-		protected BlackboardInspector m_blackboardInspector = new();
+		protected Inspector m_inspector;
+		protected BlackboardInspector m_blackboardInspector;
 		protected ConnectionManipulator m_connectionManipulator;
 		protected GraphGroupCreator m_groupCreator;
 
@@ -33,6 +33,10 @@ namespace Jackey.Behaviours.Editor.Graph {
 		VisualElement ISelectionManager.Element => this;
 		public List<ISelectableElement> SelectedElements { get; } = new();
 
+		public List<Node> Nodes => m_nodes;
+		public List<Connection> Connections => m_connections;
+		public List<GraphGroup> Groups => m_groups;
+
 		public bool IsEditable => m_isEditable;
 
 		public BehaviourGraph() {
@@ -53,10 +57,14 @@ namespace Jackey.Behaviours.Editor.Graph {
 				pickingMode = PickingMode.Ignore,
 			});
 
-			hierarchy.Add(m_inspector);
+			hierarchy.Add(m_inspector = new Inspector());
 			m_inspector.RegisterCallback<WheelEvent>(evt => evt.StopPropagation());
-			hierarchy.Add(m_blackboardInspector);
+			hierarchy.Add(m_blackboardInspector = new BlackboardInspector());
 			m_blackboardInspector.RegisterCallback<WheelEvent>(evt => evt.StopPropagation());
+
+			GraphMinimap minimap = new GraphMinimap(this);
+			hierarchy.Add(minimap);
+			minimap.RegisterCallback<WheelEvent>(evt => evt.StopPropagation());
 
 			this.AddManipulator(new ContentDragger());
 			this.AddManipulator(new ContentZoomer());

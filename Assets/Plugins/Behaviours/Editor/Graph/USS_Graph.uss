@@ -284,6 +284,43 @@ PopupTextElement {
 	height: 15px;
 }
 
+GraphMinimap {
+	right: 0;
+	bottom: 0;
+	transition-property: width, height;
+	transition-duration: 0.3s;
+}
+
+GraphMinimap.Square {
+	width: 150px;
+	height: 150px;
+}
+
+GraphMinimap.Square:hover, GraphMinimap:active {
+	width: 250px;
+	height: 250px;
+}
+
+GraphMinimap.Horizontal {
+	width: 177px;
+	height: 100px;
+}
+
+GraphMinimap.Horizontal:hover, GraphMinimap:active {
+	width: 355px;
+	height: 200px;
+}
+
+GraphMinimap.Vertical {
+	width: 100px;
+	height: 177px;
+}
+
+GraphMinimap.Vertical:hover, GraphMinimap:active {
+	width: 200px;
+	height: 355px;
+}
+
 .unity-list-view__reorderable-item__container {
 	padding-left: 3px;
 }
