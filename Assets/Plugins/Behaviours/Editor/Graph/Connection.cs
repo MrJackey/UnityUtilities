@@ -86,7 +86,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		private (Vector2 start, Vector2 end) GetPoints() {
 			Debug.Assert(Start != null || End != null);
 
-			Vector2 mousePosition = Event.current.mousePosition;
+			Vector2 mousePosition = Event.current?.mousePosition ?? Vector2.zero;
 
 			Vector2 start = mousePosition;
 			if (Start != null) {
@@ -104,7 +104,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		}
 
 		private (Vector2 startTangent, Vector2 endTangent) GetTangents(Vector2 start, Vector2 end) {
-			Vector2 mousePosition = Event.current.mousePosition;
+			Vector2 mousePosition = Event.current?.mousePosition ?? Vector2.zero;
 
 			Vector2 startTangent;
 			if (Start != null)
