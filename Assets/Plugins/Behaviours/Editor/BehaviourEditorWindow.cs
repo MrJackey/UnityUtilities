@@ -5,6 +5,7 @@ using Jackey.Behaviours.BT;
 using Jackey.Behaviours.Editor.Graph;
 using Jackey.Behaviours.Editor.Graph.BT;
 using Jackey.Behaviours.Editor.Graph.FSM;
+using Jackey.Behaviours.Editor.Utilities;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -433,24 +434,24 @@ namespace Jackey.Behaviours.Editor {
 		private void FrameSelection() {
 			Debug.Assert(m_activeGraph?.SelectedElements.Count > 0);
 
-			Rect frame = m_activeGraph.SelectedElements[0].Element.worldBound;
+			Rect? frame = null;
 
-			for (int i = 1; i < m_activeGraph.SelectedElements.Count; i++) {
-				ISelectableElement selectedElement = m_activeGraph.SelectedElements[i];
-				Rect selectedBound = selectedElement.Element.worldBound;
+			foreach (ISelectableElement selected in m_activeGraph.SelectedElements) {
+				VisualElement selectedElement = selected.Element;
+				Rect selectedBound = selectedElement.hierarchy.parent.ChangeCoordinatesTo(m_activeGraph, selectedElement.localBound);
+				frame ??= selectedBound;
 
-				frame.xMin = Mathf.Min(frame.xMin, selectedBound.xMin);
-				frame.xMax = Mathf.Max(frame.xMax, selectedBound.xMax);
-				frame.yMin = Mathf.Min(frame.yMin, selectedBound.yMin);
-				frame.yMax = Mathf.Max(frame.yMax, selectedBound.yMax);
+				frame = frame.Value.Encapsulate(selectedBound);
 			}
 
+			Debug.Assert(frame != null);
+
 			Vector2 graphSize = m_activeGraph.localBound.size;
-			Vector2 centerOffset = graphSize / 2f - frame.center;
+			Vector2 centerOffset = graphSize / 2f - frame.Value.center;
 
 			m_activeGraph.contentContainer.transform.position += (Vector3)centerOffset;
 
-			// TODO: Add zoom
+			// TODO: Add zoom?
 		}
 
 		private void FrameContent() {
@@ -465,15 +466,10 @@ namespace Jackey.Behaviours.Editor {
 			Rect? frame = null;
 
 			foreach (VisualElement child in m_activeGraph.Children()) {
-				Rect childBound = child.worldBound;
+				Rect childBound = child.hierarchy.parent.ChangeCoordinatesTo(m_activeGraph, child.localBound);
 				frame ??= childBound;
 
-				Rect rect = frame.Value;
-				rect.xMin = Mathf.Min(rect.xMin, childBound.xMin);
-				rect.xMax = Mathf.Max(rect.xMax, childBound.xMax);
-				rect.yMin = Mathf.Min(rect.yMin, childBound.yMin);
-				rect.yMax = Mathf.Max(rect.yMax, childBound.yMax);
-				frame = rect;
+				frame = frame.Value.Encapsulate(childBound);
 			}
 
 			Debug.Assert(frame.HasValue);
@@ -483,7 +479,7 @@ namespace Jackey.Behaviours.Editor {
 
 			m_activeGraph.contentContainer.transform.position += (Vector3)centerOffset;
 
-			// TODO: Add zoom
+			// TODO: Add zoom?
 		}
 
 		#endregion
