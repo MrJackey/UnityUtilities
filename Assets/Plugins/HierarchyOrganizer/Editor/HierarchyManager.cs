@@ -53,7 +53,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 					case ObjectChangeKind.DestroyGameObjectHierarchy:
 						stream.GetDestroyGameObjectHierarchyEvent(i, out DestroyGameObjectHierarchyEventArgs destroyData);
 
-						if (IsFolder(destroyData.instanceId)) {
+						if (IsInitializedFolder(destroyData.instanceId)) {
 							s_folders.RemoveWhere(instanceId => EditorUtility.InstanceIDToObject(instanceId) == null);
 						}
 
@@ -213,12 +213,53 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 		[MenuItem("GameObject/Convert to Folder(s)", priority = 0)]
 		private static void MenuConvertToFolder() {
-			foreach (GameObject selectedGo in Selection.gameObjects) {
+			Undo.SetCurrentGroupName("Convert to Folder");
+			int undoIndex = Undo.GetCurrentGroup();
+
+			IOrderedEnumerable<GameObject> selectionDepthLast = Selection.gameObjects.OrderBy(go => {
+				int depth = 0;
+
+				Transform ancestor = go.transform.parent;
+				while (ancestor) {
+					depth++;
+					ancestor = ancestor.parent;
+				}
+
+				return depth;
+			});
+
+			foreach (GameObject selectedGo in selectionDepthLast) {
 				if (!CanGameObjectBeFolder(selectedGo))
 					continue;
 
+				Transform selectedTransform = selectedGo.transform;
+				int childCount = selectedTransform.childCount;
+				Matrix4x4[] childTransforms = new Matrix4x4[childCount];
+
+				// Record child transforms
+				for (int i = 0; i < childCount; i++) {
+					Transform child = selectedTransform.GetChild(i);
+					childTransforms[i] = Matrix4x4.TRS(child.position, child.rotation, child.lossyScale);
+				}
+
+				// Reset the folder's transform
 				Undo.AddComponent<HierarchyFolder>(selectedGo);
+				Undo.RecordObject(selectedTransform, "");
+				selectedTransform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+				selectedTransform.localScale = Vector3.one;
+
+				// Apply the child transforms to match before conversion
+				for (int i = 0; i < childCount; i++) {
+					Transform child = selectedTransform.GetChild(i);
+					Matrix4x4 worldTransform = childTransforms[i];
+
+					Undo.RecordObject(child, "");
+					child.SetPositionAndRotation(worldTransform.GetPosition(), worldTransform.rotation);
+					child.localScale = worldTransform.lossyScale;
+				}
 			}
+
+			Undo.CollapseUndoOperations(undoIndex);
 		}
 
 		[MenuItem("GameObject/Remove as Folder(s)", true)]
