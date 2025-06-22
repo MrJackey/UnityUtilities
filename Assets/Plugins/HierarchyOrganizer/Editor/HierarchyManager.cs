@@ -314,7 +314,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 		}
 
 		private static bool CanFolderBeRemoved(GameObject go) {
-			if (!IsFolder(go.GetInstanceID()))
+			if (!IsInitializedFolder(go.GetInstanceID()))
 				return false;
 
 			Transform transform = go.transform;
@@ -322,11 +322,11 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 			for (int i = 0; i < childCount; i++) {
 				Transform child = transform.GetChild(i);
-
-				if (!child.TryGetComponent(out HierarchyFolder _))
-					return true;
-
 				GameObject childGo = child.gameObject;
+
+				if (!IsFolder(childGo))
+					continue;
+
 				if (!Selection.gameObjects.Contains(childGo) || !CanFolderBeRemoved(childGo))
 					return false;
 			}
@@ -365,7 +365,11 @@ namespace Jackey.HierarchyOrganizer.Editor {
 			s_folders.Remove(folderID);
 		}
 
-		public static bool IsFolder(int instanceID) {
+		public static bool IsFolder(GameObject go) {
+			return go.TryGetComponent(out HierarchyFolder _);
+		}
+
+		public static bool IsInitializedFolder(int instanceID) {
 			return s_folders.Contains(instanceID);
 		}
 	}
