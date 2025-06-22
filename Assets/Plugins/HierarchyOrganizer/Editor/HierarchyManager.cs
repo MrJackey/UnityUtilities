@@ -296,7 +296,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 			if (PrefabUtility.IsPartOfAnyPrefab(go))
 				return false;
 
-			if (IsFolder(go.GetInstanceID()))
+			if (IsInitializedFolder(go.GetInstanceID()))
 				return false;
 
 			if (go.GetComponentCount() > 1)
@@ -307,7 +307,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 				return true;
 
 			GameObject parentGo = parent.gameObject;
-			if (IsFolder(parentGo.GetInstanceID()) || (Selection.gameObjects.Contains(parentGo) && CanGameObjectBeFolder(parentGo)))
+			if (IsFolder(parentGo) || (Selection.gameObjects.Contains(parentGo) && CanGameObjectBeFolder(parentGo)))
 				return true;
 
 			return false;
