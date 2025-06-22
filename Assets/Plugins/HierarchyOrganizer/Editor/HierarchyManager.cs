@@ -260,6 +260,8 @@ namespace Jackey.HierarchyOrganizer.Editor {
 			}
 
 			Undo.CollapseUndoOperations(undoIndex);
+
+			EditorApplication.delayCall += OnSelectionChanged;
 		}
 
 		[MenuItem("GameObject/Remove as Folder(s)", true)]
@@ -280,6 +282,8 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 				Undo.DestroyObjectImmediate(selectedGo.GetComponent<HierarchyFolder>());
 			}
+
+			OnSelectionChanged();
 		}
 
 		private static GameObject CreateFolder() {
