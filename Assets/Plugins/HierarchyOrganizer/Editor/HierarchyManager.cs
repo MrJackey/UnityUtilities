@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Jackey.HierarchyOrganizer.Runtime;
 using UnityEditor;
@@ -130,37 +131,59 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 		[MenuItem("GameObject/Create Folder Parent", true)]
 		private static bool ValidateMenuCreateFolderParent() {
-			if (Selection.count != 1) return false;
-
-			GameObject selectedObject = Selection.activeGameObject;
-
-			// Make sure there is a selection
-			if (!selectedObject) return false;
-
-			// Make sure selected object isn't an asset
-			if (AssetDatabase.Contains(selectedObject))
+			if (Application.isPlaying)
 				return false;
+
+			if (PrefabStageUtility.GetCurrentPrefabStage() != null)
+				return false;
+
+			GameObject[] selectedGameObjects = Selection.gameObjects;
+			if (selectedGameObjects.Length == 0)
+				return false;
+
+			Transform parent = selectedGameObjects[0].transform.parent;
 
 			// Prevent creating folder as child of non-folder
-			if (selectedObject.transform.parent && !s_folders.Contains(selectedObject.transform.parent.gameObject.GetInstanceID()))
+			if (parent != null && !s_folders.Contains(parent.gameObject.GetInstanceID()))
 				return false;
 
-			return !Application.isPlaying &&
-			       PrefabStageUtility.GetCurrentPrefabStage() == null;
+			foreach (GameObject selectedObject in selectedGameObjects) {
+				// Make sure the selected is valid
+				if (selectedObject == null)
+					return false;
+
+				// Make sure selected object isn't an asset
+				if (AssetDatabase.Contains(selectedObject))
+					return false;
+
+				// Make sure all selected objects share the same parent
+				if (selectedObject.transform.parent != parent)
+					return false;
+			}
+
+			return true;
 		}
 
 		[MenuItem("GameObject/Create Folder Parent", priority = 0)]
-		private static void MenuCreateFolderParent() {
+		private static void MenuCreateFolderParent(MenuCommand cmd) {
+			// Make sure this menu item is only executed once with multiple selected objects
+			if (cmd.context != null && cmd.context != Selection.activeObject)
+				return;
+
 			Undo.SetCurrentGroupName("Create Folder Parent");
 			int undoIndex = Undo.GetCurrentGroup();
 
 			GameObject folderObject = CreateFolder();
 
-			Transform selectedTransform = Selection.activeTransform;
-			int siblingIndex = selectedTransform.GetSiblingIndex();
+			Transform[] selectedTransforms = Selection.transforms;
+			Undo.SetTransformParent(folderObject.transform, selectedTransforms[0].parent, "");
 
-			Undo.SetTransformParent(folderObject.transform, selectedTransform.parent, "");
-			Undo.SetTransformParent(selectedTransform, folderObject.transform, "");
+			Array.Sort(selectedTransforms, (lhs, rhs) => lhs.GetSiblingIndex() - rhs.GetSiblingIndex());
+			int siblingIndex = selectedTransforms[0].GetSiblingIndex();
+
+			foreach (Transform selectedTransform in selectedTransforms) {
+				Undo.SetTransformParent(selectedTransform, folderObject.transform, "");
+			}
 
 			folderObject.transform.SetSiblingIndex(siblingIndex);
 
