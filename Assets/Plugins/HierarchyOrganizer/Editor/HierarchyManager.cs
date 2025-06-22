@@ -200,6 +200,9 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 		[MenuItem("GameObject/Convert to Folder(s)", true)]
 		private static bool ValidateMenuConvertToFolder() {
+			if (PrefabStageUtility.GetCurrentPrefabStage() != null)
+				return false;
+
 			foreach (GameObject selectedGo in Selection.gameObjects) {
 				if (CanGameObjectBeFolder(selectedGo))
 					return true;
