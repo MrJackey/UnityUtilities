@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Jackey.HierarchyOrganizer.Runtime;
 using UnityEditor;
@@ -52,7 +53,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 					case ObjectChangeKind.DestroyGameObjectHierarchy:
 						stream.GetDestroyGameObjectHierarchyEvent(i, out DestroyGameObjectHierarchyEventArgs destroyData);
 
-						if (IsFolder(destroyData.instanceId)) {
+						if (IsInitializedFolder(destroyData.instanceId)) {
 							s_folders.RemoveWhere(instanceId => EditorUtility.InstanceIDToObject(instanceId) == null);
 						}
 
@@ -130,37 +131,59 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 		[MenuItem("GameObject/Create Folder Parent", true)]
 		private static bool ValidateMenuCreateFolderParent() {
-			if (Selection.count != 1) return false;
-
-			GameObject selectedObject = Selection.activeGameObject;
-
-			// Make sure there is a selection
-			if (!selectedObject) return false;
-
-			// Make sure selected object isn't an asset
-			if (AssetDatabase.Contains(selectedObject))
+			if (Application.isPlaying)
 				return false;
+
+			if (PrefabStageUtility.GetCurrentPrefabStage() != null)
+				return false;
+
+			GameObject[] selectedGameObjects = Selection.gameObjects;
+			if (selectedGameObjects.Length == 0)
+				return false;
+
+			Transform parent = selectedGameObjects[0].transform.parent;
 
 			// Prevent creating folder as child of non-folder
-			if (selectedObject.transform.parent && !s_folders.Contains(selectedObject.transform.parent.gameObject.GetInstanceID()))
+			if (parent != null && !s_folders.Contains(parent.gameObject.GetInstanceID()))
 				return false;
 
-			return !Application.isPlaying &&
-			       PrefabStageUtility.GetCurrentPrefabStage() == null;
+			foreach (GameObject selectedObject in selectedGameObjects) {
+				// Make sure the selected is valid
+				if (selectedObject == null)
+					return false;
+
+				// Make sure selected object isn't an asset
+				if (AssetDatabase.Contains(selectedObject))
+					return false;
+
+				// Make sure all selected objects share the same parent
+				if (selectedObject.transform.parent != parent)
+					return false;
+			}
+
+			return true;
 		}
 
 		[MenuItem("GameObject/Create Folder Parent", priority = 0)]
-		private static void MenuCreateFolderParent() {
+		private static void MenuCreateFolderParent(MenuCommand cmd) {
+			// Make sure this menu item is only executed once with multiple selected objects
+			if (cmd.context != null && cmd.context != Selection.activeObject)
+				return;
+
 			Undo.SetCurrentGroupName("Create Folder Parent");
 			int undoIndex = Undo.GetCurrentGroup();
 
 			GameObject folderObject = CreateFolder();
 
-			Transform selectedTransform = Selection.activeTransform;
-			int siblingIndex = selectedTransform.GetSiblingIndex();
+			Transform[] selectedTransforms = Selection.transforms;
+			Undo.SetTransformParent(folderObject.transform, selectedTransforms[0].parent, "");
 
-			Undo.SetTransformParent(folderObject.transform, selectedTransform.parent, "");
-			Undo.SetTransformParent(selectedTransform, folderObject.transform, "");
+			Array.Sort(selectedTransforms, (lhs, rhs) => lhs.GetSiblingIndex() - rhs.GetSiblingIndex());
+			int siblingIndex = selectedTransforms[0].GetSiblingIndex();
+
+			foreach (Transform selectedTransform in selectedTransforms) {
+				Undo.SetTransformParent(selectedTransform, folderObject.transform, "");
+			}
 
 			folderObject.transform.SetSiblingIndex(siblingIndex);
 
@@ -177,6 +200,9 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 		[MenuItem("GameObject/Convert to Folder(s)", true)]
 		private static bool ValidateMenuConvertToFolder() {
+			if (PrefabStageUtility.GetCurrentPrefabStage() != null)
+				return false;
+
 			foreach (GameObject selectedGo in Selection.gameObjects) {
 				if (CanGameObjectBeFolder(selectedGo))
 					return true;
@@ -187,12 +213,55 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 		[MenuItem("GameObject/Convert to Folder(s)", priority = 0)]
 		private static void MenuConvertToFolder() {
-			foreach (GameObject selectedGo in Selection.gameObjects) {
+			Undo.SetCurrentGroupName("Convert to Folder");
+			int undoIndex = Undo.GetCurrentGroup();
+
+			IOrderedEnumerable<GameObject> selectionDepthLast = Selection.gameObjects.OrderBy(go => {
+				int depth = 0;
+
+				Transform ancestor = go.transform.parent;
+				while (ancestor) {
+					depth++;
+					ancestor = ancestor.parent;
+				}
+
+				return depth;
+			});
+
+			foreach (GameObject selectedGo in selectionDepthLast) {
 				if (!CanGameObjectBeFolder(selectedGo))
 					continue;
 
+				Transform selectedTransform = selectedGo.transform;
+				int childCount = selectedTransform.childCount;
+				Matrix4x4[] childTransforms = new Matrix4x4[childCount];
+
+				// Record child transforms
+				for (int i = 0; i < childCount; i++) {
+					Transform child = selectedTransform.GetChild(i);
+					childTransforms[i] = Matrix4x4.TRS(child.position, child.rotation, child.lossyScale);
+				}
+
+				// Reset the folder's transform
 				Undo.AddComponent<HierarchyFolder>(selectedGo);
+				Undo.RecordObject(selectedTransform, "");
+				selectedTransform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+				selectedTransform.localScale = Vector3.one;
+
+				// Apply the child transforms to match before conversion
+				for (int i = 0; i < childCount; i++) {
+					Transform child = selectedTransform.GetChild(i);
+					Matrix4x4 worldTransform = childTransforms[i];
+
+					Undo.RecordObject(child, "");
+					child.SetPositionAndRotation(worldTransform.GetPosition(), worldTransform.rotation);
+					child.localScale = worldTransform.lossyScale;
+				}
 			}
+
+			Undo.CollapseUndoOperations(undoIndex);
+
+			EditorApplication.delayCall += OnSelectionChanged;
 		}
 
 		[MenuItem("GameObject/Remove as Folder(s)", true)]
@@ -213,6 +282,8 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 				Undo.DestroyObjectImmediate(selectedGo.GetComponent<HierarchyFolder>());
 			}
+
+			OnSelectionChanged();
 		}
 
 		private static GameObject CreateFolder() {
@@ -229,7 +300,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 			if (PrefabUtility.IsPartOfAnyPrefab(go))
 				return false;
 
-			if (IsFolder(go.GetInstanceID()))
+			if (IsInitializedFolder(go.GetInstanceID()))
 				return false;
 
 			if (go.GetComponentCount() > 1)
@@ -240,14 +311,14 @@ namespace Jackey.HierarchyOrganizer.Editor {
 				return true;
 
 			GameObject parentGo = parent.gameObject;
-			if (IsFolder(parentGo.GetInstanceID()) || (Selection.gameObjects.Contains(parentGo) && CanGameObjectBeFolder(parentGo)))
+			if (IsFolder(parentGo) || (Selection.gameObjects.Contains(parentGo) && CanGameObjectBeFolder(parentGo)))
 				return true;
 
 			return false;
 		}
 
 		private static bool CanFolderBeRemoved(GameObject go) {
-			if (!IsFolder(go.GetInstanceID()))
+			if (!IsInitializedFolder(go.GetInstanceID()))
 				return false;
 
 			Transform transform = go.transform;
@@ -255,11 +326,11 @@ namespace Jackey.HierarchyOrganizer.Editor {
 
 			for (int i = 0; i < childCount; i++) {
 				Transform child = transform.GetChild(i);
-
-				if (!child.TryGetComponent(out HierarchyFolder _))
-					return true;
-
 				GameObject childGo = child.gameObject;
+
+				if (!IsFolder(childGo))
+					continue;
+
 				if (!Selection.gameObjects.Contains(childGo) || !CanFolderBeRemoved(childGo))
 					return false;
 			}
@@ -298,7 +369,11 @@ namespace Jackey.HierarchyOrganizer.Editor {
 			s_folders.Remove(folderID);
 		}
 
-		public static bool IsFolder(int instanceID) {
+		public static bool IsFolder(GameObject go) {
+			return go.TryGetComponent(out HierarchyFolder _);
+		}
+
+		public static bool IsInitializedFolder(int instanceID) {
 			return s_folders.Contains(instanceID);
 		}
 	}

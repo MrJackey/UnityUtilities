@@ -38,7 +38,7 @@ namespace Jackey.HierarchyOrganizer.Editor {
 				return;
 			}
 
-			if (PrefabStageUtility.GetCurrentPrefabStage() == null && HierarchyManager.IsFolder(instanceID)) {
+			if (PrefabStageUtility.GetCurrentPrefabStage() == null && HierarchyManager.IsInitializedFolder(instanceID)) {
 				GameObject folderGameObject = (GameObject)EditorUtility.InstanceIDToObject(instanceID);
 
 				if (!folderGameObject)
