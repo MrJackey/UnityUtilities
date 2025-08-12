@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Jackey.Behaviours.Editor.Manipulators;
+using Jackey.Behaviours.Editor.Utilities;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -90,12 +91,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 					continue;
 				}
 
-				Rect rectWithSibling = new Rect(totalRect.Value);
-				rectWithSibling.xMin = Mathf.Min(rectWithSibling.xMin, siblingRect.xMin);
-				rectWithSibling.xMax = Mathf.Max(rectWithSibling.xMax, siblingRect.xMax);
-				rectWithSibling.yMin = Mathf.Min(rectWithSibling.yMin, siblingRect.yMin);
-				rectWithSibling.yMax = Mathf.Max(rectWithSibling.yMax, siblingRect.yMax);
-				totalRect = rectWithSibling;
+				totalRect = totalRect.Value.Encapsulate(siblingRect);
 			}
 
 			if (totalRect != null) {

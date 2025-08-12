@@ -18,6 +18,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 			style.position = Position.Absolute;
 			style.display = DisplayStyle.None;
 
+			AddToClassList("FloatingPanel");
+
 			hierarchy.Add(m_header = new Label("Inspector"));
 			hierarchy.Add(contentContainer = new VisualElement() {
 				name = "Content",

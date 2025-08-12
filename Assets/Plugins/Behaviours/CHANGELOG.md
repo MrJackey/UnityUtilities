@@ -1,3 +1,12 @@
+# 0.5.0 (2025-08-12)
+
+### Features
+- Added a minimap panel in the bottom right corner that shows nodes, connection and groups
+
+### Fixes
+- Fixed connections sometimes causing null refs without an active event
+- Fixed framing action (Shortcut 'F') centering with a slight offset
+
 # 0.4.0 (2025-06-03)
 
 ### Features
