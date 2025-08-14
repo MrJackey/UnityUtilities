@@ -463,8 +463,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		protected override void OnNodeDoubleClick(Node node) {
 			BTNode btNode = (BTNode)node;
 
-			if (btNode.Action is NestedBehaviourTree nestedTree && nestedTree.InstanceOrBehaviour != null) {
-				EditorWindow.GetWindow<BehaviourEditorWindow>().PushBehaviour(nestedTree.InstanceOrBehaviour);
+			if (btNode.Action is NestedBehaviourAction nestedAction && nestedAction.InstanceOrBehaviour != null) {
+				EditorWindow.GetWindow<BehaviourEditorWindow>().PushBehaviour(nestedAction.InstanceOrBehaviour);
 				return;
 			}
 

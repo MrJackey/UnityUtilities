@@ -16,8 +16,8 @@ namespace Jackey.Behaviours.BT.Decorators {
 
 		protected override ExecutionStatus OnChildFinished() {
 			return m_child.Status switch {
-				ActionStatus.Success => ExecutionStatus.Failure,
-				ActionStatus.Failure => ExecutionStatus.Success,
+				BehaviourStatus.Success => ExecutionStatus.Failure,
+				BehaviourStatus.Failure => ExecutionStatus.Success,
 				_ => throw new ArgumentOutOfRangeException(),
 			};
 		}

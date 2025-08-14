@@ -26,7 +26,7 @@ namespace Jackey.Behaviours.BT.Composites {
 		internal override void InterruptChildren() {
 			int childCount = m_children.Count;
 			for (int i = 0; i < childCount; i++) {
-				if (m_children[i].Status != ActionStatus.Running) continue;
+				if (m_children[i].Status != BehaviourStatus.Running) continue;
 
 				m_children[i].Interrupt();
 			}
@@ -35,7 +35,7 @@ namespace Jackey.Behaviours.BT.Composites {
 		internal override void ResetChildren() {
 			int childCount = m_children.Count;
 			for (int i = 0; i < childCount; i++) {
-				if (m_children[i].Status == ActionStatus.Inactive) continue;
+				if (m_children[i].Status == BehaviourStatus.Inactive) continue;
 
 				m_children[i].Reset();
 			}

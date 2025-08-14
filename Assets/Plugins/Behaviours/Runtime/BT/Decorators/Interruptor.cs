@@ -9,7 +9,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 		[SerializeField] private BehaviourConditionGroup m_conditions;
 
 		[Space]
-		[SerializeField] private ActionResult m_interruptResult = ActionResult.Failure;
+		[SerializeField] private BehaviourResult m_interruptResult = BehaviourResult.Failure;
 
 #if UNITY_EDITOR
 		public override string Editor_Info => $"{InfoUtilities.AlignCenter("Interrupt if")}\n" +

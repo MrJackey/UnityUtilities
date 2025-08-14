@@ -6,13 +6,13 @@ using Debug = UnityEngine.Debug;
 
 namespace Jackey.Behaviours.BT.Nested {
 	[GraphIcon("BehaviourTree")]
-	[SearchPath("Nested/Behaviour Tree")]
-	public class NestedBehaviourTree : BehaviourAction {
-		[SerializeField] private BlackboardRef<BehaviourTree> m_behaviour;
+	[SearchPath("Utilities/Nested Behaviour")]
+	public class NestedBehaviourAction : BehaviourAction {
+		[SerializeField] private BlackboardRef<ObjectBehaviour> m_behaviour;
 
-		private BehaviourTree m_behaviourInstance;
+		private ObjectBehaviour m_behaviourInstance;
 
-		public BehaviourTree InstanceOrBehaviour => m_behaviourInstance != null ? m_behaviourInstance : m_behaviour.GetValue();
+		public ObjectBehaviour InstanceOrBehaviour => m_behaviourInstance != null ? m_behaviourInstance : m_behaviour.GetValue();
 
 #if UNITY_EDITOR
 		public override string Editor_Info {
@@ -20,7 +20,7 @@ namespace Jackey.Behaviours.BT.Nested {
 				if (m_behaviour.IsVariable)
 					return m_behaviour.Editor_Info;
 
-				BehaviourTree value = m_behaviour.GetValue();
+				ObjectBehaviour value = m_behaviour.GetValue();
 				if (value == null)
 					return "<b>NONE</b>";
 
@@ -30,9 +30,9 @@ namespace Jackey.Behaviours.BT.Nested {
 #endif
 
 		protected override ExecutionStatus OnEnter() {
-			BehaviourTree behaviour = m_behaviour.GetValue();
+			ObjectBehaviour behaviour = m_behaviour.GetValue();
 			if (behaviour == null) {
-				Debug.LogWarning($"Nested BehaviourTree in {m_runtimeBehaviour.name} does not have an assigned behaviour", Owner);
+				Debug.LogWarning($"Nested Behaviour Action in {m_runtimeBehaviour.name} does not have an assigned behaviour", Owner);
 				return ExecutionStatus.Failure;
 			}
 
@@ -47,16 +47,12 @@ namespace Jackey.Behaviours.BT.Nested {
 		}
 
 		protected override ExecutionStatus OnTick() {
-			if (m_behaviourInstance.Status == ActionStatus.Inactive) {
+			if (m_behaviourInstance.Status == BehaviourStatus.Inactive) {
 				m_behaviourInstance.Start();
 				return (ExecutionStatus)m_behaviourInstance.Status;
 			}
 
 			return m_behaviourInstance.Tick();
-		}
-
-		protected override void OnInterrupt() {
-			m_behaviourInstance.Stop();
 		}
 
 		protected override void OnExit() {

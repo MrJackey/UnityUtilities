@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.BT;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
 using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Editor.Utilities;
 using Jackey.Behaviours.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +14,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		private static Dictionary<string, Texture> s_iconCache = new();
 
 		private BehaviourAction m_action;
-		private ActionStatus m_actionStatus = ActionStatus.Inactive;
+		private BehaviourStatus m_lastRuntimeActionStatus = BehaviourStatus.Inactive;
 
 		private Image m_icon;
 		private Label m_label;
@@ -117,13 +115,13 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		}
 
 		private void RuntimeTick() {
-			if (m_action.Status == m_actionStatus)
+			if (m_action.Status == m_lastRuntimeActionStatus)
 				return;
 
-			string previousClass = m_actionStatus switch {
-				ActionStatus.Running => "Status-Running",
-				ActionStatus.Success => "Status-Success",
-				ActionStatus.Failure => "Status-Failure",
+			string previousClass = m_lastRuntimeActionStatus switch {
+				BehaviourStatus.Running => "Status-Running",
+				BehaviourStatus.Success => "Status-Success",
+				BehaviourStatus.Failure => "Status-Failure",
 				_ => null,
 			};
 
@@ -131,16 +129,16 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				contentContainer.RemoveFromClassList(previousClass);
 
 			string nextClass = m_action.Status switch {
-				ActionStatus.Running => "Status-Running",
-				ActionStatus.Success => "Status-Success",
-				ActionStatus.Failure => "Status-Failure",
+				BehaviourStatus.Running => "Status-Running",
+				BehaviourStatus.Success => "Status-Success",
+				BehaviourStatus.Failure => "Status-Failure",
 				_ => null,
 			};
 
 			if (!string.IsNullOrEmpty(nextClass))
-				contentContainer.EnsureClass(nextClass);
+				contentContainer.AddToClassList(nextClass);
 
-			m_actionStatus = m_action.Status;
+			m_lastRuntimeActionStatus = m_action.Status;
 		}
 
 		public void UpdateEditorData() {

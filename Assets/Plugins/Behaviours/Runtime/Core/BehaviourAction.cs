@@ -13,8 +13,8 @@ namespace Jackey.Behaviours.Core {
 		internal BehaviourAction Parent { get; set; }
 		internal int Index { get; private set; }
 
-		public ActionStatus Status { get; set; } = ActionStatus.Inactive;
-		public bool IsFinished => Status is ActionStatus.Success or ActionStatus.Failure;
+		public BehaviourStatus Status { get; private set; } = BehaviourStatus.Inactive;
+		public bool IsFinished => Status is BehaviourStatus.Success or BehaviourStatus.Failure;
 
 		protected BehaviourOwner Owner => m_runtimeBehaviour.Owner;
 
@@ -39,7 +39,7 @@ namespace Jackey.Behaviours.Core {
 #endif
 
 			ExecutionStatus enterStatus = OnEnter();
-			Status = (ActionStatus)enterStatus;
+			Status = (BehaviourStatus)enterStatus;
 
 			return enterStatus;
 		}
@@ -51,7 +51,7 @@ namespace Jackey.Behaviours.Core {
 				return (ExecutionStatus)Status;
 
 			ExecutionStatus tickStatus = OnTick();
-			Status = (ActionStatus)tickStatus;
+			Status = (BehaviourStatus)tickStatus;
 
 			return tickStatus;
 		}
@@ -67,7 +67,7 @@ namespace Jackey.Behaviours.Core {
 				return (ExecutionStatus)Status;
 
 			ExecutionStatus continueStatus = OnChildFinished();
-			Status = (ActionStatus)continueStatus;
+			Status = (BehaviourStatus)continueStatus;
 
 			return continueStatus;
 		}
@@ -78,7 +78,7 @@ namespace Jackey.Behaviours.Core {
 		/// </summary>
 		public void Interrupt() {
 			InterruptChildren();
-			Status = ActionStatus.Failure;
+			Status = BehaviourStatus.Failure;
 
 			OnInterrupt();
 			Exit();
@@ -93,7 +93,7 @@ namespace Jackey.Behaviours.Core {
 		/// </summary>
 		protected virtual void OnInterrupt() { }
 
-		internal void Result(ActionResult result) {
+		internal void Result(BehaviourResult result) {
 			OnResult(result);
 			Exit();
 		}
@@ -102,9 +102,9 @@ namespace Jackey.Behaviours.Core {
 		/// This is invoked when an action finishes from any of OnEnter/OnTick/OnChildFinished with a result.
 		/// <see cref="OnExit"/> is invoked directly afterwards
 		/// </summary>
-		protected virtual void OnResult(ActionResult result) { }
+		protected virtual void OnResult(BehaviourResult result) { }
 
-		internal void Exit() {
+		private void Exit() {
 			OnExit();
 		}
 
@@ -135,7 +135,7 @@ namespace Jackey.Behaviours.Core {
 
 		public void Reset() {
 			ResetChildren();
-			Status = ActionStatus.Inactive;
+			Status = BehaviourStatus.Inactive;
 
 			OnReset();
 		}
@@ -146,8 +146,9 @@ namespace Jackey.Behaviours.Core {
 			ExecutionStatus enterStatus = Enter();
 
 			if (IsFinished) {
-				Result((ActionResult)enterStatus);
+				Result((BehaviourResult)enterStatus);
 			}
+
 			return enterStatus;
 		}
 
@@ -155,7 +156,7 @@ namespace Jackey.Behaviours.Core {
 			ExecutionStatus tickStatus = Tick();
 
 			if (IsFinished) {
-				Result((ActionResult)tickStatus);
+				Result((BehaviourResult)tickStatus);
 			}
 
 			return tickStatus;
@@ -165,7 +166,7 @@ namespace Jackey.Behaviours.Core {
 			ExecutionStatus traversalStatus = OnTraversal();
 
 			if (IsFinished) {
-				Result((ActionResult)traversalStatus);
+				Result((BehaviourResult)traversalStatus);
 			}
 
 			return traversalStatus;

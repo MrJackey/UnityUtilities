@@ -1,6 +1,5 @@
 ﻿namespace Jackey.Behaviours {
-	public enum ExecutionStatus {
-		Running = BehaviourStatus.Running,
+	public enum BehaviourResult {
 		Success = BehaviourStatus.Success,
 		Failure = BehaviourStatus.Failure,
 	}

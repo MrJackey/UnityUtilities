@@ -29,10 +29,10 @@ namespace Jackey.Behaviours.BT {
 		}
 
 		internal override void Start() {
-			if (Status != ActionStatus.Inactive)
+			if (Status != BehaviourStatus.Inactive)
 				return;
 
-			Status = ActionStatus.Running;
+			Status = BehaviourStatus.Running;
 
 			m_inTreeTraversal = true;
 			m_entry.EnterSequence();
@@ -91,7 +91,7 @@ namespace Jackey.Behaviours.BT {
 		internal override void Stop() {
 			m_entry.Interrupt();
 			m_entry.Reset();
-			Status = ActionStatus.Inactive;
+			Status = BehaviourStatus.Inactive;
 		}
 
 		public void EnableTicking(BehaviourAction action) {

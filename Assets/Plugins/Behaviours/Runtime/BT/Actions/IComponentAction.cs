@@ -6,7 +6,7 @@ namespace Jackey.Behaviours.BT.Actions {
 		ExecutionStatus OnTick(BehaviourAction action);
 
 		void OnInterrupt(BehaviourAction action);
-		void OnResult(BehaviourAction action, ActionResult result);
+		void OnResult(BehaviourAction action, BehaviourResult result);
 		void OnExit(BehaviourAction action);
 	}
 
@@ -15,7 +15,7 @@ namespace Jackey.Behaviours.BT.Actions {
 		ExecutionStatus OnTick(BehaviourAction action, T args);
 
 		void OnInterrupt(BehaviourAction action, T args);
-		void OnResult(BehaviourAction action, T args, ActionResult result);
+		void OnResult(BehaviourAction action, T args, BehaviourResult result);
 		void OnExit(BehaviourAction action, T args);
 	}
 }

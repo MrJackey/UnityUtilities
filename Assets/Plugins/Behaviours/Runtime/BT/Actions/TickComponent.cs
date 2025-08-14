@@ -10,7 +10,7 @@ namespace Jackey.Behaviours.BT.Actions {
 		protected override ExecutionStatus OnTick() => GetInterfaceTarget().OnTick(this);
 
 		protected override void OnInterrupt() => GetInterfaceTarget().OnInterrupt(this);
-		protected override void OnResult(ActionResult result) => GetInterfaceTarget().OnResult(this, result);
+		protected override void OnResult(BehaviourResult result) => GetInterfaceTarget().OnResult(this, result);
 		protected override void OnExit() => GetInterfaceTarget().OnExit(this);
 
 		private IComponentAction GetInterfaceTarget() {

@@ -24,7 +24,7 @@ namespace Jackey.Behaviours.FSM {
 		}
 
 		internal override void Start() {
-			if (Status != ActionStatus.Inactive)
+			if (Status != BehaviourStatus.Inactive)
 				return;
 
 			m_activeState = m_entry;
@@ -90,7 +90,7 @@ namespace Jackey.Behaviours.FSM {
 					state.Reset();
 			}
 
-			Status = ActionStatus.Inactive;
+			Status = BehaviourStatus.Inactive;
 		}
 
 		private void Reset() {

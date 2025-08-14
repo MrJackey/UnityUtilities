@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.BT;
 using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Core.Events;
 using UnityEngine;

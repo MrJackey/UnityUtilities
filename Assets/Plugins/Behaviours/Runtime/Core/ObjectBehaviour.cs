@@ -20,7 +20,7 @@ namespace Jackey.Behaviours {
 		protected internal BehaviourOwner Owner { get; internal set; }
 		public Blackboard Blackboard => m_blackboard;
 
-		public ActionStatus Status { get; protected set; } = ActionStatus.Inactive;
+		public BehaviourStatus Status { get; protected set; } = BehaviourStatus.Inactive;
 
 		internal virtual void Initialize(BehaviourOwner owner) {
 			Owner = owner;

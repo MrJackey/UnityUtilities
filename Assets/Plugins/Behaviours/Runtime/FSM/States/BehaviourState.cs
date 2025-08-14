@@ -9,8 +9,8 @@ namespace Jackey.Behaviours.FSM.States {
 
 		protected ObjectBehaviour m_runtimeBehaviour;
 
-		public ActionStatus Status { get; private set; } = ActionStatus.Inactive;
-		public bool IsFinished => Status is ActionStatus.Success or ActionStatus.Failure;
+		public BehaviourStatus Status { get; private set; } = BehaviourStatus.Inactive;
+		public bool IsFinished => Status is BehaviourStatus.Success or BehaviourStatus.Failure;
 
 		protected BehaviourOwner Owner => m_runtimeBehaviour.Owner;
 
@@ -19,11 +19,11 @@ namespace Jackey.Behaviours.FSM.States {
 		}
 
 		private ExecutionStatus Enter() {
-			if (Status != ActionStatus.Inactive)
+			if (Status != BehaviourStatus.Inactive)
 				Reset();
 
 			ExecutionStatus enterStatus = OnEnter();
-			Status = (ActionStatus)enterStatus;
+			Status = (BehaviourStatus)enterStatus;
 
 			return enterStatus;
 		}
@@ -31,14 +31,14 @@ namespace Jackey.Behaviours.FSM.States {
 
 		private ExecutionStatus Tick() {
 			ExecutionStatus tickStatus = OnTick();
-			Status = (ActionStatus)tickStatus;
+			Status = (BehaviourStatus)tickStatus;
 
 			return tickStatus;
 		}
 		protected virtual ExecutionStatus OnTick() => ExecutionStatus.Running;
 
 		internal void Interrupt() {
-			Status = ActionStatus.Failure;
+			Status = BehaviourStatus.Failure;
 
 			OnInterrupt();
 			Exit();
@@ -67,7 +67,7 @@ namespace Jackey.Behaviours.FSM.States {
 		}
 
 		internal void Reset() {
-			Status = ActionStatus.Inactive;
+			Status = BehaviourStatus.Inactive;
 			OnReset();
 		}
 		protected virtual void OnReset() { }

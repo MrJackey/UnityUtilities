@@ -50,7 +50,7 @@ namespace Jackey.Behaviours.BT.Composites {
 			m_runningIndex = index;
 			BehaviourAction nextChild = m_children[m_runningIndex];
 
-			if (nextChild.Status != ActionStatus.Inactive)
+			if (nextChild.Status != BehaviourStatus.Inactive)
 				nextChild.Reset();
 
 			return nextChild.EnterSequence();
