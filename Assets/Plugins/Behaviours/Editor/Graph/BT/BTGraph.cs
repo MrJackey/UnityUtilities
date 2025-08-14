@@ -755,7 +755,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		#endregion
 
 		protected override void ApplyChanges() {
-			m_behaviour.ConnectBlackboardRefs();
+			m_behaviour.ConnectAllBlackboardRefs();
 
 			base.ApplyChanges();
 		}

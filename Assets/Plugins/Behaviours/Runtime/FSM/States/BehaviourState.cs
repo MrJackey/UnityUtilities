@@ -1,0 +1,98 @@
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Jackey.Behaviours.FSM.States {
+	[Serializable]
+	public abstract class BehaviourState {
+		[SerializeField] private List<StateTransition> m_transitions;
+
+		protected ObjectBehaviour m_runtimeBehaviour;
+
+		public ActionStatus Status { get; private set; } = ActionStatus.Inactive;
+		public bool IsFinished => Status is ActionStatus.Success or ActionStatus.Failure;
+
+		protected BehaviourOwner Owner => m_runtimeBehaviour.Owner;
+
+		internal void Initialize(ObjectBehaviour behaviour) {
+			m_runtimeBehaviour = behaviour;
+		}
+
+		private ExecutionStatus Enter() {
+			if (Status != ActionStatus.Inactive)
+				Reset();
+
+			ExecutionStatus enterStatus = OnEnter();
+			Status = (ActionStatus)enterStatus;
+
+			return enterStatus;
+		}
+		protected virtual ExecutionStatus OnEnter() => ExecutionStatus.Running;
+
+		private ExecutionStatus Tick() {
+			ExecutionStatus tickStatus = OnTick();
+			Status = (ActionStatus)tickStatus;
+
+			return tickStatus;
+		}
+		protected virtual ExecutionStatus OnTick() => ExecutionStatus.Running;
+
+		internal void Interrupt() {
+			Status = ActionStatus.Failure;
+
+			OnInterrupt();
+			Exit();
+		}
+
+		/// <summary>
+		/// States are interrupted when a Tick transition evaluates to true
+		/// <br/>
+		/// <see cref="OnExit"/> is invoked directly afterwards
+		/// </summary>
+		protected virtual void OnInterrupt() { }
+
+		private void Exit() {
+			OnExit();
+		}
+		protected virtual void OnExit() { }
+
+		internal bool CheckTransitions(StateTransitionContext ctx, out BehaviourState destination) {
+			foreach (StateTransition transition in m_transitions) {
+				if (transition.Evaluate(ctx, out destination))
+					return true;
+			}
+
+			destination = null;
+			return false;
+		}
+
+		internal void Reset() {
+			Status = ActionStatus.Inactive;
+			OnReset();
+		}
+		protected virtual void OnReset() { }
+
+		internal ExecutionStatus EnterSequence() {
+			if (IsFinished)
+				Reset();
+
+			ExecutionStatus enterStatus = Enter();
+
+			if (IsFinished) {
+				Exit();
+			}
+
+			return enterStatus;
+		}
+
+		internal ExecutionStatus TickSequence() {
+			ExecutionStatus tickStatus = Tick();
+
+			if (IsFinished) {
+				Exit();
+			}
+
+			return tickStatus;
+		}
+	}
+}
