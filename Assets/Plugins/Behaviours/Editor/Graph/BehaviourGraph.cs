@@ -355,8 +355,18 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public virtual void Paste(Vector2 GUIPosition) { }
 
 		public void UndoRedo() {
+			m_serializedBehaviour.Update();
+
 			m_connectionManipulator.Cancel();
+
+			int oldNodeCount = m_nodes.Count;
+			int oldGroupCount = m_groups.Count;
+
 			SyncGraph();
+
+			// Inspectable elements may have their indices changed thus disconnecting any active inspector
+			if (m_nodes.Count != oldNodeCount || m_groups.Count != oldGroupCount)
+				OnSelectionChange();
 		}
 
 		#endregion
