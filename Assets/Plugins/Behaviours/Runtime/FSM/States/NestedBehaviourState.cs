@@ -1,7 +1,10 @@
-﻿using Jackey.Behaviours.Core.Blackboard;
+﻿using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Core.Blackboard;
 using UnityEngine;
 
 namespace Jackey.Behaviours.FSM.States {
+	[GraphIcon("BehaviourTree")]
+	[SearchPath("Nested Behaviour State")]
 	public class NestedBehaviourState : BehaviourState {
 		[SerializeField] private BlackboardRef<ObjectBehaviour> m_behaviour;
 

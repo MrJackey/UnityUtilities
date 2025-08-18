@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Reflection;
 using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
@@ -11,8 +10,6 @@ using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Graph.BT {
 	public class BTNode : Node, ITickElement, IConnectionSocketOwner, IConnectionSocket {
-		private static Dictionary<string, Texture> s_iconCache = new();
-
 		private BehaviourAction m_action;
 		private BehaviourStatus m_lastRuntimeActionStatus = BehaviourStatus.Inactive;
 
@@ -73,7 +70,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		public void SetAction(BehaviourAction action) {
 			m_action = action;
 
-			Texture icon = GetActionIcon(m_action);
+			Texture icon = GraphIconAttribute.GetTexture(m_action.GetType());
 			m_icon.image = icon;
 			m_icon.style.display = icon ? DisplayStyle.Flex : DisplayStyle.None;
 
@@ -154,26 +151,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 			m_action.Editor_Data.Breakpoint = isBreakpoint;
 			m_breakpointElement.visible = isBreakpoint;
-		}
-
-		private static Texture GetActionIcon(BehaviourAction action) {
-			if (action == null)
-				return null;
-
-			GraphIconAttribute iconAttribute = (GraphIconAttribute)action.GetType().GetCustomAttribute(typeof(GraphIconAttribute));
-
-			if (iconAttribute == null)
-				return null;
-
-			if (s_iconCache.TryGetValue(iconAttribute.Path, out Texture iconTexture))
-				return iconTexture;
-
-			iconTexture = Resources.Load<Texture>(iconAttribute.Path);
-
-			if (iconTexture)
-				s_iconCache.Add(iconAttribute.Path, iconTexture);
-
-			return iconTexture;
 		}
 	}
 }

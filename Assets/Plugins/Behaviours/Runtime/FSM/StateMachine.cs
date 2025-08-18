@@ -5,8 +5,8 @@ using UnityEngine;
 namespace Jackey.Behaviours.FSM {
 	[CreateAssetMenu(fileName = "new StateMachine", menuName = "Jackey/Behaviour/State Machine", order = 0)]
 	public class StateMachine : ObjectBehaviour {
-		[SerializeReference] private List<BehaviourState> m_allStates = new();
-		[SerializeReference] private BehaviourState m_entry;
+		[SerializeReference] internal List<BehaviourState> m_allStates = new();
+		[SerializeReference] internal BehaviourState m_entry;
 
 		private BehaviourState m_activeState;
 

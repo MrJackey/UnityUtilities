@@ -2,6 +2,7 @@
 using Jackey.Behaviours.Editor.Manipulators;
 using Jackey.Behaviours.Editor.Utilities;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -79,6 +80,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 			AddToClassList(nameof(BehaviourGraph));
 		}
+
+		public virtual void UpdateBehaviour(ObjectBehaviour behaviour) { }
 
 		public void Tick() {
 			foreach (VisualElement child in contentContainer.Children()) {
@@ -409,6 +412,29 @@ namespace Jackey.Behaviours.Editor.Graph {
 		protected T m_behaviour;
 
 		public override ObjectBehaviour Behaviour => m_behaviour;
+
+		public override void UpdateBehaviour(ObjectBehaviour behaviour) {
+			if (behaviour is not T typedBehaviour) return;
+
+			m_serializedBehaviour?.Dispose();
+
+			m_behaviour = typedBehaviour;
+			m_serializedBehaviour = new SerializedObject(behaviour);
+
+			bool isPersistent = EditorUtility.IsPersistent(m_behaviour);
+			m_graphInstanceInfo.text = isPersistent ? "(Asset)" : "(Instance)";
+			m_isEditable = isPersistent;
+
+			ClearGraph();
+			BuildGraph();
+
+			m_graphHeader.Bind(m_serializedBehaviour);
+
+			m_blackboardInspector.SetSecondaryBlackboard(behaviour.Blackboard, m_serializedBehaviour.FindProperty(nameof(ObjectBehaviour.m_blackboard)));
+
+			this.ClearSelection();
+			OnSelectionChange();
+		}
 
 		protected override void SyncGraph() {
 			base.SyncGraph();

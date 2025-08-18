@@ -11,7 +11,6 @@ using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Editor.Utilities;
 using JetBrains.Annotations;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -24,27 +23,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			m_connectionManipulator.ConnectionCreated += OnConnectionCreated;
 			m_connectionManipulator.ConnectionMoved += OnConnectionMoved;
 			m_connectionManipulator.ConnectionRemoved += OnConnectionRemoved;
-		}
-
-		public void UpdateBehaviour(BehaviourTree behaviour) {
-			m_serializedBehaviour?.Dispose();
-
-			m_behaviour = behaviour;
-			m_serializedBehaviour = new SerializedObject(behaviour);
-
-			bool isPersistent = EditorUtility.IsPersistent(m_behaviour);
-			m_graphInstanceInfo.text = isPersistent ? "(Asset)" : "(Instance)";
-			m_isEditable = isPersistent;
-
-			ClearGraph();
-			BuildGraph();
-
-			m_graphHeader.Bind(m_serializedBehaviour);
-
-			m_blackboardInspector.SetSecondaryBlackboard(behaviour.Blackboard, m_serializedBehaviour.FindProperty(nameof(ObjectBehaviour.m_blackboard)));
-
-			this.ClearSelection();
-			OnSelectionChange();
 		}
 
 		protected override void SyncGraph() {
@@ -407,59 +385,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 		#endregion
 
-		private void ShowNodeContext(ContextualMenuPopulateEvent evt) {
-			BTNode btNode = (BTNode)evt.target;
-			DropdownMenuAction.Status editStatus = m_isEditable ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
-
-			evt.menu.AppendAction(
-				"Entry",
-				_ => { SetEntry(btNode); },
-				m_behaviour.m_entry == btNode.Action ? DropdownMenuAction.Status.Checked | DropdownMenuAction.Status.Disabled : editStatus
-			);
-			evt.menu.AppendAction(
-				"Decorate",
-				menuAction => {
-					Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(menuAction.eventInfo.mousePosition);
-					IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<Decorator>().Where(type => !type.IsAbstract);
-
-					TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => DecorateNode(btNode, type));
-				},
-				editStatus
-			);
-			evt.menu.AppendAction(
-				"Breakpoint",
-				_ => { ToggleBreakpoint(btNode); },
-				btNode.Action.Editor_Data.Breakpoint ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal
-			);
-
-			MonoScript script = AssetUtilities.GetScriptAsset(btNode.Action.GetType());
-			if (script != null) {
-				evt.menu.AppendSeparator();
-				evt.menu.AppendAction(
-					"Edit Script",
-					_ => AssetDatabase.OpenAsset(script)
-				);
-			}
-
-			evt.menu.AppendSeparator();
-			evt.menu.AppendAction(
-				"Smart Delete",
-				_ => {
-					SmartDelete(btNode);
-					this.ValidateSelection();
-				},
-				editStatus
-			);
-			evt.menu.AppendAction(
-				"Delete",
-				_ => {
-					DeleteNode(btNode);
-					this.ValidateSelection();
-				},
-				editStatus
-			);
-		}
-
 		protected override void OnNodeDoubleClick(Node node) {
 			BTNode btNode = (BTNode)node;
 
@@ -519,10 +444,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		}
 
 		protected override void InspectElement(VisualElement element) {
-			// TODO: Remove guard?
-			if (m_behaviour == null)
-				return;
-
 			if (element is not BTNode node)
 				return;
 
@@ -687,7 +608,60 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 		#endregion
 
-		#region Context Actions
+		#region Context Menu
+
+		private void ShowNodeContext(ContextualMenuPopulateEvent evt) {
+			BTNode btNode = (BTNode)evt.target;
+			DropdownMenuAction.Status editStatus = m_isEditable ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
+
+			evt.menu.AppendAction(
+				"Entry",
+				_ => { SetEntry(btNode); },
+				m_behaviour.m_entry == btNode.Action ? DropdownMenuAction.Status.Checked | DropdownMenuAction.Status.Disabled : editStatus
+			);
+			evt.menu.AppendAction(
+				"Decorate",
+				menuAction => {
+					Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(menuAction.eventInfo.mousePosition);
+					IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<Decorator>().Where(type => !type.IsAbstract);
+
+					TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => DecorateNode(btNode, type));
+				},
+				editStatus
+			);
+			evt.menu.AppendAction(
+				"Breakpoint",
+				_ => { ToggleBreakpoint(btNode); },
+				btNode.Action.Editor_Data.Breakpoint ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal
+			);
+
+			MonoScript script = AssetUtilities.GetScriptAsset(btNode.Action.GetType());
+			if (script != null) {
+				evt.menu.AppendSeparator();
+				evt.menu.AppendAction(
+					"Edit Script",
+					_ => AssetDatabase.OpenAsset(script)
+				);
+			}
+
+			evt.menu.AppendSeparator();
+			evt.menu.AppendAction(
+				"Smart Delete",
+				_ => {
+					SmartDelete(btNode);
+					this.ValidateSelection();
+				},
+				editStatus
+			);
+			evt.menu.AppendAction(
+				"Delete",
+				_ => {
+					DeleteNode(btNode);
+					this.ValidateSelection();
+				},
+				editStatus
+			);
+		}
 
 		private void SetEntry(BTNode node) {
 			if (m_behaviour.m_entry == node.Action)

@@ -1,7 +1,9 @@
-﻿using Jackey.Behaviours.Core;
+﻿using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Core;
 using UnityEngine;
 
 namespace Jackey.Behaviours.FSM.States {
+	[SearchPath("Action State")]
 	public class ActionState : BehaviourState {
 		[SerializeReference] private BehaviourAction m_action;
 

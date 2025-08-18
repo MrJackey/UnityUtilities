@@ -14,6 +14,11 @@ namespace Jackey.Behaviours.FSM.States {
 
 		protected BehaviourOwner Owner => m_runtimeBehaviour.Owner;
 
+#if UNITY_EDITOR
+		[SerializeField] internal EditorData Editor_Data = new();
+#endif
+		public virtual string Editor_Info => string.Empty;
+
 		internal void Initialize(ObjectBehaviour behaviour) {
 			m_runtimeBehaviour = behaviour;
 		}
@@ -94,5 +99,13 @@ namespace Jackey.Behaviours.FSM.States {
 
 			return tickStatus;
 		}
+
+#if UNITY_EDITOR
+		[Serializable]
+		internal class EditorData {
+			public Vector2 Position;
+			public bool Breakpoint;
+		}
+#endif
 	}
 }
