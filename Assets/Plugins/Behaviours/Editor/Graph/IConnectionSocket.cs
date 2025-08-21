@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace Jackey.Behaviours.Editor.Graph {
 	public interface IConnectionSocket {
 		[NotNull] VisualElement Element { get; }
-		Vector2 Tangent { get; }
+		Vector2 Tangent { get; set; }
 
 		int MaxIncomingConnections { get; set; }
 		int MaxOutgoingConnections { get; set; }

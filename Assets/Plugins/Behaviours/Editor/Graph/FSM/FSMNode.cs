@@ -13,12 +13,33 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 
 		private Image m_icon;
 		private Label m_label;
+
 		private List<IConnectionSocket> m_sockets;
+		private IConnectionSocket[] m_outSockets;
+		private ConnectionSocket m_upSocket;
+		private ConnectionSocket m_rightSocket;
+		private ConnectionSocket m_downSocket;
+		private ConnectionSocket m_leftSocket;
 
 		private Label m_entryLabel;
 		private VisualElement m_breakpointElement;
 
 		public BehaviourState State => m_state;
+		public IConnectionSocket[] OutSockets => m_outSockets;
+
+		#region IConnectionSocket
+
+		List<IConnectionSocket> IConnectionSocketOwner.Sockets => m_sockets;
+
+		VisualElement IConnectionSocket.Element => this;
+		Vector2 IConnectionSocket.Tangent { get; set; }
+
+		int IConnectionSocket.MaxIncomingConnections { get; set; } = -1;
+		int IConnectionSocket.MaxOutgoingConnections { get; set; } = 0;
+		int IConnectionSocket.IncomingConnections { get; set; }
+		int IConnectionSocket.OutgoingConnections { get; set; }
+
+		#endregion
 
 		public FSMNode(BehaviourState state) {
 			style.transformOrigin = new TransformOrigin(Length.Percent(50f), Length.Percent(50f));
@@ -40,7 +61,17 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				pickingMode = PickingMode.Ignore,
 			});
 
-			m_sockets = new List<IConnectionSocket>() { this };
+			VisualElement rightCenter = new VisualElement() { name = "RightSocketCenter" };
+			rightCenter.Add(m_rightSocket = new ConnectionSocket() { name = "RightSocket", Tangent = Vector2.right });
+			VisualElement leftCenter = new VisualElement() { name = "LeftSocketCenter" };
+			leftCenter.Add(m_leftSocket = new ConnectionSocket() { name = "LeftSocket", Tangent = Vector2.left });
+
+			hierarchy.Add(m_upSocket = new ConnectionSocket() { name = "UpSocket", Tangent = Vector2.down });
+			hierarchy.Add(rightCenter);
+			hierarchy.Add(m_downSocket = new ConnectionSocket() { name = "DownSocket", Tangent = Vector2.up });
+			hierarchy.Add(leftCenter);
+			m_sockets = new List<IConnectionSocket>() { this, m_upSocket, m_rightSocket, m_downSocket, m_leftSocket };
+			m_outSockets = new IConnectionSocket[] { m_upSocket, m_rightSocket, m_downSocket, m_leftSocket };
 
 			transform.position = state.Editor_Data.Position;
 
@@ -111,19 +142,49 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			m_lastRuntimeStateStatus = m_state.Status;
 		}
 
-		#region IConnectionSocket
+		public void MoveConnectionStartToClosestSocket(Connection connection) {
+			Vector2 myPosition = transform.position;
+			Vector2 endPosition = connection.End.Element.transform.position;
+			float angle = Vector2.SignedAngle(Vector2.up, myPosition - endPosition);
 
-		List<IConnectionSocket> IConnectionSocketOwner.Sockets => m_sockets;
+			switch (Mathf.Abs(angle)) {
+				case > 135f: // Down
+					if (connection.Start == m_downSocket)
+						return;
 
-		VisualElement IConnectionSocket.Element => this;
-		Vector2 IConnectionSocket.Tangent => Vector2.zero;
+					connection.Start.OutgoingConnections--;
+					connection.Start = m_downSocket;
 
-		int IConnectionSocket.MaxIncomingConnections { get; set; } = -1;
-		int IConnectionSocket.MaxOutgoingConnections { get; set; } = 0;
-		int IConnectionSocket.IncomingConnections { get; set; }
-		int IConnectionSocket.OutgoingConnections { get; set; }
+					break;
+				case > 45f: // Sides
+					if (angle < 0) {
+						if (connection.Start == m_leftSocket)
+							return;
 
-		#endregion
+						connection.Start.OutgoingConnections--;
+						connection.Start = m_leftSocket;
+					}
+					else {
+						if (connection.Start == m_rightSocket)
+							return;
+
+						connection.Start.OutgoingConnections--;
+						connection.Start = m_rightSocket;
+					}
+
+					break;
+				default: // Up
+					if (connection.Start == m_upSocket)
+						return;
+
+					connection.Start.OutgoingConnections--;
+					connection.Start = m_upSocket;
+
+					break;
+			}
+
+			connection.Start.OutgoingConnections++;
+		}
 
 		public void UpdateEditorData() {
 			m_state.Editor_Data.Position = transform.position;

@@ -83,7 +83,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		public virtual void UpdateBehaviour(ObjectBehaviour behaviour) { }
 
-		public void Tick() {
+		public virtual void Tick() {
 			foreach (VisualElement child in contentContainer.Children()) {
 				if (child is ITickElement tickElement) {
 					tickElement.Tick();

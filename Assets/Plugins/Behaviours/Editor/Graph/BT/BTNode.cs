@@ -27,7 +27,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		#region IConnectionSocket
 
 		VisualElement IConnectionSocket.Element => this;
-		Vector2 IConnectionSocket.Tangent => Vector2.down;
+		Vector2 IConnectionSocket.Tangent { get; set; } = Vector2.down;
 		List<IConnectionSocket> IConnectionSocketOwner.Sockets => m_sockets;
 
 		int IConnectionSocket.MaxIncomingConnections { get; set; } = 1;
@@ -58,7 +58,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				pickingMode = PickingMode.Ignore,
 			});
 
-			hierarchy.Add(m_outSocket = new ConnectionSocket());
+			hierarchy.Add(m_outSocket = new ConnectionSocket() { Tangent = Vector2.up });
 			m_sockets = new List<IConnectionSocket> { this, m_outSocket };
 
 			transform.position = action.Editor_Data.Position;

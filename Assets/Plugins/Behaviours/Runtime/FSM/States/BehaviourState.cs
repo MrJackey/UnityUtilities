@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Jackey.Behaviours.FSM.States {
 	[Serializable]
 	public abstract class BehaviourState {
-		[SerializeField] private List<StateTransition> m_transitions;
+		[SerializeField] private List<StateTransition> m_transitions = new();
 
 		protected ObjectBehaviour m_runtimeBehaviour;
 
@@ -13,6 +13,8 @@ namespace Jackey.Behaviours.FSM.States {
 		public bool IsFinished => Status is BehaviourStatus.Success or BehaviourStatus.Failure;
 
 		protected BehaviourOwner Owner => m_runtimeBehaviour.Owner;
+
+		internal List<StateTransition> Transitions => m_transitions;
 
 #if UNITY_EDITOR
 		[SerializeField] internal EditorData Editor_Data = new();
