@@ -65,39 +65,46 @@ namespace Jackey.Behaviours {
 
 			Type type = instance.GetType();
 
-			foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
-				Type fieldType = field.FieldType;
+			while (true) {
+				foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
+					Type fieldType = field.FieldType;
 
-				if (!fieldType.IsSerializable) continue;
-				if (fieldType.IsPrimitive) continue;
+					if (!fieldType.IsSerializable) continue;
+					if (fieldType.IsPrimitive) continue;
 
-				if (fieldType.IsGenericType) {
-					Type typeDefinition = fieldType.GetGenericTypeDefinition();
+					if (fieldType.IsGenericType) {
+						Type typeDefinition = fieldType.GetGenericTypeDefinition();
 
-					if (typeDefinition == typeof(BlackboardRef<>) || typeDefinition == typeof(BlackboardOnlyRef<>)) {
-						FieldInfo behaviourField = fieldType.GetField("m_behaviour", BindingFlags.Instance | BindingFlags.NonPublic);
-						Debug.Assert(behaviourField != null);
+						if (typeDefinition == typeof(BlackboardRef<>) || typeDefinition == typeof(BlackboardOnlyRef<>)) {
+							FieldInfo behaviourField = fieldType.GetField("m_behaviour", BindingFlags.Instance | BindingFlags.NonPublic);
+							Debug.Assert(behaviourField != null);
 
-						object blackboardRefValue = field.GetValue(instance);
-						behaviourField.SetValue(blackboardRefValue, this);
-						field.SetValue(instance, blackboardRefValue);
+							object blackboardRefValue = field.GetValue(instance);
+							behaviourField.SetValue(blackboardRefValue, this);
+							field.SetValue(instance, blackboardRefValue);
+						}
+					}
+
+					object fieldValue = field.GetValue(instance);
+					if (fieldValue == null) continue;
+
+					// Only lists and arrays are serializable collections in Unity
+					if (fieldValue is IList list) {
+						foreach (object item in list)
+							ConnectBlackboardRefs(item);
+					}
+					else {
+						ConnectBlackboardRefs(fieldValue);
+
+						if (fieldType.IsValueType)
+							field.SetValue(instance, fieldValue);
 					}
 				}
 
-				object fieldValue = field.GetValue(instance);
-				if (fieldValue == null) continue;
+				if (type.BaseType == null)
+					break;
 
-				// Only lists and arrays are serializable collections in Unity
-				if (fieldValue is IList list) {
-					foreach (object item in list)
-						ConnectBlackboardRefs(item);
-				}
-				else {
-					ConnectBlackboardRefs(fieldValue);
-
-					if (fieldType.IsValueType)
-						field.SetValue(instance, fieldValue);
-				}
+				type = type.BaseType;
 			}
 		}
 
