@@ -121,7 +121,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 
 					voided = false;
 
-					if (socket.IncomingConnections >= socket.MaxIncomingConnections)
+					if (socket.MaxIncomingConnections != -1 && socket.IncomingConnections >= socket.MaxIncomingConnections)
 						continue;
 
 					m_connection.End = socket;
@@ -210,9 +210,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 				Debug.Assert(m_connection.Start != null || (socket.MaxOutgoingConnections == -1 || socket.OutgoingConnections < socket.MaxOutgoingConnections));
 				Debug.Assert(m_connection.End != null || (socket.MaxIncomingConnections == -1 || socket.IncomingConnections < socket.MaxIncomingConnections));
 			}
-
-			if (!IsConnectionValidWithSocket(m_connection, socket)) {
-				Debug.Assert(socket != m_socket);
+			else if (!IsConnectionValidWithSocket(m_connection, socket)) { // Assumed to be valid when moved back
 				return false;
 			}
 
@@ -224,7 +222,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 				socket.OutgoingConnections++;
 			}
 			else {
-				if (socket.IncomingConnections != -1 && socket.IncomingConnections >= socket.MaxIncomingConnections)
+				if (socket.MaxIncomingConnections != -1 && socket.IncomingConnections >= socket.MaxIncomingConnections)
 					return false;
 
 				m_connection.End = socket;
