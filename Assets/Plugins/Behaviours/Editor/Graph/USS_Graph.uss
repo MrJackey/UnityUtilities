@@ -253,6 +253,24 @@ Inspector #Content {
 	padding: 10px 5px;
 }
 
+Inspector #SelectActionButton {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+Inspector #ActionFields {
+	background-color: rgb(55, 55, 55);
+	border-radius: 5px;
+	padding: 10px 5px;
+}
+
+Inspector #ActionFieldsHeader {
+	align-self: center;
+	font-size: 13px;
+	margin-bottom: 5px;
+	-unity-font-style: bold;
+}
+
 #BlackboardRef {
 	flex-direction: column;
 }

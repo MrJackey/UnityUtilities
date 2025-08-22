@@ -1,4 +1,5 @@
 ﻿using System;
+using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.BT;
 using Jackey.Behaviours.Core.Blackboard;
 using JetBrains.Annotations;
@@ -19,6 +20,7 @@ namespace Jackey.Behaviours.Core {
 		protected BehaviourOwner Owner => m_runtimeBehaviour.Owner;
 
 #if UNITY_EDITOR
+		[HideInNormalInspector]
 		[SerializeField] internal EditorData Editor_Data = new();
 #endif
 		public virtual string Editor_Info => string.Empty;
