@@ -12,4 +12,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 		int IncomingConnections { get; set; }
 		int OutgoingConnections { get; set; }
 	}
+
+	public interface IConnectionAreaSocket : IConnectionSocket {
+		Vector2 GetPoint(Connection connection);
+	}
 }

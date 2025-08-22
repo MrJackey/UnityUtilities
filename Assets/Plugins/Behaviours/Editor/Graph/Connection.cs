@@ -91,13 +91,21 @@ namespace Jackey.Behaviours.Editor.Graph {
 			Vector2 start = mousePosition;
 			if (Start != null) {
 				VisualElement startElement = Start.Element;
-				start = startElement.ChangeCoordinatesTo(this, startElement.GetLocalOrigin());
+
+				if (startElement is IConnectionAreaSocket areaSocket)
+					start = startElement.ChangeCoordinatesTo(this, areaSocket.GetPoint(this));
+				else
+					start = startElement.ChangeCoordinatesTo(this, startElement.GetLocalOrigin());
 			}
 
 			Vector2 end = mousePosition;
 			if (End != null) {
 				VisualElement endElement = End.Element;
-				end = endElement.ChangeCoordinatesTo(this, endElement.GetLocalOrigin());
+
+				if (endElement is IConnectionAreaSocket areaSocket)
+					end = endElement.ChangeCoordinatesTo(this, areaSocket.GetPoint(this));
+				else
+					end = endElement.ChangeCoordinatesTo(this, endElement.GetLocalOrigin());
 			}
 
 			return (start, end);

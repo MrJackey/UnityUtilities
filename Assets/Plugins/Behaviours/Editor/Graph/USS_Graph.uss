@@ -144,8 +144,6 @@ ConnectionSocket {
 	border-color: rgb(25, 25, 25);
 	border-width: 3px;
 	border-radius: 25px;
-	width: 20px;
-	height: 20px;
 }
 
 ConnectionSocket:hover {
@@ -156,6 +154,8 @@ BTNode > ConnectionSocket {
 	align-self: center;
 	position: absolute;
 	bottom: -20px;
+	width: 20px;
+	height: 20px;
 }
 
 BTNode #Entry {
@@ -179,7 +179,9 @@ FSMNode ConnectionSocket {
 }
 
 FSMNode #UpSocket {
-	top: -20px;
+	top: -14px;
+	width: 50%;
+	height: 14px;
 }
 
 FSMNode > #RightSocketCenter {
@@ -190,11 +192,15 @@ FSMNode > #RightSocketCenter {
 }
 
 FSMNode #RightSocket {
-	right: -20px;
+	right: -14px;
+	width: 14px;
+	height: 50%;
 }
 
 FSMNode #DownSocket {
-	bottom: -20px;
+	bottom: -14px;
+	width: 50%;
+	height: 14px;
 }
 
 FSMNode > #LeftSocketCenter {
@@ -205,7 +211,9 @@ FSMNode > #LeftSocketCenter {
 }
 
 FSMNode #LeftSocket {
-	left: -20px;
+	left: -14px;
+	width: 14px;
+	height: 50%;
 }
 
 FSMNode #Entry {

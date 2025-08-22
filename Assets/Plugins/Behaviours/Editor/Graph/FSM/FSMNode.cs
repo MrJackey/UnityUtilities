@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Graph.FSM {
-	public class FSMNode : Node, ITickElement, IConnectionSocketOwner, IConnectionSocket {
+	public class FSMNode : Node, ITickElement, IConnectionSocketOwner, IConnectionAreaSocket {
 		private BehaviourState m_state;
 		private BehaviourStatus m_lastRuntimeStateStatus = BehaviourStatus.Inactive;
 
@@ -38,6 +38,21 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 		int IConnectionSocket.MaxOutgoingConnections { get; set; } = 0;
 		int IConnectionSocket.IncomingConnections { get; set; }
 		int IConnectionSocket.OutgoingConnections { get; set; }
+
+		Vector2 IConnectionAreaSocket.GetPoint(Connection connection) {
+			Vector2 myPosition = transform.position;
+			Vector2 startPosition = connection.Start != null
+				? connection.Start.Element.GetFirstOfType<FSMNode>().transform.position
+				: connection.localBound.center; // Estimate its position's direction
+			float angle = Vector2.SignedAngle(Vector2.up, myPosition - startPosition);
+
+			return angle switch {
+				> 90f => new Vector2(localBound.width, localBound.height), // BottomRight
+				> 0f => new Vector2(localBound.width, 0f), // TopRight
+				< -90f => new Vector2(0f, localBound.height), // BottomLeft
+				_ => Vector2.zero, // TopLeft
+			};
+		}
 
 		#endregion
 
@@ -70,6 +85,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			hierarchy.Add(rightCenter);
 			hierarchy.Add(m_downSocket = new ConnectionSocket() { name = "DownSocket", Tangent = Vector2.up });
 			hierarchy.Add(leftCenter);
+
 			m_sockets = new List<IConnectionSocket>() { this, m_upSocket, m_rightSocket, m_downSocket, m_leftSocket };
 			m_outSockets = new IConnectionSocket[] { m_upSocket, m_rightSocket, m_downSocket, m_leftSocket };
 
@@ -147,42 +163,18 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			Vector2 endPosition = connection.End.Element.transform.position;
 			float angle = Vector2.SignedAngle(Vector2.up, myPosition - endPosition);
 
-			switch (Mathf.Abs(angle)) {
-				case > 135f: // Down
-					if (connection.Start == m_downSocket)
-						return;
+			IConnectionSocket closest = Mathf.Abs(angle) switch {
+				> 135f => m_downSocket,
+				> 45f when angle < 0 => m_leftSocket,
+				> 45f when angle > 0 => m_rightSocket,
+				_ => m_upSocket,
+			};
 
-					connection.Start.OutgoingConnections--;
-					connection.Start = m_downSocket;
+			if (closest == connection.Start)
+				return;
 
-					break;
-				case > 45f: // Sides
-					if (angle < 0) {
-						if (connection.Start == m_leftSocket)
-							return;
-
-						connection.Start.OutgoingConnections--;
-						connection.Start = m_leftSocket;
-					}
-					else {
-						if (connection.Start == m_rightSocket)
-							return;
-
-						connection.Start.OutgoingConnections--;
-						connection.Start = m_rightSocket;
-					}
-
-					break;
-				default: // Up
-					if (connection.Start == m_upSocket)
-						return;
-
-					connection.Start.OutgoingConnections--;
-					connection.Start = m_upSocket;
-
-					break;
-			}
-
+			connection.Start.OutgoingConnections--;
+			connection.Start = closest;
 			connection.Start.OutgoingConnections++;
 		}
 
