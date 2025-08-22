@@ -63,13 +63,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			);
 
 			Handles.color = new Color(0.5f, 0.5f, 0.5f, 1f);
-
-			if (Start != null)
-				Handles.DrawSolidDisc(start, Vector3.back, WIDTH * 0.75f);
-
-			if (End != null)
-				Handles.DrawSolidDisc(end, Vector3.back, WIDTH * 0.75f);
-
+			Handles.DrawSolidDisc(end, Vector3.back, WIDTH * 0.75f);
 			Handles.color = Color.white;
 		}
 

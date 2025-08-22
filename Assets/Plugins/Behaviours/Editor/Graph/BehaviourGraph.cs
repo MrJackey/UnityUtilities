@@ -71,7 +71,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			this.AddManipulator(new ContentZoomer());
 			this.AddManipulator(new RectangleSelector(this));
 
-			this.AddManipulator(m_connectionManipulator = new ConnectionManipulator(this));
+			this.AddManipulator(m_connectionManipulator = new ConnectionManipulator(InsertConnectionElement));
 			m_connectionManipulator.ConnectionCreated += OnConnectionCreated;
 			m_connectionManipulator.ConnectionValidator = IsConnectionValid;
 
@@ -194,9 +194,13 @@ namespace Jackey.Behaviours.Editor.Graph {
 			Debug.Assert(!m_connections.Contains(connection));
 
 			m_connections.Add(connection);
-			Insert(m_groups.Count, connection);
+			InsertConnectionElement(connection);
 
 			connection.RegisterCallback<MouseDownEvent>(OnConnectionMouseDown);
+		}
+
+		private void InsertConnectionElement(Connection connection) {
+			Insert(m_groups.Count, connection);
 		}
 
 		public void RemoveAllConnections() {
