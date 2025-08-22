@@ -6,6 +6,7 @@ using Jackey.Behaviours.Core.Blackboard;
 using UnityEngine;
 
 #if UNITY_EDITOR
+using Jackey.Behaviours.Attributes;
 using UnityEditor;
 #endif
 
@@ -67,6 +68,8 @@ namespace Jackey.Behaviours {
 
 			while (true) {
 				foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
+					if (field.GetCustomAttribute<SkipBlackboardConnectAttribute>() != null) continue;
+
 					Type fieldType = field.FieldType;
 
 					if (!fieldType.IsSerializable) continue;

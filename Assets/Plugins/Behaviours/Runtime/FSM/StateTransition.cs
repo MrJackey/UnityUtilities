@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.Core.Conditions;
 using Jackey.Behaviours.FSM.States;
 using UnityEngine;
@@ -7,6 +8,7 @@ using UnityEngine;
 namespace Jackey.Behaviours.FSM {
 	[Serializable]
 	public class StateTransition {
+		[SkipBlackboardConnect]
 		[SerializeReference] private BehaviourState m_destination;
 		[SerializeField] private List<StateTransitionGroup> m_groups;
 
