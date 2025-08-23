@@ -177,6 +177,20 @@ namespace Jackey.Behaviours.Editor.Graph {
 		/// </summary>
 		protected virtual void OnNodeRemoval(Node node) { }
 
+		// Moves nodes to position keeping relative offsets
+		protected void MoveNodesAroundPoint(in Node[] nodes, Vector2 position) {
+			Rect nodeRect = new Rect(nodes[0].transform.position, Vector2.zero);
+
+			for (int i = 1; i < nodes.Length; i++) {
+				Vector3 nodePosition = nodes[i].transform.position;
+				nodeRect = nodeRect.Encapsulate(nodePosition);
+			}
+
+			Vector2 offset = position - nodeRect.center;
+			foreach (Node node in nodes)
+				node.transform.position += (Vector3)offset;
+		}
+
 		#endregion
 
 		#region Connection

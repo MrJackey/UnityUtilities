@@ -195,7 +195,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				if (selectedElement is not BTNode btNode)
 					continue;
 
-				BehaviourAction actionClone = SerializationUtilities.DeepClone(btNode.Action);
+				BehaviourAction actionClone = SerializationUtilities.DeepCloneAction(btNode.Action);
 				BTNode nodeClone = new BTNode(actionClone);
 
 				originals.Add(btNode);
@@ -301,22 +301,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		}
 
 		public override void Paste(Vector2 GUIPosition) {
-			CopyPasteData pasteData;
-			try {
-				pasteData = JsonUtility.FromJson<CopyPasteData>(GUIUtility.systemCopyBuffer);
-			}
-			catch (ArgumentException) {
-				Debug.LogWarning("Invalid clipboard content. Unable to paste");
-				return;
-			}
-
-			if (pasteData is not { Context: CopyPasteContext.BT }) return;
-
-			BTCopyData btData;
-			try {
-				btData = JsonUtility.FromJson<BTCopyData>(pasteData.Data);
-			}
-			catch (ArgumentException) {
+			if (!CopyPasteData.TryParse(CopyPasteContext.BT, out BTCopyData data)) {
 				Debug.LogWarning("Invalid clipboard content. Unable to paste");
 				return;
 			}
@@ -324,10 +309,10 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			Undo.RecordObject(m_behaviour, "Paste nodes");
 
 			// Create nodes
-			BehaviourAction[] actions = new BehaviourAction[btData.Actions.Length];
-			BTNode[] nodes = new BTNode[btData.Actions.Length];
+			BehaviourAction[] actions = new BehaviourAction[data.Actions.Length];
+			BTNode[] nodes = new BTNode[data.Actions.Length];
 			for (int i = 0; i < actions.Length; i++) {
-				BehaviourAction action = (BehaviourAction)JsonUtility.FromJson(btData.Actions[i], Type.GetType(btData.ActionTypes[i]));
+				BehaviourAction action = (BehaviourAction)JsonUtility.FromJson(data.Actions[i], Type.GetType(data.ActionTypes[i]));
 				actions[i] = action;
 				m_behaviour.m_allActions.Add(action);
 
@@ -346,8 +331,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			}
 
 			// Setup connections
-			for (int i = 0; i < btData.ParentIndices.Length; i++) {
-				int parentIndex = btData.ParentIndices[i];
+			for (int i = 0; i < data.ParentIndices.Length; i++) {
+				int parentIndex = data.ParentIndices[i];
 				if (parentIndex == -1) continue;
 
 				BehaviourAction parentAction = actions[parentIndex];
@@ -366,18 +351,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			}
 
 			// Move nodes to cursor location keeping relative offsets
-			Vector2 pasteCenter = this.ChangeCoordinatesTo(contentContainer, GUIPosition) - new Vector2(Node.DEFAULT_WIDTH / 2f, Node.DEFAULT_HEIGHT / 2f);
-			Rect pasteRect = new Rect(nodes[0].transform.position, Vector2.zero);
-
-			for (int i = 1; i < nodes.Length; i++) {
-				Vector3 nodePosition = nodes[i].transform.position;
-				pasteRect.min = Vector2.Min(pasteRect.min, nodePosition);
-				pasteRect.max = Vector2.Max(pasteRect.max, nodePosition);
-			}
-
-			Vector2 offset = pasteCenter - pasteRect.center;
-			foreach (BTNode node in nodes)
-				node.transform.position += (Vector3)offset;
+			Vector2 pasteCenter = this.ChangeCoordinatesTo(contentContainer, GUIPosition) - new Vector2(Node.DEFAULT_WIDTH / 2f, Node.DEFAULT_HEIGHT / 2f);;
+			MoveNodesAroundPoint(nodes, pasteCenter);
 
 			ApplyChanges();
 			this.ReplaceSelection(nodes);

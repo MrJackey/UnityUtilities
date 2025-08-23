@@ -7,6 +7,7 @@ using Jackey.Behaviours.BT.Decorators;
 using Jackey.Behaviours.BT.Nested;
 using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Core.Operations;
+using Jackey.Behaviours.Editor.CopyPaste;
 using Jackey.Behaviours.Editor.PropertyDrawers;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Editor.Utilities;
@@ -190,6 +191,151 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 					RemoveConnection(connection);
 				}
 			}
+		}
+
+		#endregion
+
+		#region CopyPaste
+
+		public override void DuplicateSelection() {
+			if (SelectedElements.Count == 0) return;
+
+			List<FSMNode> originals = new List<FSMNode>();
+			List<FSMNode> clones = new List<FSMNode>();
+
+			Undo.RecordObject(m_behaviour, "Duplicate selected elements");
+
+			// Duplicate Nodes
+			foreach (ISelectableElement selectedElement in SelectedElements) {
+				if (selectedElement is not FSMNode fsmNode)
+					continue;
+
+				BehaviourState stateClone = SerializationUtilities.DeepCloneState(fsmNode.State);
+				FSMNode nodeClone = new FSMNode(stateClone);
+
+				originals.Add(fsmNode);
+				clones.Add(nodeClone);
+
+				m_behaviour.m_allStates.Add(stateClone);
+
+				AddNode(nodeClone);
+				nodeClone.transform.position += Node.DUPLICATE_OFFSET;
+			}
+
+			ApplyChanges();
+
+			// Clear/Duplicate Connections
+			for (int i = 0; i < clones.Count; i++) {
+				FSMNode original = originals[i];
+				FSMNode clone = clones[i];
+
+				BehaviourState originalState = original.State;
+				BehaviourState cloneState = clone.State;
+
+				for (int j = originalState.Transitions.Count - 1; j >= 0; j--) {
+					StateTransition originalTransition = originalState.Transitions[j];
+
+					int destinationIndex = originals.FindIndex(x => x.State == originalTransition.Destination);
+					if (destinationIndex == -1) {
+						cloneState.Transitions.RemoveAt(j);
+						continue;
+					}
+
+					cloneState.Transitions[j].Destination = clones[destinationIndex].State;
+
+					AddConnection(new Connection(
+						start: clone.OutSockets[0],
+						end: clones[destinationIndex]
+					));
+				}
+			}
+
+			this.ReplaceSelection(clones);
+		}
+
+		public override void CopySelection() {
+			if (SelectedElements.Count == 0) return;
+
+			// Get all selected states
+			List<BehaviourState> states = new List<BehaviourState>();
+			foreach (ISelectableElement selected in SelectedElements) {
+				if (selected.Element is FSMNode node)
+					states.Add(node.State);
+			}
+
+			if (states.Count == 0)
+				return;
+
+			// Save their transition destinations if part of selection
+			List<int> transitionIndices = new List<int>();
+			foreach (BehaviourState state in states) {
+				foreach (StateTransition transition in state.Transitions) {
+					int transitionIndex = states.IndexOf(transition.Destination);
+					transitionIndices.Add(transitionIndex);
+				}
+			}
+
+			// Save data to clipboard
+			FSMCopyData fsmData = new FSMCopyData() {
+				StateTypes = states.Select(state => state.GetType().AssemblyQualifiedName).ToArray(),
+				States = states.Select(JsonUtility.ToJson).ToArray(),
+				TransitionIndices = transitionIndices.ToArray(),
+			};
+			CopyPasteData copyData = new CopyPasteData() {
+				Context = CopyPasteContext.FSM,
+				Data = JsonUtility.ToJson(fsmData),
+			};
+			GUIUtility.systemCopyBuffer = JsonUtility.ToJson(copyData);
+		}
+
+		public override void Paste(Vector2 GUIPosition) {
+			if (!CopyPasteData.TryParse(CopyPasteContext.FSM, out FSMCopyData data)) {
+				Debug.LogWarning("Invalid clipboard content. Unable to paste");
+				return;
+			}
+
+			Undo.RecordObject(m_behaviour, "Paste nodes");
+
+			// Create nodes
+			BehaviourState[] states = new BehaviourState[data.States.Length];
+			FSMNode[] nodes = new FSMNode[data.States.Length];
+			for (int i = 0; i < states.Length; i++) {
+				BehaviourState state = (BehaviourState)JsonUtility.FromJson(data.States[i], Type.GetType(data.StateTypes[i]));
+				states[i] = state;
+				m_behaviour.m_allStates.Add(state);
+
+				FSMNode node = new FSMNode(state);
+				nodes[i] = node;
+				AddNode(node);
+			}
+
+			// Setup transitions
+			int dataIndex = 0;
+			for (int stateIndex = 0; stateIndex < states.Length; stateIndex++) {
+				BehaviourState state = states[stateIndex];
+				int transitionCount = state.Transitions.Count;
+
+				for (int j = transitionCount - 1; j >= 0; j--) {
+					int destinationIndex = data.TransitionIndices[dataIndex + j];
+					if (destinationIndex == -1) {
+						state.Transitions.RemoveAt(j);
+						continue;
+					}
+
+					state.Transitions[j].Destination = states[destinationIndex];
+
+					AddConnection(new Connection(nodes[stateIndex].OutSockets[0], nodes[destinationIndex]));
+				}
+
+				dataIndex += transitionCount;
+			}
+
+			// Move nodes to cursor location keeping relative offsets
+			Vector2 pasteCenter = this.ChangeCoordinatesTo(contentContainer, GUIPosition) - new Vector2(Node.DEFAULT_WIDTH / 2f, Node.DEFAULT_HEIGHT / 2f);;
+			MoveNodesAroundPoint(nodes, pasteCenter);
+
+			ApplyChanges();
+			this.ReplaceSelection(nodes);
 		}
 
 		#endregion
