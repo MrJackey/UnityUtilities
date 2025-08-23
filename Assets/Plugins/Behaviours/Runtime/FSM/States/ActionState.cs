@@ -18,5 +18,9 @@ namespace Jackey.Behaviours.FSM.States {
 		protected override void OnInterrupt() {
 			m_action.Interrupt();
 		}
+
+		internal void SetAction(BehaviourAction action) {
+			m_action = action;
+		}
 	}
 }

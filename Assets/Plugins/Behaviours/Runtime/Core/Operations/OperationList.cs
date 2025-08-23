@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Jackey.Behaviours.Core.Operations {
 	[Serializable]
 	public class OperationList {
-		[SerializeReference] private Operation[] m_operations;
+		[SerializeReference] private Operation[] m_operations = Array.Empty<Operation>();
 
 #if UNITY_EDITOR
 		public string Editor_Info {
@@ -35,6 +35,11 @@ namespace Jackey.Behaviours.Core.Operations {
 			foreach (Operation operation in m_operations) {
 				operation.Execute(owner);
 			}
+		}
+
+		internal void Add(Operation operation) {
+			Array.Resize(ref m_operations, m_operations.Length + 1);
+			m_operations[^1] = operation;
 		}
 	}
 }

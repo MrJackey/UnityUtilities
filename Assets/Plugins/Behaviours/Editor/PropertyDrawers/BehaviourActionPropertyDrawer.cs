@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
-using Jackey.Behaviours.BT.Composites;
-using Jackey.Behaviours.BT.Decorators;
 using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Editor.Graph.FSM;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Utilities;
 using UnityEditor;
@@ -13,10 +11,6 @@ using UnityEngine.UIElements;
 namespace Jackey.Behaviours.Editor.PropertyDrawers {
 	[CustomPropertyDrawer(typeof(BehaviourAction))]
 	public class BehaviourActionPropertyDrawer : PropertyDrawer {
-		internal static readonly Type[] s_actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>()
-			.Where(type => !type.IsAbstract && !typeof(Decorator).IsAssignableFrom(type) && !typeof(Composite).IsAssignableFrom(type))
-			.ToArray();
-
 		private SerializedProperty m_property;
 
 		public override VisualElement CreatePropertyGUI(SerializedProperty property) {
@@ -55,7 +49,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		private void ChangeAction() {
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
 
-			TypeProvider.Instance.AskForType(mouseScreenPosition, s_actionTypes, type => {
+			TypeProvider.Instance.AskForType(mouseScreenPosition, FSMGraph.s_actionTypes, type => {
 				m_property.managedReferenceValue = Activator.CreateInstance(type);
 				m_property.serializedObject.ApplyModifiedProperties();
 			});

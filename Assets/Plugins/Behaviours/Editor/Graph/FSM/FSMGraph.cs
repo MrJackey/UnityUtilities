@@ -1,5 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Jackey.Behaviours.BT.Actions;
+using Jackey.Behaviours.BT.Composites;
+using Jackey.Behaviours.BT.Decorators;
+using Jackey.Behaviours.BT.Nested;
+using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Core.Operations;
+using Jackey.Behaviours.Editor.PropertyDrawers;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Editor.Utilities;
 using Jackey.Behaviours.FSM;
@@ -12,6 +20,11 @@ using UnityEngine.UIElements;
 namespace Jackey.Behaviours.Editor.Graph.FSM {
 	public class FSMGraph : BehaviourGraph<StateMachine> {
 		internal static readonly Type[] s_stateTypes = TypeCache.GetTypesDerivedFrom<BehaviourState>().Where(type => !type.IsAbstract).ToArray();
+		internal static readonly Type[] s_actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>()
+			.Where(type =>
+				!type.IsAbstract && !typeof(Decorator).IsAssignableFrom(type) && !typeof(Composite).IsAssignableFrom(type) &&
+				type != typeof(NestedBehaviourAction) && type != typeof(Operator))
+			.ToArray();
 
 		public FSMGraph() {
 			m_connectionManipulator.ConnectionVoided += OnConnectionVoided;
@@ -85,14 +98,31 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			base.BeginNodeCreation(GUIPosition);
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(GUIPosition);
-			TypeProvider.Instance.AskForType(mouseScreenPosition, s_stateTypes, type => CreateNode(type));
+			IEnumerable<TypeProvider.SearchEntry> searchTypes = TypeProvider.TypesToSearch(s_stateTypes).Select(entry => { entry.Path = $"States/{entry.Path}"; return entry; })
+				.Concat(TypeProvider.TypesToSearch(s_actionTypes).Select(entry => { entry.Path = $"Actions/{entry.Path}"; return entry; }))
+				.Concat(TypeProvider.TypesToSearch(OperationListPropertyDrawer.s_operationTypes).Select(entry => { entry.Path = $"Operations/{entry.Path}"; return entry; }));
+			TypeProvider.Instance.AskForType(mouseScreenPosition, searchTypes, type => CreateNode(type));
 		}
 
 		private FSMNode CreateNode(Type type) {
 			int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
 			Undo.RecordObject(m_behaviour, $"Create {type.Name} node");
 
-			BehaviourState state = (BehaviourState)Activator.CreateInstance(type);
+			BehaviourState state;
+			if (typeof(BehaviourAction).IsAssignableFrom(type)) {
+				ActionState actionState = new ActionState();
+				actionState.SetAction((BehaviourAction)Activator.CreateInstance(type));
+				state = actionState;
+			}
+			else if (typeof(Operation).IsAssignableFrom(type)) {
+				OperationState operationState = new OperationState();
+				operationState.Operations.Add((Operation)Activator.CreateInstance(type));
+				state = operationState;
+			}
+			else {
+				state = (BehaviourState)Activator.CreateInstance(type);
+			}
+
 			FSMNode node = new FSMNode(state);
 			m_behaviour.m_allStates.Add(state);
 

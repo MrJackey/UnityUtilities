@@ -5,8 +5,9 @@ using UnityEngine;
 namespace Jackey.Behaviours.FSM.States {
 	[SearchPath("Operation State")]
 	public class OperationState : BehaviourState {
-		[Header("Operations")]
-		[SerializeField] private OperationList m_operations;
+		[SerializeField] private OperationList m_operations = new();
+
+		internal OperationList Operations => m_operations;
 
 		protected override ExecutionStatus OnEnter() {
 			m_operations.Execute(Owner);
