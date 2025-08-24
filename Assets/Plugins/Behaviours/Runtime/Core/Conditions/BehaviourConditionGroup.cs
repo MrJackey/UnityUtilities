@@ -6,11 +6,14 @@ namespace Jackey.Behaviours.Core.Conditions {
 	[Serializable]
 	public class BehaviourConditionGroup {
 		[SerializeField] private Policy m_policy;
-		[SerializeReference] internal BehaviourCondition[] m_conditions;
+		[SerializeReference] internal BehaviourCondition[] m_conditions = Array.Empty<BehaviourCondition>();
 		[SerializeField] private bool m_invert;
 
 		public string Editor_Info {
 			get {
+				if (m_conditions.Length == 0)
+					return $"{InfoUtilities.AlignCenter("<b>No Conditions</b>")}";
+
 #if UNITY_EDITOR
 				string policyString = UnityEditor.ObjectNames.NicifyVariableName(m_policy.ToString());
 #else
@@ -18,18 +21,16 @@ namespace Jackey.Behaviours.Core.Conditions {
 #endif
 				string output = InfoUtilities.AlignCenter(m_invert ? $"<b>not {policyString}</b>\n" : $"<b>{policyString}</b>\n");
 
-				if (m_conditions != null) {
-					for (int i = 0; i < m_conditions.Length; i++) {
-						string conditionInfo = m_conditions[i].Editor_Info;
+				for (int i = 0; i < m_conditions.Length; i++) {
+					string conditionInfo = m_conditions[i].Editor_Info;
 
-						if (string.IsNullOrEmpty(conditionInfo))
-							conditionInfo = m_conditions[i].GetType().GetDisplayOrTypeName();
+					if (string.IsNullOrEmpty(conditionInfo))
+						conditionInfo = m_conditions[i].GetType().GetDisplayOrTypeName();
 
-						if (i < m_conditions.Length - 1)
-							output += $"{InfoUtilities.MULTI_INFO_SEPARATOR} {conditionInfo}\n";
-						else
-							output += $"{InfoUtilities.MULTI_INFO_SEPARATOR} {conditionInfo}";
-					}
+					if (i < m_conditions.Length - 1)
+						output += $"{InfoUtilities.MULTI_INFO_SEPARATOR} {conditionInfo}\n";
+					else
+						output += $"{InfoUtilities.MULTI_INFO_SEPARATOR} {conditionInfo}";
 				}
 
 				return output;

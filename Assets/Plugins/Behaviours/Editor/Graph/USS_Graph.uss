@@ -150,6 +150,17 @@ ConnectionSocket:hover {
 	background-color: rgb(110, 110, 110);
 }
 
+Connection > Label {
+	position: absolute;
+	background-color: rgb(25, 25, 25);
+	border-color: rgb(45, 45, 45);
+	border-width: 2px;
+	border-radius: 5px;
+	padding: 5px;
+	font-size: 11px;
+	-unity-text-align: middle-left;
+}
+
 BTNode > ConnectionSocket {
 	align-self: center;
 	position: absolute;

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.Core.Conditions;
 using Jackey.Behaviours.FSM.States;
+using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
 namespace Jackey.Behaviours.FSM {
@@ -10,7 +12,11 @@ namespace Jackey.Behaviours.FSM {
 	public class StateTransition {
 		[SkipBlackboardConnect]
 		[SerializeReference] private BehaviourState m_destination;
-		[SerializeField] private List<StateTransitionGroup> m_groups;
+		[SerializeField] private List<StateTransitionGroup> m_groups = new() { new StateTransitionGroup() };
+
+#if UNITY_EDITOR
+		public string Editor_Info => string.Join($"\n{InfoUtilities.AlignCenter("———")}\n", m_groups.Select(group => group.Editor_Info));
+#endif
 
 		internal BehaviourState Destination {
 			get => m_destination;
@@ -50,6 +56,10 @@ namespace Jackey.Behaviours.FSM {
 	public class StateTransitionGroup {
 		[SerializeField] private StateTransitionContext m_context;
 		[SerializeField] private BehaviourConditionGroup m_conditions;
+
+#if UNITY_EDITOR
+		public string Editor_Info => $"{InfoUtilities.AlignCenter(m_context.ToString())}\n{m_conditions.Editor_Info}";
+#endif
 
 		public void Enable(BehaviourOwner owner) {
 			m_conditions.Enable(owner);

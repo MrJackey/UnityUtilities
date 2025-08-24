@@ -10,20 +10,21 @@ namespace Jackey.Behaviours.Core.Operations {
 #if UNITY_EDITOR
 		public string Editor_Info {
 			get {
+				if (m_operations.Length == 0)
+					return $"{InfoUtilities.AlignCenter("<b>No Operations</b>")}";
+
 				string output = "";
 
-				if (m_operations != null) {
-					for (int i = 0; i < m_operations.Length; i++) {
-						string operationInfo = m_operations[i].Editor_Info;
+				for (int i = 0; i < m_operations.Length; i++) {
+					string operationInfo = m_operations[i].Editor_Info;
 
-						if (string.IsNullOrEmpty(operationInfo))
-							operationInfo = m_operations[i].GetType().GetDisplayOrTypeName();
+					if (string.IsNullOrEmpty(operationInfo))
+						operationInfo = m_operations[i].GetType().GetDisplayOrTypeName();
 
-						if (i < m_operations.Length - 1)
-							output += $"{InfoUtilities.MULTI_INFO_SEPARATOR} {operationInfo}\n";
-						else
-							output += $"{InfoUtilities.MULTI_INFO_SEPARATOR} {operationInfo}";
-					}
+					if (i < m_operations.Length - 1)
+						output += $"{InfoUtilities.MULTI_INFO_SEPARATOR} {operationInfo}\n";
+					else
+						output += $"{InfoUtilities.MULTI_INFO_SEPARATOR} {operationInfo}";
 				}
 
 				return output;

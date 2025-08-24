@@ -78,8 +78,18 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			foreach (Connection connection in m_connections) {
 				if (connection.Start == null || connection.End == null) continue;
 
-				FSMNode node = connection.Start.Element.GetFirstOfType<FSMNode>();
-				node.MoveConnectionStartToClosestSocket(connection);
+				FSMNode startNode = connection.Start.Element.GetFirstOfType<FSMNode>();
+				FSMNode endNode = connection.End.Element.GetFirstOfType<FSMNode>();
+
+				startNode.MoveConnectionStartToClosestSocket(connection);
+
+				// Update connection label
+				foreach (StateTransition transition in startNode.State.Transitions) {
+					if (transition.Destination != endNode.State) continue;
+
+					connection.SetLabel(transition.Editor_Info);
+					break;
+				}
 			}
 
 			base.Tick();

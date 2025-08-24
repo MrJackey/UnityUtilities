@@ -9,11 +9,21 @@ namespace Jackey.Behaviours.Editor.Graph {
 		private const float WIDTH = 10f;
 		private const float CLICK_DISTANCE = 10f;
 
+		private Label m_label;
+
 		public IConnectionSocket Start { get; set; }
 		public IConnectionSocket End { get; set; }
 
 		public Connection() {
 			style.position = Position.Absolute;
+
+			Add(m_label = new Label() {
+				pickingMode = PickingMode.Ignore,
+				usageHints = UsageHints.DynamicTransform,
+				visible = false,
+			});
+
+			usageHints = UsageHints.DynamicTransform;
 		}
 
 		public Connection(IConnectionSocket start, IConnectionSocket end) : this() {
@@ -24,6 +34,16 @@ namespace Jackey.Behaviours.Editor.Graph {
 			end.IncomingConnections++;
 
 			usageHints = UsageHints.DynamicTransform;
+		}
+
+		public void SetLabel(string info) {
+			if (string.IsNullOrEmpty(info)) {
+				m_label.visible = false;
+				return;
+			}
+
+			m_label.visible = true;
+			m_label.text = info;
 		}
 
 		protected override void ImmediateRepaint() {
@@ -45,12 +65,23 @@ namespace Jackey.Behaviours.Editor.Graph {
 				return;
 
 			// Update bounds. Add click distance as padding to handle edges being clicked
-			transform.position = this.ChangeCoordinatesTo(parent.contentContainer, localRect).position;
+			Vector2 nextBoundsPosition = this.ChangeCoordinatesTo(parent.contentContainer, localRect).position;
+			Vector2 boundsDeltaPosition = nextBoundsPosition - (Vector2)transform.position;
+
+			transform.position = nextBoundsPosition;
 			style.width = width + 2f * CLICK_DISTANCE;
 			style.height = height + 2f * CLICK_DISTANCE;
 
 			// Draw graphics
 			(Vector2 startTangent, Vector2 endTangent) = GetTangents(start, end);
+
+			if (m_label.visible) {
+				Vector2 bezierPoint = Handles.MakeBezierPoints(start, end, start + startTangent, end +endTangent, 7)[2];
+				Vector2 labelPosition = bezierPoint - m_label.localBound.size / 2f;
+				labelPosition -= boundsDeltaPosition; // Adjust if connection transform moves, otherwise causes jittering
+
+				m_label.transform.position = labelPosition;
+			}
 
 			Handles.DrawBezier(
 				start,

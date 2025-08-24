@@ -77,13 +77,13 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			});
 
 			VisualElement rightCenter = new VisualElement() { name = "RightSocketCenter" };
-			rightCenter.Add(m_rightSocket = new ConnectionSocket() { name = "RightSocket", Tangent = Vector2.right });
+			rightCenter.Add(m_rightSocket = new ConnectionSocket() { name = "RightSocket", Tangent = new Vector2(2.5f, 0f) });
 			VisualElement leftCenter = new VisualElement() { name = "LeftSocketCenter" };
-			leftCenter.Add(m_leftSocket = new ConnectionSocket() { name = "LeftSocket", Tangent = Vector2.left });
+			leftCenter.Add(m_leftSocket = new ConnectionSocket() { name = "LeftSocket", Tangent = new Vector2(-2.5f, 0f) });
 
-			hierarchy.Add(m_upSocket = new ConnectionSocket() { name = "UpSocket", Tangent = Vector2.down });
+			hierarchy.Add(m_upSocket = new ConnectionSocket() { name = "UpSocket", Tangent = new Vector2(0f, -2.5f) });
 			hierarchy.Add(rightCenter);
-			hierarchy.Add(m_downSocket = new ConnectionSocket() { name = "DownSocket", Tangent = Vector2.up });
+			hierarchy.Add(m_downSocket = new ConnectionSocket() { name = "DownSocket", Tangent = new Vector2(0f, 2.5f) });
 			hierarchy.Add(leftCenter);
 
 			m_sockets = new List<IConnectionSocket>() { this, m_upSocket, m_rightSocket, m_downSocket, m_leftSocket };
