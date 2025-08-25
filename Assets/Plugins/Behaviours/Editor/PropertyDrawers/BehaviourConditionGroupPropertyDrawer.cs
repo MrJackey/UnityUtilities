@@ -9,11 +9,8 @@ using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.PropertyDrawers {
 	[CustomPropertyDrawer(typeof(BehaviourConditionGroup))]
-	public class BehaviourConditionGroupPropertyDrawer : ManagedListPropertyDrawer<BehaviourCondition> {
+	public class BehaviourConditionGroupPropertyDrawer : PropertyDrawer {
 		internal static readonly Type[] s_conditionTypes = TypeCache.GetTypesDerivedFrom<BehaviourCondition>().Where(type => !type.IsAbstract).ToArray();
-
-		protected override string CreateButtonText => "Add Condition";
-		protected override Type[] CreateTypes => s_conditionTypes;
 
 		public override VisualElement CreatePropertyGUI(SerializedProperty property) {
 			VisualElement rootVisualElement = new VisualElement();
@@ -24,7 +21,11 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			SerializedProperty policyProperty = property.FindPropertyRelative("m_policy");
 			rootVisualElement.Add(new PropertyField(policyProperty, string.Empty));
 
-			CreateListGUI(rootVisualElement, property.FindPropertyRelative("m_conditions"));
+			rootVisualElement.Add(new ManagedListPropertyDrawer(
+				property.FindPropertyRelative("m_conditions"),
+				"Add Condition",
+				s_conditionTypes)
+			);
 
 			fieldInfo.GetCustomAttribute<CustomShowIfAttribute>()?.Bind(rootVisualElement, property);
 			fieldInfo.GetCustomAttribute<CustomEnableIfAttribute>()?.Bind(rootVisualElement, property);
