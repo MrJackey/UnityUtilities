@@ -9,16 +9,17 @@ namespace Jackey.Behaviours.Editor.Graph {
 		private const float WIDTH = 10f;
 		private const float CLICK_DISTANCE = 10f;
 
-		private Label m_label;
+		private ConnectionLabel m_label;
 
 		public IConnectionSocket Start { get; set; }
 		public IConnectionSocket End { get; set; }
 
+		public ConnectionLabel Label => m_label;
+
 		public Connection() {
 			style.position = Position.Absolute;
 
-			Add(m_label = new Label() {
-				pickingMode = PickingMode.Ignore,
+			Add(m_label = new ConnectionLabel() {
 				usageHints = UsageHints.DynamicTransform,
 				visible = false,
 			});

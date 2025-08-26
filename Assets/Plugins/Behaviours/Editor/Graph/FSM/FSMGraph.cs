@@ -8,6 +8,7 @@ using Jackey.Behaviours.BT.Nested;
 using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Core.Operations;
 using Jackey.Behaviours.Editor.CopyPaste;
+using Jackey.Behaviours.Editor.Manipulators;
 using Jackey.Behaviours.Editor.PropertyDrawers;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Editor.Utilities;
@@ -367,16 +368,35 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			m_connectionManipulator.CreateConnection(socket);
 		}
 
+		protected override void OnConnectionAdded(Connection connection) {
+			connection.Label.AddManipulator(new ClickSelector(this));
+		}
+
 		protected override void InspectElement(VisualElement element) {
-			if (element is not FSMNode node)
-				return;
+			switch (element) {
+				case ConnectionLabel label:
+					Connection connection = label.GetFirstOfType<Connection>();
+					BehaviourState startState = connection.Start.Element.GetFirstOfType<FSMNode>().State;
+					BehaviourState endState = connection.End.Element.GetFirstOfType<FSMNode>().State;
 
-			int nodeIndex = m_behaviour.m_allStates.IndexOf(node.State);
+					int stateIndex = m_behaviour.m_allStates.IndexOf(startState);
+					Debug.Assert(stateIndex != -1);
 
-			Debug.Assert(nodeIndex != -1);
+					int transitionIndex = startState.Transitions.List.FindIndex(transition => transition.Destination == endState);
+					Debug.Assert(transitionIndex != -1);
 
-			SerializedProperty nodeProperty = m_serializedBehaviour.FindProperty($"{nameof(m_behaviour.m_allStates)}.Array.data[{nodeIndex}]");
-			m_inspector.Inspect(node.State.GetType(), nodeProperty);
+					SerializedProperty transitionProperty = m_serializedBehaviour.FindProperty($"{nameof(m_behaviour.m_allStates)}.Array.data[{stateIndex}].m_transitions.m_list.Array.data[{transitionIndex}]");
+					m_inspector.Inspect(typeof(StateTransition), transitionProperty);
+					break;
+				case FSMNode node:
+					int nodeIndex = m_behaviour.m_allStates.IndexOf(node.State);
+
+					Debug.Assert(nodeIndex != -1);
+
+					SerializedProperty nodeProperty = m_serializedBehaviour.FindProperty($"{nameof(m_behaviour.m_allStates)}.Array.data[{nodeIndex}]");
+					m_inspector.Inspect(node.State.GetType(), nodeProperty);
+					break;
+			}
 		}
 
 		#region Connection Callbacks

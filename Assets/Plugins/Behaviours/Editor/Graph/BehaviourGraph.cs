@@ -199,9 +199,10 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		private void OnConnectionCreated(Connection connection) {
 			m_connections.Add(connection);
-			Insert(m_groups.Count, connection);
+			InsertConnectionElement(connection);
 
 			connection.RegisterCallback<MouseDownEvent>(OnConnectionMouseDown);
+			OnConnectionAdded(connection);
 		}
 
 		public void AddConnection(Connection connection) {
@@ -211,7 +212,9 @@ namespace Jackey.Behaviours.Editor.Graph {
 			InsertConnectionElement(connection);
 
 			connection.RegisterCallback<MouseDownEvent>(OnConnectionMouseDown);
+			OnConnectionAdded(connection);
 		}
+		protected virtual void OnConnectionAdded(Connection connection) { }
 
 		private void InsertConnectionElement(Connection connection) {
 			Insert(m_groups.Count, connection);

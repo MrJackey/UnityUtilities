@@ -150,7 +150,7 @@ ConnectionSocket:hover {
 	background-color: rgb(110, 110, 110);
 }
 
-Connection > Label {
+Connection > ConnectionLabel {
 	position: absolute;
 	background-color: rgb(25, 25, 25);
 	border-color: rgb(45, 45, 45);
@@ -375,7 +375,7 @@ Inspector #ActionFieldsHeader {
 	margin-bottom: 5px;
 }
 
-#TransitionListInspector #GroupInspector {
+#TransitionGroupInspector {
 	background-color: rgb(48, 48, 48);
 	border-radius: 5px;
 	margin: 5px 0;
