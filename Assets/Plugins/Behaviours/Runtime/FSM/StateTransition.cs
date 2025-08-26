@@ -55,7 +55,7 @@ namespace Jackey.Behaviours.FSM {
 	[Serializable]
 	public class StateTransitionGroup {
 		[SerializeField] private StateTransitionContext m_context;
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionGroup m_conditions = new();
 
 #if UNITY_EDITOR
 		public string Editor_Info => $"{InfoUtilities.AlignCenter(m_context.ToString())}\n{m_conditions.Editor_Info}";

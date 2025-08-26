@@ -64,7 +64,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				node.transform.position = state.Editor_Data.Position;
 				node.SetEntry(m_behaviour.m_entry == state);
 
-				foreach (StateTransition transition in state.Transitions) {
+				foreach (StateTransition transition in state.Transitions.List) {
 					FSMNode destinationNode = GetNodeOfState(transition.Destination);
 
 					AddConnection(new Connection(node.OutSockets[0], destinationNode));
@@ -84,10 +84,12 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				startNode.MoveConnectionStartToClosestSocket(connection);
 
 				// Update connection label
-				foreach (StateTransition transition in startNode.State.Transitions) {
+				List<StateTransition> transitions = startNode.State.Transitions.List;
+				for (int i = 0; i < transitions.Count; i++) {
+					StateTransition transition = transitions[i];
 					if (transition.Destination != endNode.State) continue;
 
-					connection.SetLabel(transition.Editor_Info);
+					connection.SetLabel($"{i + 1}\n{transition.Editor_Info}");
 					break;
 				}
 			}
@@ -176,10 +178,12 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 
 			// Remove transitions to deleted state
 			foreach (BehaviourState other in m_behaviour.m_allStates) {
-				for (int i = other.Transitions.Count - 1; i >= 0; i--) {
-					if (other.Transitions[i].Destination != state) continue;
+				List<StateTransition> otherTransitions = other.Transitions.List;
 
-					other.Transitions.RemoveAt(i);
+				for (int i = otherTransitions.Count - 1; i >= 0; i--) {
+					if (otherTransitions[i].Destination != state) continue;
+
+					otherTransitions.RemoveAt(i);
 				}
 			}
 
@@ -242,16 +246,19 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				BehaviourState originalState = original.State;
 				BehaviourState cloneState = clone.State;
 
-				for (int j = originalState.Transitions.Count - 1; j >= 0; j--) {
-					StateTransition originalTransition = originalState.Transitions[j];
+				List<StateTransition> originalTransitions = originalState.Transitions.List;
+				List<StateTransition> cloneTransitions = cloneState.Transitions.List;
+
+				for (int j = originalTransitions.Count - 1; j >= 0; j--) {
+					StateTransition originalTransition = originalTransitions[j];
 
 					int destinationIndex = originals.FindIndex(x => x.State == originalTransition.Destination);
 					if (destinationIndex == -1) {
-						cloneState.Transitions.RemoveAt(j);
+						cloneTransitions.RemoveAt(j);
 						continue;
 					}
 
-					cloneState.Transitions[j].Destination = clones[destinationIndex].State;
+					cloneTransitions[j].Destination = clones[destinationIndex].State;
 
 					AddConnection(new Connection(
 						start: clone.OutSockets[0],
@@ -279,7 +286,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			// Save their transition destinations if part of selection
 			List<int> transitionIndices = new List<int>();
 			foreach (BehaviourState state in states) {
-				foreach (StateTransition transition in state.Transitions) {
+				foreach (StateTransition transition in state.Transitions.List) {
 					int transitionIndex = states.IndexOf(transition.Destination);
 					transitionIndices.Add(transitionIndex);
 				}
@@ -323,16 +330,17 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			int dataIndex = 0;
 			for (int stateIndex = 0; stateIndex < states.Length; stateIndex++) {
 				BehaviourState state = states[stateIndex];
-				int transitionCount = state.Transitions.Count;
+				List<StateTransition> stateTransitions = state.Transitions.List;
+				int transitionCount = stateTransitions.Count;
 
 				for (int j = transitionCount - 1; j >= 0; j--) {
 					int destinationIndex = data.TransitionIndices[dataIndex + j];
 					if (destinationIndex == -1) {
-						state.Transitions.RemoveAt(j);
+						stateTransitions.RemoveAt(j);
 						continue;
 					}
 
-					state.Transitions[j].Destination = states[destinationIndex];
+					stateTransitions[j].Destination = states[destinationIndex];
 
 					AddConnection(new Connection(nodes[stateIndex].OutSockets[0], nodes[destinationIndex]));
 				}
@@ -396,7 +404,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				return false;
 
 			// Prevent multiple connections with same start and end.
-			foreach (StateTransition transition in startNode.State.Transitions) {
+			foreach (StateTransition transition in startNode.State.Transitions.List) {
 				if (transition.Destination == endNode.State)
 					return false;
 			}
@@ -410,7 +418,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			FSMNode start = connection.Start.Element.GetFirstOfType<FSMNode>();
 			FSMNode end = connection.End.Element.GetFirstOfType<FSMNode>();
 
-			start.State.Transitions.Add(new StateTransition() { Destination = end.State });
+			start.State.Transitions.List.Add(new StateTransition() { Destination = end.State });
 
 			ApplyChanges();
 		}
@@ -427,21 +435,24 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			if (movedStart) {
 				FSMNode endNode = connection.End.Element.GetFirstOfType<FSMNode>();
 
+				List<StateTransition> fromNodeTransitions = fromNode.State.Transitions.List;
+				List<StateTransition> toNodeTransitions = toNode.State.Transitions.List;
+
 				// Find transition
-				int transitionIndex = fromNode.State.Transitions.FindIndex(transition => transition.Destination == endNode.State);
+				int transitionIndex = fromNodeTransitions.FindIndex(transition => transition.Destination == endNode.State);
 				Debug.Assert(transitionIndex != -1);
-				StateTransition transition = fromNode.State.Transitions[transitionIndex];
+				StateTransition transition = fromNodeTransitions[transitionIndex];
 
 				// Move to new state
-				fromNode.State.Transitions.RemoveAt(transitionIndex);
-				toNode.State.Transitions.Add(transition);
+				fromNodeTransitions.RemoveAt(transitionIndex);
+				toNodeTransitions.Add(transition);
 
 			}
 			else { // Moved end
 				FSMNode startNode = connection.Start.Element.GetFirstOfType<FSMNode>();
 
 				// Change destination of the transition
-				StateTransition transition = startNode.State.Transitions.First(transition => transition.Destination == fromNode.State);
+				StateTransition transition = startNode.State.Transitions.List.First(transition => transition.Destination == fromNode.State);
 				transition.Destination = toNode.State;
 			}
 
@@ -457,10 +468,11 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			foreach (FSMNode node in m_nodes) {
 				if (!node.OutSockets.Contains(start)) continue;
 
-				for (int i = 0; i < node.State.Transitions.Count; i++) {
-					if (node.State.Transitions[i].Destination != endNode.State) continue;
+				List<StateTransition> transitions = node.State.Transitions.List;
+				for (int i = 0; i < transitions.Count; i++) {
+					if (transitions[i].Destination != endNode.State) continue;
 
-					node.State.Transitions.RemoveAt(i);
+					transitions.RemoveAt(i);
 					break;
 				}
 			}

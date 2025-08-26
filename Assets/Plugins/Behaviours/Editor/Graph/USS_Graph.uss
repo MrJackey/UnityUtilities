@@ -327,13 +327,15 @@ Inspector #ActionFieldsHeader {
 	-unity-text-align: middle-center;
 }
 
-#ManagedListView {
+#ManagedListView, #TransitionListView, #TransitionGroupListView {
 	background-color: rgb(75, 75, 75);
 	border-radius: 5px;
 	margin-top: 10px;
+	margin-left: 5px;
+	margin-right: 5px;
 }
 
-#ManagedListView #ItemRoot {
+#ManagedListView #ItemRoot, #TransitionListView #ItemRoot, #TransitionGroupListView #GroupRoot {
 	flex-direction: row;
 	align-items: center;
 	justify-content: space-between;
@@ -348,12 +350,36 @@ Inspector #ActionFieldsHeader {
 	background-color: rgb(48, 48, 48);
 	border-radius: 5px;
 	margin-top: 10px;
+	margin-left: 3px;
+	margin-right: 3px;
 	padding: 5px 2px;
 }
 
 #ManagedListInspector > Label {
 	-unity-text-align: upper-center;
 	margin-bottom: 5px;
+}
+
+#TransitionList {
+	margin-bottom: 10px;
+}
+
+#TransitionListInspector {
+	border-radius: 5px;
+	margin-top: 10px;
+	padding-bottom: 5px;
+}
+
+#TransitionGroupListView {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+#TransitionListInspector #GroupInspector {
+	background-color: rgb(48, 48, 48);
+	border-radius: 5px;
+	margin: 5px 0;
+	padding: 10px 0;
 }
 
 #CreateButton {
@@ -408,6 +434,10 @@ GraphMinimap.Vertical:hover, GraphMinimap:active {
 	height: 355px;
 }
 
+#unity-list-view__reorderable-handle {
+	padding-top: 5px;
+}
+
 .unity-list-view__reorderable-item__container {
 	padding-left: 3px;
 }
@@ -417,5 +447,5 @@ GraphMinimap.Vertical:hover, GraphMinimap:active {
 }
 
 .unity-collection-view__item--selected {
-	background-color: #303030;
+	background-color: rgb(48, 48, 48);
 }
