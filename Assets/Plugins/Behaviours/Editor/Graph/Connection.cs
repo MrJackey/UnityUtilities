@@ -60,9 +60,9 @@ namespace Jackey.Behaviours.Editor.Graph {
 				size + new Vector2(CLICK_DISTANCE * 2f, CLICK_DISTANCE * 2f)
 			);
 
-			// Prevent drawing and updating of the transform if the result won't be visible.
+			// Prevent drawing and updating of the transform if the result won't be visible (as long as it has been updated once).
 			// DrawSolidDisc is worst with ~0.035ms each, with two per connection
-			if (!parent.Overlaps(this.ChangeCoordinatesTo(parent, localRect)))
+			if (localBound.size.sqrMagnitude > 0f && !parent.Overlaps(this.ChangeCoordinatesTo(parent, localRect)))
 				return;
 
 			// Update bounds. Add click distance as padding to handle edges being clicked
