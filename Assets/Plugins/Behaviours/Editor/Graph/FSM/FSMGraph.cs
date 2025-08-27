@@ -68,12 +68,17 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				AddNode(new FSMNode(state));
 			}
 
-			// Sync connections by removing and then recreating them
-			RemoveAllConnections();
+			// Remove connections with invalid start or end
+			for (int i = m_connections.Count - 1; i >= 0; i--) {
+				Connection connection = m_connections[i];
+				if (connection.Start?.Element.panel == null || connection.End?.Element.panel == null) {
+					RemoveConnection(connection);
+				}
+			}
 
-			foreach (BehaviourState state in m_behaviour.m_allStates) {
-				FSMNode node = GetNodeOfState(state);
-				Debug.Assert(node != null);
+			// Sync node states and add missing connections
+			foreach (FSMNode node in m_nodes) {
+				BehaviourState state = node.State;
 
 				node.transform.position = state.Editor_Data.Position;
 				node.SetEntry(m_behaviour.m_entry == state);
@@ -81,7 +86,9 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				foreach (StateTransition transition in state.Transitions.List) {
 					FSMNode destinationNode = GetNodeOfState(transition.Destination);
 
-					AddConnection(new Connection(node.OutSockets[0], destinationNode));
+					if (GetConnectionBetweenNodes(node, destinationNode) == null) {
+						AddConnection(new Connection(node.OutSockets[0], destinationNode));
+					}
 				}
 			}
 
@@ -583,6 +590,16 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			foreach (FSMNode node in m_nodes) {
 				if (node.State == state)
 					return node;
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		private Connection GetConnectionBetweenNodes(FSMNode from, FSMNode to) {
+			foreach (Connection connection in m_connections) {
+				if (connection.Start.Element.GetFirstOfType<FSMNode>() == from && connection.End.Element.GetFirstOfType<FSMNode>() == to)
+					return connection;
 			}
 
 			return null;
