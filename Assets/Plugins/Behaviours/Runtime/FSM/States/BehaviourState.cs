@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Jackey.Behaviours.FSM.States {
@@ -8,8 +9,7 @@ namespace Jackey.Behaviours.FSM.States {
 		[SerializeField] internal string Name;
 #endif
 
-		[Header("Transitions")]
-		[SerializeField] private TransitionList m_transitions;
+		[SerializeField] private List<StateTransition> m_transitions = new();
 
 		protected ObjectBehaviour m_runtimeBehaviour;
 
@@ -18,7 +18,7 @@ namespace Jackey.Behaviours.FSM.States {
 
 		protected BehaviourOwner Owner => m_runtimeBehaviour.Owner;
 
-		internal TransitionList Transitions => m_transitions;
+		internal List<StateTransition> Transitions => m_transitions;
 
 #if UNITY_EDITOR
 		[SerializeField] internal EditorData Editor_Data = new();
@@ -68,7 +68,7 @@ namespace Jackey.Behaviours.FSM.States {
 		protected virtual void OnExit() { }
 
 		internal bool CheckTransitions(StateTransitionContext ctx, out BehaviourState destination) {
-			foreach (StateTransition transition in m_transitions.List) {
+			foreach (StateTransition transition in m_transitions) {
 				if (transition.Evaluate(ctx, out destination))
 					return true;
 			}

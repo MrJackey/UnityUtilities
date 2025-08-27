@@ -364,6 +364,13 @@ Inspector #ActionFieldsHeader {
 	margin-bottom: 10px;
 }
 
+#TransitionList > Label {
+	color: #D2D2D2;
+	margin-top: 5px;
+	margin-left: 3px;
+	-unity-font-style: bold;
+}
+
 #TransitionListInspector {
 	border-radius: 5px;
 	margin-top: 10px;

@@ -12,10 +12,10 @@ namespace Jackey.Behaviours.FSM {
 	public class StateTransition {
 		[SkipBlackboardConnect, HideInNormalInspector]
 		[SerializeReference] private BehaviourState m_destination;
-		[SerializeField] private StateTransitionGroupList m_groups = new();
+		[SerializeField] private List<StateTransitionGroup> m_groups = new() { new StateTransitionGroup() };
 
 #if UNITY_EDITOR
-		public string Editor_Info => string.Join($"\n{InfoUtilities.AlignCenter("———")}\n", m_groups.List.Select(group => group.Editor_Info));
+		public string Editor_Info => string.Join($"\n{InfoUtilities.AlignCenter("———")}\n", m_groups.Select(group => group.Editor_Info));
 #endif
 
 		internal BehaviourState Destination {
@@ -24,13 +24,13 @@ namespace Jackey.Behaviours.FSM {
 		}
 
 		public void Enable(BehaviourOwner owner) {
-			foreach (StateTransitionGroup group in m_groups.List) {
+			foreach (StateTransitionGroup group in m_groups) {
 				group.Enable(owner);
 			}
 		}
 
 		public void Disable() {
-			foreach (StateTransitionGroup group in m_groups.List) {
+			foreach (StateTransitionGroup group in m_groups) {
 				group.Disable();
 			}
 		}
@@ -39,11 +39,10 @@ namespace Jackey.Behaviours.FSM {
 			destination = Destination;
 
 			// Default to OnFinish transition with no groups
-			List<StateTransitionGroup> groupList = m_groups.List;
-			if (groupList.Count == 0 && ctx != StateTransitionContext.OnTick)
+			if (m_groups.Count == 0 && ctx != StateTransitionContext.OnTick)
 				return true;
 
-			foreach (StateTransitionGroup group in groupList) {
+			foreach (StateTransitionGroup group in m_groups) {
 				if (group.Evaluate(ctx))
 					return true;
 			}

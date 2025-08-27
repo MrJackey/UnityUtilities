@@ -83,7 +83,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				node.transform.position = state.Editor_Data.Position;
 				node.SetEntry(m_behaviour.m_entry == state);
 
-				foreach (StateTransition transition in state.Transitions.List) {
+				foreach (StateTransition transition in state.Transitions) {
 					FSMNode destinationNode = GetNodeOfState(transition.Destination);
 
 					if (GetConnectionBetweenNodes(node, destinationNode) == null) {
@@ -105,7 +105,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				startNode.MoveConnectionStartToClosestSocket(connection);
 
 				// Update connection label
-				List<StateTransition> transitions = startNode.State.Transitions.List;
+				List<StateTransition> transitions = startNode.State.Transitions;
 				for (int i = 0; i < transitions.Count; i++) {
 					StateTransition transition = transitions[i];
 					if (transition.Destination != endNode.State) continue;
@@ -196,7 +196,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 
 			// Remove transitions to deleted state
 			foreach (BehaviourState other in m_behaviour.m_allStates) {
-				List<StateTransition> otherTransitions = other.Transitions.List;
+				List<StateTransition> otherTransitions = other.Transitions;
 
 				for (int i = otherTransitions.Count - 1; i >= 0; i--) {
 					if (otherTransitions[i].Destination != state) continue;
@@ -264,8 +264,8 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				BehaviourState originalState = original.State;
 				BehaviourState cloneState = clone.State;
 
-				List<StateTransition> originalTransitions = originalState.Transitions.List;
-				List<StateTransition> cloneTransitions = cloneState.Transitions.List;
+				List<StateTransition> originalTransitions = originalState.Transitions;
+				List<StateTransition> cloneTransitions = cloneState.Transitions;
 
 				for (int j = originalTransitions.Count - 1; j >= 0; j--) {
 					StateTransition originalTransition = originalTransitions[j];
@@ -304,7 +304,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			// Save their transition destinations if part of selection
 			List<int> transitionIndices = new List<int>();
 			foreach (BehaviourState state in states) {
-				foreach (StateTransition transition in state.Transitions.List) {
+				foreach (StateTransition transition in state.Transitions) {
 					int transitionIndex = states.IndexOf(transition.Destination);
 					transitionIndices.Add(transitionIndex);
 				}
@@ -348,7 +348,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			int dataIndex = 0;
 			for (int stateIndex = 0; stateIndex < states.Length; stateIndex++) {
 				BehaviourState state = states[stateIndex];
-				List<StateTransition> stateTransitions = state.Transitions.List;
+				List<StateTransition> stateTransitions = state.Transitions;
 				int transitionCount = stateTransitions.Count;
 
 				for (int j = transitionCount - 1; j >= 0; j--) {
@@ -399,10 +399,10 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 					int stateIndex = m_behaviour.m_allStates.IndexOf(startState);
 					Debug.Assert(stateIndex != -1);
 
-					int transitionIndex = startState.Transitions.List.FindIndex(transition => transition.Destination == endState);
+					int transitionIndex = startState.Transitions.FindIndex(transition => transition.Destination == endState);
 					Debug.Assert(transitionIndex != -1);
 
-					SerializedProperty transitionProperty = m_serializedBehaviour.FindProperty($"{nameof(m_behaviour.m_allStates)}.Array.data[{stateIndex}].m_transitions.m_list.Array.data[{transitionIndex}]");
+					SerializedProperty transitionProperty = m_serializedBehaviour.FindProperty($"{nameof(m_behaviour.m_allStates)}.Array.data[{stateIndex}].m_transitions.Array.data[{transitionIndex}]");
 					m_inspector.Inspect(typeof(StateTransition), transitionProperty);
 					break;
 				case FSMNode node:
@@ -441,7 +441,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				return false;
 
 			// Prevent multiple connections with same start and end.
-			foreach (StateTransition transition in startNode.State.Transitions.List) {
+			foreach (StateTransition transition in startNode.State.Transitions) {
 				if (transition.Destination == endNode.State)
 					return false;
 			}
@@ -455,7 +455,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			FSMNode start = connection.Start.Element.GetFirstOfType<FSMNode>();
 			FSMNode end = connection.End.Element.GetFirstOfType<FSMNode>();
 
-			start.State.Transitions.List.Add(new StateTransition() { Destination = end.State });
+			start.State.Transitions.Add(new StateTransition() { Destination = end.State });
 
 			ApplyChanges();
 		}
@@ -472,8 +472,8 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			if (movedStart) {
 				FSMNode endNode = connection.End.Element.GetFirstOfType<FSMNode>();
 
-				List<StateTransition> fromNodeTransitions = fromNode.State.Transitions.List;
-				List<StateTransition> toNodeTransitions = toNode.State.Transitions.List;
+				List<StateTransition> fromNodeTransitions = fromNode.State.Transitions;
+				List<StateTransition> toNodeTransitions = toNode.State.Transitions;
 
 				// Find transition
 				int transitionIndex = fromNodeTransitions.FindIndex(transition => transition.Destination == endNode.State);
@@ -489,7 +489,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				FSMNode startNode = connection.Start.Element.GetFirstOfType<FSMNode>();
 
 				// Change destination of the transition
-				StateTransition transition = startNode.State.Transitions.List.First(transition => transition.Destination == fromNode.State);
+				StateTransition transition = startNode.State.Transitions.First(transition => transition.Destination == fromNode.State);
 				transition.Destination = toNode.State;
 			}
 
@@ -505,7 +505,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			foreach (FSMNode node in m_nodes) {
 				if (!node.OutSockets.Contains(start)) continue;
 
-				List<StateTransition> transitions = node.State.Transitions.List;
+				List<StateTransition> transitions = node.State.Transitions;
 				for (int i = 0; i < transitions.Count; i++) {
 					if (transitions[i].Destination != endNode.State) continue;
 

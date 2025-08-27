@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Jackey.Behaviours.FSM;
 using Jackey.Behaviours.FSM.States;
 using Jackey.Behaviours.Utilities;
 using UnityEditor;
@@ -8,20 +7,19 @@ using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.PropertyDrawers {
-	[CustomPropertyDrawer(typeof(TransitionList), true)]
-	public class TransitionListPropertyDrawer : PropertyDrawer {
+	public class StateTransitionListPropertyDrawer : VisualElement {
 		private SerializedProperty m_listProperty;
 
 		private ListView m_transitionsListView;
-		private PropertyField m_groupsInspector;
+		private StateTransitionGroupListPropertyDrawer m_groupsInspector;
 
-		public override VisualElement CreatePropertyGUI(SerializedProperty property) {
-			VisualElement rootVisualElement = new VisualElement() { name = "TransitionList" };
-			rootVisualElement.RegisterCallback<MouseDownEvent>(evt => evt.StopImmediatePropagation());
+		public StateTransitionListPropertyDrawer() {
+			name = "TransitionList";
+			RegisterCallback<MouseDownEvent>(evt => evt.StopImmediatePropagation());
 
-			m_listProperty = property.FindPropertyRelative("m_list");
+			Add(new Label("Transitions"));
 
-			rootVisualElement.Add(m_transitionsListView = new ListView() {
+			Add(m_transitionsListView = new ListView() {
 				name = "TransitionListView",
 				makeItem = MakeTransitionListItem,
 				bindItem = BindTransitionListItem,
@@ -33,16 +31,29 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			});
 			m_transitionsListView.itemIndexChanged += OnTransitionMoved;
 			m_transitionsListView.selectedIndicesChanged += OnSelectedTransitionChanged;
-			m_transitionsListView.TrackPropertyValue(m_listProperty, OnTransitionsPropertyChanged);
 
-			m_transitionsListView.BindProperty(m_listProperty);
-
-			rootVisualElement.Add(m_groupsInspector = new PropertyField() {
+			Add(m_groupsInspector = new StateTransitionGroupListPropertyDrawer() {
 				name = "TransitionListInspector",
 				style = { display = DisplayStyle.None },
 			});
+		}
 
-			return rootVisualElement;
+		public StateTransitionListPropertyDrawer(SerializedProperty listProperty) : this() {
+			Bind(listProperty);
+		}
+
+		public void Bind(SerializedProperty listProperty) {
+			ClearTransitionInspection();
+
+			m_listProperty = listProperty.Copy();
+
+			m_transitionsListView.BindProperty(m_listProperty);
+			m_transitionsListView.TrackPropertyValue(m_listProperty, OnTransitionsPropertyChanged);
+		}
+
+		public void Unbind() {
+			m_transitionsListView.Unbind();
+			m_listProperty = null;
 		}
 
 		private VisualElement MakeTransitionListItem() {
@@ -64,8 +75,8 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			else {
 				string destinationInfo = destination.Editor_Info;
 				label = !string.IsNullOrEmpty(destinationInfo)
-					? Regex.Replace(destinationInfo, "^\\W*", string.Empty)
-					: destination.GetType().Editor_GetDisplayOrTypeName();
+					? Regex.Replace(destinationInfo, "^(<.+?(?=>)>|\\W*)", string.Empty)
+					: destination.GetType().GetDisplayOrTypeName();
 			}
 
 			element.Q<Label>().text = $"({index + 1}) {label}";
@@ -83,7 +94,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 		private void InspectTransitionAtIndex(int index) {
 			m_transitionsListView.selectedIndex = index;
 
-			m_groupsInspector.BindProperty(m_listProperty.GetArrayElementAtIndex(index).FindPropertyRelative("m_groups"));
+			m_groupsInspector.Bind(m_listProperty.GetArrayElementAtIndex(index).FindPropertyRelative("m_groups"));
 			m_groupsInspector.style.display = DisplayStyle.Flex;
 		}
 

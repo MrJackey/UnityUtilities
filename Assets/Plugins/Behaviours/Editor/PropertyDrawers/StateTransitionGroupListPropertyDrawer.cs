@@ -6,8 +6,7 @@ using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.PropertyDrawers {
-	[CustomPropertyDrawer(typeof(StateTransitionGroupList))]
-	public class StateTransitionGroupListPropertyDrawer : PropertyDrawer {
+	public class StateTransitionGroupListPropertyDrawer : VisualElement {
 		private SerializedProperty m_listProperty;
 
 		private ListView m_groupsListView;
@@ -15,13 +14,10 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 		private List<Action> m_removeActions = new();
 
-		public override VisualElement CreatePropertyGUI(SerializedProperty property) {
-			VisualElement rootVisualElement = new VisualElement();
-			rootVisualElement.RegisterCallback<MouseDownEvent>(evt => evt.StopImmediatePropagation());
+		public StateTransitionGroupListPropertyDrawer() {
+			RegisterCallback<MouseDownEvent>(evt => evt.StopImmediatePropagation());
 
-			m_listProperty = property.FindPropertyRelative("m_list");
-
-			rootVisualElement.Add(m_groupsListView = new ListView() {
+			Add(m_groupsListView = new ListView() {
 				name = "TransitionGroupListView",
 				makeItem = MakeGroupListItem,
 				bindItem = BindGroupListItem,
@@ -33,21 +29,34 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				selectionType = SelectionType.Single,
 			});
 			m_groupsListView.selectedIndicesChanged += OnSelectedGroupChanged;
-			m_groupsListView.BindProperty(m_listProperty);
 
-			rootVisualElement.Add(m_groupInspector = new VisualElement() {
+			Add(m_groupInspector = new VisualElement() {
 				name = "TransitionGroupInspector",
 				style = { display = DisplayStyle.None },
 			});
 			m_groupInspector.Add(new PropertyField()); // Context
 			m_groupInspector.Add(new PropertyField()); // Conditions
 
-			rootVisualElement.Add(new Button(OnAddGroupClicked) {
+			Add(new Button(OnAddGroupClicked) {
 				name = "CreateButton",
 				text = "Add Group",
 			});
+		}
 
-			return rootVisualElement;
+		public StateTransitionGroupListPropertyDrawer(SerializedProperty listProperty) : this() {
+			Bind(listProperty);
+		}
+
+		public void Bind(SerializedProperty listProperty) {
+			ClearGroupInspection();
+
+			m_listProperty = listProperty.Copy();
+			m_groupsListView.BindProperty(m_listProperty);
+		}
+
+		public void UnBind() {
+			m_groupsListView.Unbind();
+			m_listProperty = null;
 		}
 
 		private VisualElement MakeGroupListItem() {
