@@ -28,6 +28,19 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				type != typeof(NestedBehaviourAction) && type != typeof(Operator))
 			.ToArray();
 
+		private IEnumerable<TypeProvider.SearchEntry> GroupedFSMTypes => TypeProvider.TypesToSearch(s_stateTypes).Select(entry => {
+					entry.Path = $"States/{entry.Path}";
+					return entry;
+				})
+			.Concat(TypeProvider.TypesToSearch(s_actionTypes).Select(entry => {
+					entry.Path = $"Actions/{entry.Path}";
+					return entry;
+				}))
+			.Concat(TypeProvider.TypesToSearch(OperationListPropertyDrawer.s_operationTypes).Select(entry => {
+					entry.Path = $"Operations/{entry.Path}";
+					return entry;
+				}));
+
 		public FSMGraph() {
 			m_connectionManipulator.ConnectionVoided += OnConnectionVoided;
 			m_connectionManipulator.ConnectionCreated += OnConnectionCreated;
@@ -112,10 +125,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			base.BeginNodeCreation(GUIPosition);
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(GUIPosition);
-			IEnumerable<TypeProvider.SearchEntry> searchTypes = TypeProvider.TypesToSearch(s_stateTypes).Select(entry => { entry.Path = $"States/{entry.Path}"; return entry; })
-				.Concat(TypeProvider.TypesToSearch(s_actionTypes).Select(entry => { entry.Path = $"Actions/{entry.Path}"; return entry; }))
-				.Concat(TypeProvider.TypesToSearch(OperationListPropertyDrawer.s_operationTypes).Select(entry => { entry.Path = $"Operations/{entry.Path}"; return entry; }));
-			TypeProvider.Instance.AskForType(mouseScreenPosition, searchTypes, type => CreateNode(type));
+			TypeProvider.Instance.AskForType(mouseScreenPosition, GroupedFSMTypes, type => CreateNode(type));
 		}
 
 		private FSMNode CreateNode(Type type) {
@@ -405,7 +415,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			SaveCreatePosition();
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-			TypeProvider.Instance.AskForType(mouseScreenPosition, s_stateTypes, type => {
+			TypeProvider.Instance.AskForType(mouseScreenPosition, GroupedFSMTypes, type => {
 				int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
 
 				FSMNode toNode = CreateNode(type);
