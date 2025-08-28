@@ -11,6 +11,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 		private BehaviourState m_state;
 		private BehaviourStatus m_lastRuntimeStateStatus = BehaviourStatus.Inactive;
 
+		private Label m_nameLabel;
 		private Image m_icon;
 		private Label m_label;
 
@@ -67,6 +68,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			m_entryLabel.SendToBack();
 
 			Add(m_breakpointElement = new VisualElement() { name = "Breakpoint" });
+			Add(m_nameLabel = new Label() { name = "StateName" });
 			Add(m_icon = new Image() {
 				name = "Icon",
 				pickingMode = PickingMode.Ignore,
@@ -112,6 +114,9 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 		}
 
 		private void RefreshInfo() {
+			m_nameLabel.text = m_state.Name;
+			m_nameLabel.style.display = !string.IsNullOrWhiteSpace(m_state.Name) ? DisplayStyle.Flex : DisplayStyle.None;
+
 			string info = m_state.Editor_Info;
 
 			if (string.IsNullOrEmpty(info)) {

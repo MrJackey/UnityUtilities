@@ -183,6 +183,12 @@ BTNode #Entry {
 	-unity-text-align: middle-center;
 }
 
+FSMNode #StateName {
+	font-size: 14px;
+	border-bottom-width: 1px;
+	border-bottom-color: rgb(210, 210, 210);
+}
+
 FSMNode ConnectionSocket {
 	align-self: center;
 	position: absolute;
