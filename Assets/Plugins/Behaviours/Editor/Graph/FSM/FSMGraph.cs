@@ -227,6 +227,14 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 
 		#endregion
 
+		protected override void OnNodeDoubleClick(Node node) {
+			FSMNode fsmNode = (FSMNode)node;
+
+			if (fsmNode.State is NestedBehaviourState nestedState && nestedState.InstanceOrBehaviour != null) {
+				EditorWindow.GetWindow<BehaviourEditorWindow>().PushBehaviour(nestedState.InstanceOrBehaviour);
+			}
+		}
+
 		#region CopyPaste
 
 		public override void DuplicateSelection() {
