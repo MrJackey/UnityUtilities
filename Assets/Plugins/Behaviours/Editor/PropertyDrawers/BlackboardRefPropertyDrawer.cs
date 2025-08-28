@@ -55,6 +55,10 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			};
 			m_root.TrackPropertyValue(property, _ => OnPropertyChanged());
 
+			// If reordered as part of a list/array, for some reason the property tracker notifies after the SerializedProperty has been disposed.
+			// This seems to unbind before that notification, avoiding an exception
+			m_root.RegisterCallback<DetachFromPanelEvent>(evt => m_root.Unbind());
+
 			m_fieldRow = new VisualElement() {
 				name = "FieldRow",
 			};
@@ -262,6 +266,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			}
 		}
 
+		// Makes sure that the drawer is up to date on undo/redo
 		private void OnPropertyChanged() {
 			int currentMode = m_dropdownField.parent != null ? VARIABLE_MODE : FIELD_MODE;
 			int expectedMode = m_blackboardOnly ? VARIABLE_MODE : m_modeProperty.enumValueIndex;
