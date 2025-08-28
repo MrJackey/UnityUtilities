@@ -30,7 +30,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				VisualElement actionFields = new VisualElement() { name = "ActionFields" };
 				rootVisualElement.Add(actionFields);
 
-				actionFields.Add(new Label(property.managedReferenceValue.GetType().GetDisplayOrTypeName()) { name = "ActionFieldsHeader" });
+				actionFields.Add(new Label(property.managedReferenceValue.GetType().Editor_GetDisplayOrTypeName()) { name = "ActionFieldsHeader" });
 
 				SerializedProperty iterator = property.Copy();
 				int depth = iterator.depth;

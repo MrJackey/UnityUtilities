@@ -1,7 +1,6 @@
 ﻿using Jackey.Behaviours.Attributes;
 
 namespace Jackey.Behaviours.BT.Composites {
-	[DisplayName("Do Until")]
 	[SearchPath("Composites/Do Until")]
 	public class DoUntil : Composite {
 		private int m_runningIndex;

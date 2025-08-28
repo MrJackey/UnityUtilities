@@ -10,6 +10,21 @@ namespace Jackey.Behaviours.FSM.States {
 
 		private ObjectBehaviour m_behaviourInstance;
 
+#if UNITY_EDITOR
+		public override string Editor_Info {
+			get {
+				if (m_behaviour.IsVariable)
+					return m_behaviour.Editor_Info;
+
+				ObjectBehaviour value = m_behaviour.GetValue();
+				if (value == null)
+					return "<b>NONE</b>";
+
+				return value.name;
+			}
+		}
+#endif
+
 		protected override ExecutionStatus OnEnter() {
 			ObjectBehaviour behaviour = m_behaviour.GetValue();
 			if (behaviour == null) {

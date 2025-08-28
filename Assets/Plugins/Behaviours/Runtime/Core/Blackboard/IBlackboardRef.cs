@@ -7,7 +7,7 @@ namespace Jackey.Behaviours.Core.Blackboard {
 		public static string Editor_VariableInfo<T>(ObjectBehaviour behaviour, SerializedGUID guid, string name, ref BlackboardVar cachedVar) {
 			if (guid != default) {
 				BlackboardVar variable = GetReferencedVariable<T>(behaviour, guid, name, ref cachedVar);
-				return variable != null ? $"<b>({variable.Name})</b>" : $"<color=red><b>({name})</b></color>";
+				return variable != null ? $"▤<b>({variable.Name})</b>" : $"▤<color=red><b>({name})</b></color>";
 			}
 
 			return "<b>NONE</b>";

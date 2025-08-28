@@ -76,7 +76,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				string destinationInfo = destination.Editor_Info;
 				label = !string.IsNullOrEmpty(destinationInfo)
 					? Regex.Replace(destinationInfo, "^(<.+?(?=>)>|\\W*)", string.Empty)
-					: destination.GetType().GetDisplayOrTypeName();
+					: destination.GetType().Editor_GetDisplayOrTypeName();
 			}
 
 			element.Q<Label>().text = $"({index + 1}) {label}";

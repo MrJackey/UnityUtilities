@@ -42,7 +42,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public void Inspect(Type type, SerializedProperty property) {
 			Clear();
 
-			m_header.text = type.GetDisplayOrTypeName();
+			m_header.text = type.Editor_GetDisplayOrTypeName();
 
 			SerializedProperty targetProperty = property.FindPropertyRelative("m_target");
 			if (targetProperty != null) {

@@ -99,7 +99,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 					m_label.style.display = DisplayStyle.None;
 				}
 				else {
-					m_label.text = m_action.GetType().GetDisplayOrTypeName();
+					m_label.text = m_action.GetType().Editor_GetDisplayOrTypeName();
 					m_label.style.display = DisplayStyle.Flex;
 				}
 			}

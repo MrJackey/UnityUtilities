@@ -19,7 +19,7 @@ namespace Jackey.Behaviours.Core.Operations {
 					string operationInfo = m_operations[i].Editor_Info;
 
 					if (string.IsNullOrEmpty(operationInfo))
-						operationInfo = m_operations[i].GetType().GetDisplayOrTypeName();
+						operationInfo = m_operations[i].GetType().Editor_GetDisplayOrTypeName();
 
 					if (i < m_operations.Length - 1)
 						output += $"{InfoUtilities.MULTI_INFO_SEPARATOR} {operationInfo}\n";

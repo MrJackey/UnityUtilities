@@ -65,7 +65,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			if (m_removeActions.Count < index + 1)
 				m_removeActions.Add(() => RemoveItemAtIndex(index));
 
-			element.Q<Label>().text = m_listProperty.GetArrayElementAtIndex(index).managedReferenceValue.GetType().GetDisplayOrTypeName();
+			element.Q<Label>().text = m_listProperty.GetArrayElementAtIndex(index).managedReferenceValue.GetType().Editor_GetDisplayOrTypeName();
 			element.Q<Button>().clickable.clicked += m_removeActions[index];
 		}
 
@@ -123,7 +123,7 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			SerializedProperty property = m_listProperty.GetArrayElementAtIndex(index);
 
-			m_inspectorLabel.text = property.managedReferenceValue.GetType().GetDisplayOrTypeName();
+			m_inspectorLabel.text = property.managedReferenceValue.GetType().Editor_GetDisplayOrTypeName();
 
 			int startDepth = property.depth;
 			for (bool enterChildren = true; property.NextVisible(enterChildren) && property.depth > startDepth; enterChildren = false) {

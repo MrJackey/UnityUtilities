@@ -7,6 +7,10 @@ namespace Jackey.Behaviours.FSM.States {
 	public class ActionState : BehaviourState {
 		[SerializeReference] private BehaviourAction m_action;
 
+#if UNITY_EDITOR
+		public override string Editor_Info => m_action?.Editor_Info;
+#endif
+
 		protected override ExecutionStatus OnEnter() {
 			return m_action.EnterSequence();
 		}

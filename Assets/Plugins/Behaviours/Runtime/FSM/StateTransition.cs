@@ -60,7 +60,7 @@ namespace Jackey.Behaviours.FSM {
 		[SerializeField] private BehaviourConditionGroup m_conditions = new();
 
 #if UNITY_EDITOR
-		public string Editor_Info => $"{InfoUtilities.AlignCenter(m_context.ToString())}\n{m_conditions.Editor_Info}";
+		public string Editor_Info => $"{InfoUtilities.AlignCenter(UnityEditor.ObjectNames.NicifyVariableName(m_context.ToString()))}\n{m_conditions.Editor_Info}";
 #endif
 
 		public void Enable(BehaviourOwner owner) {

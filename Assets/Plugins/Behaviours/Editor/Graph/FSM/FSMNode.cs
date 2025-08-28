@@ -124,7 +124,7 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 					m_label.style.display = DisplayStyle.None;
 				}
 				else {
-					m_label.text = m_state.GetType().GetDisplayOrTypeName();
+					m_label.text = m_state.GetType().Editor_GetDisplayOrTypeName();
 					m_label.style.display = DisplayStyle.Flex;
 				}
 			}
