@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Jackey.Behaviours.Core;
 using Jackey.Behaviours.Core.Blackboard;
 using UnityEngine;
 
@@ -30,6 +31,9 @@ namespace Jackey.Behaviours {
 		internal abstract void Start();
 		internal abstract ExecutionStatus Tick();
 		internal abstract void Stop();
+
+		internal virtual void EnableTicking(BehaviourAction action) { }
+		internal virtual void DisableTicking(BehaviourAction action) { }
 
 #if UNITY_EDITOR
 		private void OnEnable() {

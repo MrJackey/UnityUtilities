@@ -25,7 +25,7 @@ namespace Jackey.Behaviours.BT {
 			base.Initialize(owner);
 
 			int index = 0;
-			m_entry.Initialize(this, null, ref index);
+			m_entry.BT_Initialize(this, null, ref index);
 		}
 
 		internal override void Start() {
@@ -94,7 +94,7 @@ namespace Jackey.Behaviours.BT {
 			Status = BehaviourStatus.Inactive;
 		}
 
-		public void EnableTicking(BehaviourAction action) {
+		internal override void EnableTicking(BehaviourAction action) {
 			if (m_inTreeTraversal) {
 				m_pendingTickingActions.Add(action);
 				return;
@@ -119,7 +119,7 @@ namespace Jackey.Behaviours.BT {
 			m_tickingActions.Add(action);
 		}
 
-		public void DisableTicking(BehaviourAction action) {
+		internal override void DisableTicking(BehaviourAction action) {
 			m_pendingTickingActions.Remove(action);
 
 			int tickingIndex = m_tickingActions.IndexOf(action);

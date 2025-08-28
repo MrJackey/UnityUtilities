@@ -11,12 +11,21 @@ namespace Jackey.Behaviours.FSM.States {
 
 		[SerializeField] private List<StateTransition> m_transitions = new();
 
-		protected ObjectBehaviour m_runtimeBehaviour;
+		protected StateMachine m_runtimeBehaviour;
 
 		public BehaviourStatus Status { get; private set; } = BehaviourStatus.Inactive;
 		public bool IsFinished => Status is BehaviourStatus.Success or BehaviourStatus.Failure;
 
 		protected BehaviourOwner Owner => m_runtimeBehaviour.Owner;
+
+		/// <summary>
+		/// Should this state be ticked whenever it's behaviour is ticked.
+		/// </summary>
+		/// <remarks>
+		/// If the behaviour is starting, the first tick will occur after the first behaviour tick.<br/>
+		/// If the behaviour is being ticked, the first tick will occur at the next behaviour tick
+		/// </remarks>
+		protected internal virtual bool ShouldTick { get; }
 
 		internal List<StateTransition> Transitions => m_transitions;
 
@@ -25,7 +34,7 @@ namespace Jackey.Behaviours.FSM.States {
 #endif
 		public virtual string Editor_Info => string.Empty;
 
-		internal void Initialize(ObjectBehaviour behaviour) {
+		internal virtual void Initialize(StateMachine behaviour) {
 			m_runtimeBehaviour = behaviour;
 		}
 

@@ -10,6 +10,8 @@ namespace Jackey.Behaviours.FSM.States {
 
 		private ObjectBehaviour m_behaviourInstance;
 
+		protected internal override bool ShouldTick => true;
+
 #if UNITY_EDITOR
 		public override string Editor_Info {
 			get {

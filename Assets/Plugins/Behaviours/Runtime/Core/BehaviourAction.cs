@@ -2,13 +2,15 @@
 using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.BT;
 using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.FSM;
 using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Jackey.Behaviours.Core {
 	[Serializable]
 	public abstract class BehaviourAction {
-		protected BehaviourTree m_runtimeBehaviour;
+		protected ObjectBehaviour m_runtimeBehaviour;
+		private bool m_isTicking;
 
 		[CanBeNull]
 		internal BehaviourAction Parent { get; set; }
@@ -18,6 +20,7 @@ namespace Jackey.Behaviours.Core {
 		public bool IsFinished => Status is BehaviourStatus.Success or BehaviourStatus.Failure;
 
 		protected BehaviourOwner Owner => m_runtimeBehaviour.Owner;
+		internal bool IsTicking => m_isTicking;
 
 #if UNITY_EDITOR
 		[HideInNormalInspector]
@@ -26,7 +29,11 @@ namespace Jackey.Behaviours.Core {
 		public virtual string Editor_Info => string.Empty;
 		protected internal virtual int Editor_MaxChildCount => 0;
 
-		internal virtual void Initialize(BehaviourTree behaviour, [CanBeNull] BehaviourAction parent, ref int index) {
+		internal void FSM_Initialize(StateMachine behaviour) {
+			m_runtimeBehaviour = behaviour;
+		}
+
+		internal virtual void BT_Initialize(BehaviourTree behaviour, [CanBeNull] BehaviourAction parent, ref int index) {
 			m_runtimeBehaviour = behaviour;
 			Parent = parent;
 			Index = index;
@@ -121,9 +128,12 @@ namespace Jackey.Behaviours.Core {
 		/// </summary>
 		/// <remarks>
 		/// If the behaviour is starting, the first tick will occur after the first behaviour tick.<br/>
-		/// If the behaviour is being ticked, the first tick will occur the next behaviour tick
+		/// If the behaviour is being ticked, the first tick will occur at the next behaviour tick
 		/// </remarks>
 		public void EnableTicking() {
+			Debug.Assert(!m_isTicking, "BehaviourAction enabled ticking whilst already enabled");
+
+			m_isTicking = true;
 			m_runtimeBehaviour.EnableTicking(this);
 		}
 
@@ -132,6 +142,7 @@ namespace Jackey.Behaviours.Core {
 		/// Does nothing if ticking is not already enabled
 		/// </summary>
 		public void DisableTicking() {
+			m_isTicking = false;
 			m_runtimeBehaviour.DisableTicking(this);
 		}
 

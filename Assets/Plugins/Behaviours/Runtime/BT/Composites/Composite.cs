@@ -13,13 +13,13 @@ namespace Jackey.Behaviours.BT.Composites {
 
 		internal List<BehaviourAction> Children => m_children;
 
-		internal override void Initialize(BehaviourTree behaviour, BehaviourAction parent, ref int index) {
-			base.Initialize(behaviour, parent, ref index);
+		internal override void BT_Initialize(BehaviourTree behaviour, BehaviourAction parent, ref int index) {
+			base.BT_Initialize(behaviour, parent, ref index);
 
 			int childCount = m_children.Count;
 			for (int i = 0; i < childCount; i++) {
 				index++;
-				m_children[i].Initialize(behaviour, this, ref index);
+				m_children[i].BT_Initialize(behaviour, this, ref index);
 			}
 		}
 

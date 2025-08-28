@@ -15,14 +15,14 @@ namespace Jackey.Behaviours.BT.Decorators {
 			set => m_child = value;
 		}
 
-		internal override void Initialize(BehaviourTree behaviour, BehaviourAction parent, ref int index) {
-			base.Initialize(behaviour, parent, ref index);
+		internal override void BT_Initialize(BehaviourTree behaviour, BehaviourAction parent, ref int index) {
+			base.BT_Initialize(behaviour, parent, ref index);
 
 			index++;
 
 			if (m_child != null) {
 				m_child.Parent = this;
-				m_child.Initialize(behaviour, this, ref index);
+				m_child.BT_Initialize(behaviour, this, ref index);
 			}
 		}
 

@@ -11,6 +11,14 @@ namespace Jackey.Behaviours.FSM.States {
 		public override string Editor_Info => m_action?.Editor_Info;
 #endif
 
+		protected internal override bool ShouldTick => m_action.IsTicking;
+
+		internal override void Initialize(StateMachine behaviour) {
+			base.Initialize(behaviour);
+
+			m_action.FSM_Initialize(behaviour);
+		}
+
 		protected override ExecutionStatus OnEnter() {
 			return m_action.EnterSequence();
 		}

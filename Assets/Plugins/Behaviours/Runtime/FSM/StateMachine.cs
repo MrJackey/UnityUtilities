@@ -9,6 +9,7 @@ namespace Jackey.Behaviours.FSM {
 		[SerializeReference] internal BehaviourState m_entry;
 
 		private BehaviourState m_activeState;
+		private bool m_deferActiveStateTick;
 
 		internal override void Initialize(BehaviourOwner owner) {
 			if (m_entry == null) {
@@ -28,9 +29,13 @@ namespace Jackey.Behaviours.FSM {
 				return;
 
 			m_activeState = m_entry;
+			m_deferActiveStateTick = true;
 		}
 
 		internal override ExecutionStatus Tick() {
+			bool deferTick = m_deferActiveStateTick;
+			m_deferActiveStateTick = false;
+
 			while (true) {
 				BehaviourState destination;
 
@@ -39,10 +44,11 @@ namespace Jackey.Behaviours.FSM {
 					m_activeState.Interrupt();
 					m_activeState = destination;
 
-					ExecutionStatus traverseStatus = Traverse(out destination);
-					if (traverseStatus != ExecutionStatus.Running)
-						return traverseStatus;
+					return Traverse(out destination);
 				}
+
+				if (deferTick || !m_activeState.ShouldTick)
+					return ExecutionStatus.Running;
 
 				ExecutionStatus tickStatus = m_activeState.TickSequence();
 				if (tickStatus == ExecutionStatus.Running)
@@ -53,9 +59,7 @@ namespace Jackey.Behaviours.FSM {
 				if (m_activeState.CheckTransitions(finishCtx, out destination)) {
 					m_activeState = destination;
 
-					ExecutionStatus traverseStatus = Traverse(out destination);
-					if (traverseStatus != ExecutionStatus.Running)
-						return traverseStatus;
+					return Traverse(out destination);
 				}
 
 				return tickStatus; // Success || Failure
