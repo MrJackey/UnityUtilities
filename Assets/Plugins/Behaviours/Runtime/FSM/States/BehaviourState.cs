@@ -33,6 +33,13 @@ namespace Jackey.Behaviours.FSM.States {
 			if (Status != BehaviourStatus.Inactive)
 				Reset();
 
+#if UNITY_EDITOR
+			if (Editor_Data.Breakpoint) {
+				Debug.Log($"Behaviour Breakpoint @{Owner.name}", Owner);
+				UnityEditor.EditorApplication.isPaused = true;
+			}
+#endif
+
 			ExecutionStatus enterStatus = OnEnter();
 			Status = (BehaviourStatus)enterStatus;
 
