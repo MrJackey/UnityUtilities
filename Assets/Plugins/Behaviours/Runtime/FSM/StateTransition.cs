@@ -12,10 +12,17 @@ namespace Jackey.Behaviours.FSM {
 	public class StateTransition {
 		[SkipBlackboardConnect, HideInNormalInspector]
 		[SerializeReference] private BehaviourState m_destination;
-		[SerializeField] private List<StateTransitionGroup> m_groups = new() { new StateTransitionGroup() };
+		[SerializeField] private List<StateTransitionGroup> m_groups = new();
 
 #if UNITY_EDITOR
-		public string Editor_Info => string.Join($"\n{InfoUtilities.AlignCenter("———")}\n", m_groups.Select(group => group.Editor_Info));
+		public string Editor_Info {
+			get {
+				if (m_groups.Count == 0)
+					return "On Finish";
+
+				return string.Join($"\n{InfoUtilities.AlignCenter("———")}\n", m_groups.Select(group => group.Editor_Info));
+			}
+		}
 #endif
 
 		internal BehaviourState Destination {

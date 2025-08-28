@@ -79,7 +79,6 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 
 			Button removeButton = element.Q<Button>();
 			removeButton.clicked += m_removeActions[index];
-			removeButton.style.display = m_listProperty.arraySize > 1 ? DisplayStyle.Flex : DisplayStyle.None;
 		}
 
 		private void UnbindGroupListItem(VisualElement element, int index) {
