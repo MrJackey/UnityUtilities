@@ -30,6 +30,19 @@ namespace Jackey.Behaviours.FSM {
 
 			m_activeState = m_entry;
 			m_deferActiveStateTick = true;
+
+			ExecutionStatus enterStatus = m_activeState.EnterSequence();
+			if (enterStatus == ExecutionStatus.Running) {
+				Status = (BehaviourStatus)ExecutionStatus.Running;
+				return;
+			}
+
+			// Traverse if entry state is instant
+			StateTransitionContext finishCtx = enterStatus == ExecutionStatus.Success ? StateTransitionContext.OnSuccess : StateTransitionContext.OnFailure;
+			if (m_activeState.CheckTransitions(finishCtx, out BehaviourState destination)) {
+				m_activeState = destination;
+				Status = (BehaviourStatus)Traverse();
+			}
 		}
 
 		internal override ExecutionStatus Tick() {
@@ -44,7 +57,7 @@ namespace Jackey.Behaviours.FSM {
 					m_activeState.Interrupt();
 					m_activeState = destination;
 
-					return Traverse(out destination);
+					return Traverse();
 				}
 
 				if (deferTick || !m_activeState.ShouldTick)
@@ -59,22 +72,20 @@ namespace Jackey.Behaviours.FSM {
 				if (m_activeState.CheckTransitions(finishCtx, out destination)) {
 					m_activeState = destination;
 
-					return Traverse(out destination);
+					return Traverse();
 				}
 
 				return tickStatus; // Success || Failure
 			}
 		}
 
-		private ExecutionStatus Traverse(out BehaviourState destination) {
-			destination = null;
-
+		private ExecutionStatus Traverse() {
 			// Continue until running / end of fsm
 			ExecutionStatus enterStatus = m_activeState.EnterSequence();
 			while (enterStatus != ExecutionStatus.Running) {
 				StateTransitionContext enterCtx = enterStatus == ExecutionStatus.Success ? StateTransitionContext.OnSuccess : StateTransitionContext.OnFailure;
 
-				if (m_activeState.CheckTransitions(enterCtx, out destination)) {
+				if (m_activeState.CheckTransitions(enterCtx, out BehaviourState destination)) {
 					m_activeState = destination;
 					enterStatus = m_activeState.EnterSequence();
 				}
