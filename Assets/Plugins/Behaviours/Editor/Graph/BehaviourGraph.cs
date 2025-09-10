@@ -281,6 +281,9 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public void AddGroup(GraphGroup group) {
 			Debug.Assert(!m_groups.Contains(group));
 
+			group.style.width = Mathf.Max(group.style.width.value.value, group.Resizer.MinWidth);
+			group.style.height = Mathf.Max(group.style.height.value.value, group.Resizer.MinHeight);
+
 			group.Dragger.Moved += OnElementMoved;
 			group.GroupDragger.Moved += OnElementMoved;
 			group.Resizer.Resized += OnElementResized;

@@ -5,7 +5,6 @@ using UnityEngine.UIElements;
 namespace Jackey.Behaviours.Editor.Manipulators {
 	public class Resizer : MouseManipulator {
 		private const float EDGE_THICKNESS = 15f;
-		private const float MIN_SIZE = 35f;
 
 		private VisualElement[] m_edgeElements = new VisualElement[8];
 
@@ -15,6 +14,9 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 		private Vector2 m_pointerStart;
 		private Vector3 m_startPosition;
 		private Vector2 m_startSize;
+
+		public float MinWidth { get; set; } = 50f;
+		public float MinHeight { get; set; } = 50f;
 
 		public event Action Resized;
 
@@ -112,20 +114,20 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			Vector2 positionOffset = Vector2.zero;
 
 			if ((m_activeEdges & Edges.Top) != 0) {
-				target.style.height = Mathf.Max(m_startSize.y - pointerOffset.y, MIN_SIZE);
-				positionOffset.y = Mathf.Min(pointerOffset.y, m_startSize.y - MIN_SIZE);
+				target.style.height = Mathf.Max(m_startSize.y - pointerOffset.y, MinHeight);
+				positionOffset.y = Mathf.Min(pointerOffset.y, m_startSize.y - MinHeight);
 			}
 
 			if ((m_activeEdges & Edges.Bottom) != 0)
-				target.style.height = Mathf.Max(m_startSize.y + pointerOffset.y, MIN_SIZE);
+				target.style.height = Mathf.Max(m_startSize.y + pointerOffset.y, MinHeight);
 
 			if ((m_activeEdges & Edges.Left) != 0) {
-				target.style.width = Mathf.Max(m_startSize.x - pointerOffset.x, MIN_SIZE);
-				positionOffset.x = Mathf.Min(pointerOffset.x, m_startSize.x - MIN_SIZE);
+				target.style.width = Mathf.Max(m_startSize.x - pointerOffset.x, MinWidth);
+				positionOffset.x = Mathf.Min(pointerOffset.x, m_startSize.x - MinWidth);
 			}
 
 			if ((m_activeEdges & Edges.Right) != 0)
-				target.style.width = Mathf.Max(m_startSize.x + pointerOffset.x, MIN_SIZE);
+				target.style.width = Mathf.Max(m_startSize.x + pointerOffset.x, MinWidth);
 
 			// Position offset must be accumulated as you can drag the top-left corner, moving on both the x and y-axis
 			target.transform.position = m_startPosition + (Vector3)positionOffset;

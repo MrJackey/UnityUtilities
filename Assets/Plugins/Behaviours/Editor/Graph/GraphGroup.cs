@@ -60,7 +60,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 				Modified?.Invoke();
 			}));
 
-			m_resizer = new Resizer();
+			m_resizer = new Resizer() { MinWidth = 150f, MinHeight = 100f };
 			m_dragger = new Dragger();
 			m_groupDragger = new GroupDragger(this);
 
