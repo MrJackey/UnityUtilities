@@ -329,14 +329,18 @@ namespace Jackey.Behaviours.Editor.Graph {
 					DeleteNode(node);
 				else if (selectedElement.Element is GraphGroup group)
 					DeleteGroup(group);
+				else
+					TryDeleteOther(selectedElement.Element);
 			}
 
 			Undo.CollapseUndoOperations(undoGroup);
 			ApplyChanges();
 
-			SelectedElements.Clear();
+			this.ClearSelection();
 			OnSelectionChange();
 		}
+
+		protected virtual void TryDeleteOther(VisualElement element) { }
 
 		public void SmartDeleteSelection() {
 			if (SelectedElements.Count == 0)
@@ -366,6 +370,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 				DeleteNode(node);
 			else if (element is GraphGroup group)
 				DeleteGroup(group);
+			else
+				TryDeleteOther(element);
 
 			ApplyChanges();
 		}

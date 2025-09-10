@@ -384,6 +384,28 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 
 		#endregion
 
+		protected override void TryDeleteOther(VisualElement element) {
+			if (element is not ConnectionLabel connectionLabel) return;
+
+			Connection connection = connectionLabel.GetFirstOfType<Connection>();
+			FSMNode startNode = connection.Start.Element.GetFirstOfType<FSMNode>();
+			FSMNode endNode = connection.End.Element.GetFirstOfType<FSMNode>();
+
+			BehaviourState startState = startNode.State;
+			BehaviourState destination = endNode.State;
+			for (int i = 0; i < startState.Transitions.Count; i++) {
+				if (startState.Transitions[i].Destination != destination) continue;
+
+				Undo.RecordObject(m_behaviour, "Delete transition");
+
+				startState.Transitions.RemoveAt(i);
+				RemoveConnection(connection);
+
+				ApplyChanges();
+				break;
+			}
+		}
+
 		private void OnSocketMouseDown(MouseDownEvent evt, IConnectionSocket socket) {
 			evt.StopImmediatePropagation();
 
