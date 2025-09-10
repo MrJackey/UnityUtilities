@@ -68,11 +68,24 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				AddNode(new FSMNode(state));
 			}
 
-			// Remove connections with invalid start or end
+			// Remove connections
 			for (int i = m_connections.Count - 1; i >= 0; i--) {
 				Connection connection = m_connections[i];
+				// with invalid start or end
 				if (connection.Start?.Element.panel == null || connection.End?.Element.panel == null) {
 					RemoveConnection(connection);
+				}
+				else { // without matching transition
+					BehaviourState startState = connection.Start.Element.GetFirstOfType<FSMNode>().State;
+					BehaviourState destination = connection.End.Element.GetFirstOfType<FSMNode>().State;
+
+					for (int j = startState.Transitions.Count - 1; j >= 0; j--) {
+						if (startState.Transitions[j].Destination == destination)
+							goto skipRemove;
+					}
+
+					RemoveConnection(connection);
+					skipRemove:;
 				}
 			}
 
