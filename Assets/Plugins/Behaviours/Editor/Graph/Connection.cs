@@ -119,7 +119,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 				VisualElement startElement = Start.Element;
 
 				if (startElement is IConnectionAreaSocket areaSocket)
-					start = startElement.ChangeCoordinatesTo(this, areaSocket.GetPoint(this));
+					start = startElement.ChangeCoordinatesTo(this, areaSocket.GetOutPoint(this));
 				else
 					start = startElement.ChangeCoordinatesTo(this, startElement.GetLocalOrigin());
 			}
@@ -129,7 +129,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 				VisualElement endElement = End.Element;
 
 				if (endElement is IConnectionAreaSocket areaSocket)
-					end = endElement.ChangeCoordinatesTo(this, areaSocket.GetPoint(this));
+					end = endElement.ChangeCoordinatesTo(this, areaSocket.GetInPoint(this));
 				else
 					end = endElement.ChangeCoordinatesTo(this, endElement.GetLocalOrigin());
 			}
@@ -141,16 +141,28 @@ namespace Jackey.Behaviours.Editor.Graph {
 			Vector2 mousePosition = Event.current?.mousePosition ?? Vector2.zero;
 
 			Vector2 startTangent;
-			if (Start != null)
-				startTangent = Start.Tangent;
-			else
+			if (Start != null) {
+				VisualElement startElement = Start.Element;
+				if (startElement is IConnectionAreaSocket areaSocket)
+					startTangent = areaSocket.GetOutTangent(this.ChangeCoordinatesTo(startElement, start));
+				else
+					startTangent = Start.Tangent;
+			}
+			else {
 				startTangent = (end - mousePosition).normalized;
+			}
 
 			Vector2 endTangent;
-			if (End != null)
-				endTangent = End.Tangent;
-			else
+			if (End != null) {
+				VisualElement endElement = End.Element;
+				if (endElement is IConnectionAreaSocket areaSocket)
+					endTangent = areaSocket.GetInTangent(this.ChangeCoordinatesTo(endElement, end));
+				else
+					endTangent = End.Tangent;
+			}
+			else {
 				endTangent = (start - mousePosition).normalized;
+			}
 
 			float weight = Mathf.Min(TANGENT_WEIGHT, Vector2.Distance(start, end) / 2f);
 			return (startTangent * weight, endTangent * weight);

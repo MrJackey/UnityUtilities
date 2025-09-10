@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Jackey.Behaviours.Attributes;
+using Jackey.Behaviours.Editor.Utilities;
 using Jackey.Behaviours.FSM.States;
 using Jackey.Behaviours.Utilities;
 using UnityEditor;
@@ -8,6 +9,8 @@ using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Graph.FSM {
 	public class FSMNode : Node, ITickElement, IConnectionSocketOwner, IConnectionAreaSocket {
+		private const float OUT_SOCKET_TANGENT = 2.5f;
+
 		private BehaviourState m_state;
 		private BehaviourStatus m_lastRuntimeStateStatus = BehaviourStatus.Inactive;
 
@@ -36,24 +39,67 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 		Vector2 IConnectionSocket.Tangent { get; set; }
 
 		int IConnectionSocket.MaxIncomingConnections { get; set; } = -1;
-		int IConnectionSocket.MaxOutgoingConnections { get; set; } = 0;
+		int IConnectionSocket.MaxOutgoingConnections { get; set; } = -1;
 		int IConnectionSocket.IncomingConnections { get; set; }
 		int IConnectionSocket.OutgoingConnections { get; set; }
 
-		Vector2 IConnectionAreaSocket.GetPoint(Connection connection) {
-			Vector2 myPosition = transform.position;
-			Vector2 startPosition = connection.Start != null
-				? connection.Start.Element.GetFirstOfType<FSMNode>().transform.position
-				: connection.localBound.center; // Estimate its position's direction
+
+		Vector2 IConnectionAreaSocket.GetOutPoint(Connection connection) {
+			Vector2 myPosition = transform.position + this.GetLocalOrigin();
+
+			Vector2 endPosition;
+			if (connection.End != null) {
+				FSMNode end = connection.End.Element.GetFirstOfType<FSMNode>();
+				endPosition = end.transform.position + end.GetLocalOrigin();
+			}
+			else {
+				endPosition = connection.localBound.center; // Estimate its position's direction
+			}
+
+			float angle = Vector2.SignedAngle(Vector2.up, myPosition - endPosition);
+
+			return Mathf.Abs(angle) switch {
+				> 135f => new Vector2(localBound.width / 2f, localBound.height), // Bottom
+				> 45f when angle < 0f => new Vector2(-7f, localBound.height / 2f - 3f), // Left
+				> 45f when angle > 0f => new Vector2(localBound.width + 7f, localBound.height / 2f - 3f), // Right
+				_ => new Vector2(localBound.width / 2f, -7f), // Top
+			};
+		}
+
+		Vector2 IConnectionAreaSocket.GetOutTangent(Vector2 point) {
+			float angle = Vector2.SignedAngle(Vector2.up, localBound.size / 2f - point);
+
+			return Mathf.Abs(angle) switch {
+				> 135f => new Vector2(0f, OUT_SOCKET_TANGENT), // Bottom
+				> 45f when angle < 0f => new Vector2(-OUT_SOCKET_TANGENT, 0f), // Left
+				> 45f when angle > 0f => new Vector2(OUT_SOCKET_TANGENT, 0f), // Right
+				_ => new Vector2(0f, -OUT_SOCKET_TANGENT), // Top
+			};
+		}
+
+		Vector2 IConnectionAreaSocket.GetInPoint(Connection connection) {
+			Vector2 myPosition = transform.position + this.GetLocalOrigin();
+
+			Vector2 startPosition;
+			if (connection.Start != null) {
+				FSMNode start = connection.Start.Element.GetFirstOfType<FSMNode>();
+				startPosition = start.transform.position + start.GetLocalOrigin();
+			}
+			else {
+				startPosition = connection.localBound.center; // Estimate its position's direction
+			}
+
 			float angle = Vector2.SignedAngle(Vector2.up, myPosition - startPosition);
 
 			return angle switch {
-				> 90f => new Vector2(localBound.width, localBound.height), // BottomRight
+				> 90f => localBound.size, // BottomRight
 				> 0f => new Vector2(localBound.width, 0f), // TopRight
 				< -90f => new Vector2(0f, localBound.height), // BottomLeft
 				_ => Vector2.zero, // TopLeft
 			};
 		}
+
+		Vector2 IConnectionAreaSocket.GetInTangent(Vector2 point) => Vector2.zero;
 
 		#endregion
 
@@ -79,13 +125,13 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 			});
 
 			VisualElement rightCenter = new VisualElement() { name = "RightSocketCenter" };
-			rightCenter.Add(m_rightSocket = new ConnectionSocket() { name = "RightSocket", Tangent = new Vector2(2.5f, 0f) });
+			rightCenter.Add(m_rightSocket = new ConnectionSocket() { name = "RightSocket", IncomingConnections = 0, Tangent = new Vector2(OUT_SOCKET_TANGENT, 0f) });
 			VisualElement leftCenter = new VisualElement() { name = "LeftSocketCenter" };
-			leftCenter.Add(m_leftSocket = new ConnectionSocket() { name = "LeftSocket", Tangent = new Vector2(-2.5f, 0f) });
+			leftCenter.Add(m_leftSocket = new ConnectionSocket() { name = "LeftSocket", IncomingConnections = 0, Tangent = new Vector2(-OUT_SOCKET_TANGENT, 0f) });
 
-			hierarchy.Add(m_upSocket = new ConnectionSocket() { name = "UpSocket", Tangent = new Vector2(0f, -2.5f) });
+			hierarchy.Add(m_upSocket = new ConnectionSocket() { name = "UpSocket", IncomingConnections = 0, Tangent = new Vector2(0f, -OUT_SOCKET_TANGENT) });
 			hierarchy.Add(rightCenter);
-			hierarchy.Add(m_downSocket = new ConnectionSocket() { name = "DownSocket", Tangent = new Vector2(0f, 2.5f) });
+			hierarchy.Add(m_downSocket = new ConnectionSocket() { name = "DownSocket", IncomingConnections = 0, Tangent = new Vector2(0f, OUT_SOCKET_TANGENT) });
 			hierarchy.Add(leftCenter);
 
 			m_sockets = new List<IConnectionSocket>() { this, m_upSocket, m_rightSocket, m_downSocket, m_leftSocket };
@@ -161,26 +207,6 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				contentContainer.AddToClassList(nextClass);
 
 			m_lastRuntimeStateStatus = m_state.Status;
-		}
-
-		public void MoveConnectionStartToClosestSocket(Connection connection) {
-			Vector2 myPosition = transform.position;
-			Vector2 endPosition = connection.End.Element.transform.position;
-			float angle = Vector2.SignedAngle(Vector2.up, myPosition - endPosition);
-
-			IConnectionSocket closest = Mathf.Abs(angle) switch {
-				> 135f => m_downSocket,
-				> 45f when angle < 0 => m_leftSocket,
-				> 45f when angle > 0 => m_rightSocket,
-				_ => m_upSocket,
-			};
-
-			if (closest == connection.Start)
-				return;
-
-			connection.Start.OutgoingConnections--;
-			connection.Start = closest;
-			connection.Start.OutgoingConnections++;
 		}
 
 		public void UpdateEditorData() {
