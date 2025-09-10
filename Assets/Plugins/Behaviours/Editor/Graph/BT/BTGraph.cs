@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using Jackey.Behaviours.BT;
+using Jackey.Behaviours.BT.Actions;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
 using Jackey.Behaviours.BT.Nested;
 using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Core.Conditions;
+using Jackey.Behaviours.Core.Operations;
 using Jackey.Behaviours.Editor.CopyPaste;
+using Jackey.Behaviours.Editor.PropertyDrawers;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Editor.Utilities;
 using JetBrains.Annotations;
@@ -17,6 +21,19 @@ using UnityEngine.UIElements;
 namespace Jackey.Behaviours.Editor.Graph.BT {
 	public class BTGraph : BehaviourGraph<BehaviourTree> {
 		internal static readonly Type[] s_actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract).ToArray();
+
+		private IEnumerable<TypeProvider.SearchEntry> GroupedBTTypes => TypeProvider.TypesToSearch(s_actionTypes).Select(entry => {
+				entry.Path = $"Actions/{entry.Path}";
+				return entry;
+			})
+			.Concat(TypeProvider.TypesToSearch(OperationListPropertyDrawer.s_operationTypes).Select(entry => {
+				entry.Path = $"Operations/{entry.Path}";
+				return entry;
+			}))
+			.Concat(TypeProvider.TypesToSearch(BehaviourConditionGroupPropertyDrawer.s_conditionTypes).Select(entry => {
+				entry.Path = $"Conditions/{entry.Path}";
+				return entry;
+			}));
 
 		public BTGraph() {
 			m_connectionManipulator.ConnectionVoided += OnConnectionVoided;
@@ -97,14 +114,28 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			base.BeginNodeCreation(GUIPosition);
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(GUIPosition);
-			TypeProvider.Instance.AskForType(mouseScreenPosition, s_actionTypes, type => CreateNode(type));
+			TypeProvider.Instance.AskForType(mouseScreenPosition, GroupedBTTypes, type => CreateNode(type));
 		}
 
 		private BTNode CreateNode(Type type) {
 			int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
 			Undo.RecordObject(m_behaviour, $"Create {type.Name} node");
 
-			BehaviourAction action = (BehaviourAction)Activator.CreateInstance(type);
+			BehaviourAction action;
+			if (typeof(Operation).IsAssignableFrom(type)) {
+				Operator operatorAction = new Operator();
+				operatorAction.Operations.Add((Operation)Activator.CreateInstance(type));
+				action = operatorAction;
+			}
+			else if (typeof(BehaviourCondition).IsAssignableFrom(type)) {
+				Conditional conditionalAction = new Conditional();
+				conditionalAction.Conditions.Add((BehaviourCondition)Activator.CreateInstance(type));
+				action = conditionalAction;
+			}
+			else {
+				action = (BehaviourAction)Activator.CreateInstance(type);
+			}
+
 			BTNode node = new BTNode(action);
 			m_behaviour.m_allActions.Add(action);
 
@@ -436,7 +467,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			SaveCreatePosition();
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-			TypeProvider.Instance.AskForType(mouseScreenPosition, s_actionTypes, type => {
+			TypeProvider.Instance.AskForType(mouseScreenPosition, GroupedBTTypes, type => {
 				int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
 
 				BTNode toNode = CreateNode(type);

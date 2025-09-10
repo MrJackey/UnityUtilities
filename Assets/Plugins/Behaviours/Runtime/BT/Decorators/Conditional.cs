@@ -6,8 +6,9 @@ namespace Jackey.Behaviours.BT.Decorators {
 	[GraphIcon("Conditional")]
 	[SearchPath("Decorators/Conditional")]
 	public class Conditional : Decorator {
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionGroup m_conditions = new();
 
+		internal BehaviourConditionGroup Conditions => m_conditions;
 		public override string Editor_Info => m_conditions?.Editor_Info;
 
 		protected override ExecutionStatus OnEnter() {

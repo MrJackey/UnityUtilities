@@ -89,6 +89,11 @@ namespace Jackey.Behaviours.Core.Conditions {
 			return false;
 		}
 
+		internal void Add(BehaviourCondition condition) {
+			Array.Resize(ref m_conditions, m_conditions.Length + 1);
+			m_conditions[^1] = condition;
+		}
+
 		private enum Policy {
 			AllTrue,
 			AnyTrue,
