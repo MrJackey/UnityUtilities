@@ -32,10 +32,8 @@ namespace Jackey.Behaviours.BT {
 			if (Status != BehaviourStatus.Inactive)
 				return;
 
-			Status = BehaviourStatus.Running;
-
 			m_inTreeTraversal = true;
-			m_entry.EnterSequence();
+			Status = (BehaviourStatus)m_entry.EnterSequence();
 			m_inTreeTraversal = false;
 		}
 

@@ -121,7 +121,7 @@ namespace Jackey.Behaviours {
 
 		public void StartBehaviour() {
 			m_behaviour.Start();
-			m_isRunning = true;
+			m_isRunning = m_behaviour.Status == BehaviourStatus.Running;
 		}
 
 		public void TickBehaviour() {
