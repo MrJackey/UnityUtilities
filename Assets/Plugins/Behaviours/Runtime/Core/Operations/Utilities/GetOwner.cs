@@ -1,16 +1,18 @@
 ﻿using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.Variables;
+using UnityEngine;
 
 namespace Jackey.Behaviours.Operations.Utilities {
 	[SearchPath("Utilities/Get Owner")]
 	public class GetOwner : Operation {
-		public BlackboardOnlyRef<BehaviourOwner> Out;
+		[SerializeField] private BlackboardOnlyRef<BehaviourOwner> m_out;
 
-		public override string Editor_Info => $"Set {Out.Editor_Info} to Owner";
+	#if UNITY_EDITOR
+		public override string Editor_Info => $"Set {m_out.Editor_Info} to Owner";
+#endif
 
 		internal override void Execute(BehaviourOwner owner) {
-			base.Execute(owner);
-			Out.SetValue(owner);
+			m_out.SetValue(owner);
 		}
 
 		protected override void OnExecute() { }

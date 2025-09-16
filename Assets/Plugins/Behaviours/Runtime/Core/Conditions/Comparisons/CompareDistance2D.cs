@@ -4,18 +4,20 @@ using Jackey.Behaviours.Variables;
 using UnityEngine;
 
 namespace Jackey.Behaviours.Conditions.Comparisons {
-	[SearchPath("Utilities/Compare Vector2 Distance")]
+	[SearchPath("Utilities/Compare Distance 2D")]
 	public class CompareDistance2D : BehaviourCondition {
-		public BlackboardRef<Vector2> From;
-		public BlackboardRef<Vector2> To;
-		public Arithmetic.Comparison Comparison;
-		public BlackboardRef<float> Comparand;
+		[SerializeField] private BlackboardRef<Vector2> m_from;
+		[SerializeField] private BlackboardRef<Vector2> m_to;
+		[SerializeField] private Arithmetic.Comparison m_comparison;
+		[SerializeField] private BlackboardRef<float> m_comparand;
 
-		public override string Editor_Info => $"{From.Editor_Info} ⇤⇥ {To.Editor_Info} {Arithmetic.GetComparisonString(Comparison)} {Comparand.Editor_Info}";
+#if UNITY_EDITOR
+		public override string Editor_Info => $"{m_from.Editor_Info} ⇤⇥ {m_to.Editor_Info} {Arithmetic.GetComparisonString(m_comparison)} {m_comparand.Editor_Info}";
+#endif
 
 		public override bool Evaluate() {
-			float comparand = Comparand.GetValue();
-			return Arithmetic.Compare(Vector2.SqrMagnitude(To.GetValue() - From.GetValue()), Comparison, comparand * comparand);
+			float comparand = m_comparand.GetValue();
+			return Arithmetic.Compare(Vector2.SqrMagnitude(m_to.GetValue() - m_from.GetValue()), m_comparison, comparand * comparand);
 		}
 	}
 }

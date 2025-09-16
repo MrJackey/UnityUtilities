@@ -5,26 +5,26 @@ using UnityEngine;
 namespace Jackey.Behaviours.Actions.Utilities {
 	[SearchPath("Utilities/Wait")]
 	public class Wait : BehaviourAction {
-		public BlackboardRef<float> Duration;
-		public bool UnscaledTime;
+		[SerializeField] private BlackboardRef<float> m_duration;
+		[SerializeField] private bool m_unscaledTime;
 
 		private float m_enterTime;
 
 #if UNITY_EDITOR
-		public override string Editor_Info => $"Wait {Duration.Editor_Info}s";
+		public override string Editor_Info => $"Wait {m_duration.Editor_Info}s";
 #endif
 
 		protected override ExecutionStatus OnEnter() {
-			m_enterTime = UnscaledTime ? Time.unscaledTime : Time.time;
+			m_enterTime = m_unscaledTime ? Time.unscaledTime : Time.time;
 			EnableTicking();
 
 			return ExecutionStatus.Running;
 		}
 
 		protected override ExecutionStatus OnTick() {
-			float time = UnscaledTime ? Time.unscaledTime : Time.time;
+			float time = m_unscaledTime ? Time.unscaledTime : Time.time;
 
-			if (time >= m_enterTime + Duration.GetValue())
+			if (time >= m_enterTime + m_duration.GetValue())
 				return ExecutionStatus.Success;
 
 			return ExecutionStatus.Running;
