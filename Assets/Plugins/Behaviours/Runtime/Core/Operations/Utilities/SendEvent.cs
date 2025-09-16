@@ -2,11 +2,12 @@
 using Jackey.Behaviours.Events;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Actions.Events {
-	[SearchPath("Events/Send Event")]
-	public class SendEvent : BehaviourAction<BehaviourOwner> {
+namespace Jackey.Behaviours.Operations.Utilities {
+	[SearchPath("Utilities/Send Event")]
+	public class SendEvent : Operation<BehaviourOwner> {
 		[SerializeField] private BehaviourEvent m_event;
 
+#if UNITY_EDITOR
 		public override string Editor_Info {
 			get {
 				if (m_event == null)
@@ -15,11 +16,10 @@ namespace Jackey.Behaviours.Actions.Events {
 				return $"Send {m_event.name} to {TargetInfo}";
 			}
 		}
+#endif
 
-		protected override ExecutionStatus OnEnter() {
+		protected override void OnExecute() {
 			GetTarget().SendEvent(m_event);
-
-			return ExecutionStatus.Success;
 		}
 	}
 }
