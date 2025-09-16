@@ -12,73 +12,70 @@ public class BehavioursSourceGenerator : IIncrementalGenerator {
 	private const string GENERATE_COMPONENT_ACTION_ATTRIBUTE_QUALIFIED_NAME = "Jackey.Behaviours.Attributes.GenerateComponentActionAttribute";
 	private const string BEHAVIOUR_OPERATION_ATTRIBUTE_QUALIFIED_NAME = "Jackey.Behaviours.Attributes.BehaviourOperationAttribute";
 	private const string BEHAVIOUR_CONDITION_ATTRIBUTE_QUALIFIED_NAME = "Jackey.Behaviours.Attributes.BehaviourConditionAttribute";
-	private const string COMPONENT_ACTION_INTERFACE_NAMESPACE = "Jackey.Behaviours.BT.Actions";
+	private const string COMPONENT_ACTION_INTERFACE_NAMESPACE = "Jackey.Behaviours.Actions";
 	private const string COMPONENT_ACTION_INTERFACE_NAME = "IComponentAction";
 
 	#region Templates
 
-	private const string CLASS_TEMPLATE_HEAD = @"using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.BT.Actions;
-using Jackey.Behaviours.Core.Blackboard;
-using Jackey.Behaviours.Core.Conditions;
-using Jackey.Behaviours.Core.Operations;
-using UnityEngine;
-
-namespace Jackey.Behaviours.BT.Generated {{
+	private const string CLASS_TEMPLATE_HEAD = @"namespace Jackey.Behaviours.Generated {{
 	public sealed partial class BehaviourMembers_Generated {{
 ";
 
 	private const string CLASS_TEMPLATE_TAIL = "\t}}\n}}";
 
 	private const string BASE_ACTION_TEMPLATE = CLASS_TEMPLATE_HEAD + @"
-		[DisplayName(""{0}"")]
-		[SearchPath(""Generated/{0}"")]
-		public sealed class {1} : BehaviourAction<{2}> {{
-			protected override ExecutionStatus OnEnter() => ((IComponentAction)GetTarget()).OnEnter(this);
-			protected override ExecutionStatus OnTick() => ((IComponentAction)GetTarget()).OnTick(this);
-			protected override void OnInterrupt() => ((IComponentAction)GetTarget()).OnInterrupt(this);
-			protected override void OnResult(ActionResult result) => ((IComponentAction)GetTarget()).OnResult(this, result);
-			protected override void OnExit() => ((IComponentAction)GetTarget()).OnExit(this);
+		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+		[Jackey.Behaviours.Attributes.DisplayName(""{0}"")]
+		[Jackey.Behaviours.Attributes.SearchPath(""Generated/{0}"")]
+		public sealed class {1} : Jackey.Behaviours.Actions.BehaviourAction<{2}> {{
+			protected override Jackey.Behaviours.ExecutionStatus OnEnter() => ((Jackey.Behaviours.Actions.IComponentAction)GetTarget()).OnEnter(this);
+			protected override Jackey.Behaviours.ExecutionStatus OnTick() => ((Jackey.Behaviours.Actions.IComponentAction)GetTarget()).OnTick(this);
+			protected override void OnInterrupt() => ((Jackey.Behaviours.Actions.IComponentAction)GetTarget()).OnInterrupt(this);
+			protected override void OnResult(Jackey.Behaviours.BehaviourResult result) => ((Jackey.Behaviours.Actions.IComponentAction)GetTarget()).OnResult(this, result);
+			protected override void OnExit() => ((Jackey.Behaviours.Actions.IComponentAction)GetTarget()).OnExit(this);
 		}}
 " + CLASS_TEMPLATE_TAIL;
 
 	private const string ARGS_ACTION_TEMPLATE = CLASS_TEMPLATE_HEAD + @"
-		[DisplayName(""{0}"")]
-		[SearchPath(""Generated/{0}"")]
-		public sealed class {1} : BehaviourAction<{2}> {{
-			[SerializeField] private BlackboardRef<{3}> m_args;
+		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+		[Jackey.Behaviours.Attributes.DisplayName(""{0}"")]
+		[Jackey.Behaviours.Attributes.SearchPath(""Generated/{0}"")]
+		public sealed class {1} : Jackey.Behaviours.Actions.BehaviourAction<{2}> {{
+			[UnityEngine.SerializeField] private Jackey.Behaviours.Variables.BlackboardRef<{3}> m_args;
 
-			protected override ExecutionStatus OnEnter() => ((IComponentAction<{3}>)GetTarget()).OnEnter(this, m_args.GetValue());
-			protected override ExecutionStatus OnTick() => ((IComponentAction<{3}>)GetTarget()).OnTick(this, m_args.GetValue());
-			protected override void OnInterrupt() => ((IComponentAction<{3}>)GetTarget()).OnInterrupt(this, m_args.GetValue());
-			protected override void OnResult(ActionResult result) => ((IComponentAction<{3}>)GetTarget()).OnResult(this, m_args.GetValue(), result);
-			protected override void OnExit() => ((IComponentAction<{3}>)GetTarget()).OnExit(this, m_args.GetValue());
+			protected override Jackey.Behaviours.ExecutionStatus OnEnter() => ((Jackey.Behaviours.Actions.IComponentAction<{3}>)GetTarget()).OnEnter(this, m_args.GetValue());
+			protected override Jackey.Behaviours.ExecutionStatus OnTick() => ((Jackey.Behaviours.Actions.IComponentAction<{3}>)GetTarget()).OnTick(this, m_args.GetValue());
+			protected override void OnInterrupt() => ((Jackey.Behaviours.Actions.IComponentAction<{3}>)GetTarget()).OnInterrupt(this, m_args.GetValue());
+			protected override void OnResult(Jackey.Behaviours.BehaviourResult result) => ((Jackey.Behaviours.Actions.IComponentAction<{3}>)GetTarget()).OnResult(this, m_args.GetValue(), result);
+			protected override void OnExit() => ((Jackey.Behaviours.Actions.IComponentAction<{3}>)GetTarget()).OnExit(this, m_args.GetValue());
 		}}
 " + CLASS_TEMPLATE_TAIL;
 
 	private const string BASE_CONDITION_TEMPLATE = CLASS_TEMPLATE_HEAD + @"
-		[DisplayName(""{0}"")]
-		[SearchPath(""Generated/{0}"")]
-		public sealed class {1} : BehaviourCondition<{2}> {{ 
+		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+		[Jackey.Behaviours.Attributes.DisplayName(""{0}"")]
+		[Jackey.Behaviours.Attributes.SearchPath(""Generated/{0}"")]
+		public sealed class {1} : Jackey.Behaviours.Conditions.BehaviourCondition<{2}> {{ 
 			public override bool Evaluate() => GetTarget().{3}();
 		}}
 " + CLASS_TEMPLATE_TAIL;
 
 	private const string ARGS_CONDITION_TEMPLATE = CLASS_TEMPLATE_HEAD + @"
-		[DisplayName(""{0}"")]
-		[SearchPath(""Generated/{0}"")]
-		public sealed class {1} : BehaviourCondition<{2}> {{ 
-			[SerializeField] private BlackboardRef<{3}> m_args;
+		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+		[Jackey.Behaviours.Attributes.DisplayName(""{0}"")]
+		[Jackey.Behaviours.Attributes.SearchPath(""Generated/{0}"")]
+		public sealed class {1} : Jackey.Behaviours.Conditions.BehaviourCondition<{2}> {{ 
+			[UnityEngine.SerializeField] private Jackey.Behaviours.Variables.BlackboardRef<{3}> m_args;
 
 			public override bool Evaluate() => GetTarget().{4}(m_args.GetValue());
 		}}
 " + CLASS_TEMPLATE_TAIL;
 
 	private const string BASE_OPERATION_TEMPLATE = CLASS_TEMPLATE_HEAD + @"
-		[DisplayName(""{0}"")]
-		[SearchPath(""Generated/{0}"")]
-		public sealed class {1} : Operation<{2}> {{
+		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+		[Jackey.Behaviours.Attributes.DisplayName(""{0}"")]
+		[Jackey.Behaviours.Attributes.SearchPath(""Generated/{0}"")]
+		public sealed class {1} : Jackey.Behaviours.Operations.Operation<{2}> {{
 			protected override void OnExecute() {{
 				GetTarget().{3}();
 			}}
@@ -86,10 +83,11 @@ namespace Jackey.Behaviours.BT.Generated {{
 " + CLASS_TEMPLATE_TAIL;
 
 	private const string ARGS_OPERATION_TEMPLATE = CLASS_TEMPLATE_HEAD + @"
-		[DisplayName(""{0}"")]
-		[SearchPath(""Generated/{0}"")]
-		public sealed class {1} : Operation<{2}> {{
-			[SerializeField] private BlackboardRef<{3}> m_args;
+		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+		[Jackey.Behaviours.Attributes.DisplayName(""{0}"")]
+		[Jackey.Behaviours.Attributes.SearchPath(""Generated/{0}"")]
+		public sealed class {1} : Jackey.Behaviours.Operations.Operation<{2}> {{
+			[UnityEngine.SerializeField] private Jackey.Behaviours.Variables.BlackboardRef<{3}> m_args;
 			
 			protected override void OnExecute() {{
 				GetTarget().{4}(m_args.GetValue());
