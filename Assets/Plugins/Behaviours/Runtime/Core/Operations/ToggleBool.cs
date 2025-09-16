@@ -1,7 +1,7 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Variables;
 
-namespace Jackey.Behaviours.Core.Operations {
+namespace Jackey.Behaviours.Operations {
 	[SearchPath("Blackboard/Toggle Bool")]
 	public class ToggleBool : Operation {
 		public BlackboardOnlyRef<bool> Variable;

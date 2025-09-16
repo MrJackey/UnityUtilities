@@ -1,9 +1,8 @@
 ﻿using System;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
 using UnityEngine;
 
-namespace Jackey.Behaviours.BT.Actions {
+namespace Jackey.Behaviours.Actions {
 	[SearchPath("Utilities/Tick Component")]
 	public class TickComponent : BehaviourAction<MonoBehaviour> {
 		protected override ExecutionStatus OnEnter() => GetInterfaceTarget().OnEnter(this);

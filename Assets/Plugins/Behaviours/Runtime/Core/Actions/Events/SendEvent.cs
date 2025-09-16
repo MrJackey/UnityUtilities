@@ -1,9 +1,8 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Core.Events;
+using Jackey.Behaviours.Events;
 using UnityEngine;
 
-namespace Jackey.Behaviours.BT.Actions.Events {
+namespace Jackey.Behaviours.Actions.Events {
 	[SearchPath("Events/Send Event")]
 	public class SendEvent : BehaviourAction<BehaviourOwner> {
 		[SerializeField] private BehaviourEvent m_event;

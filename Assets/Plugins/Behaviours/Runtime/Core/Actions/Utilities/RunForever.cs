@@ -1,7 +1,6 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
 
-namespace Jackey.Behaviours.BT.Actions.Utility {
+namespace Jackey.Behaviours.Actions.Utilities {
 	[SearchPath("Utilities/Run Forever")]
 	public class RunForever : BehaviourAction {
 #if UNITY_EDITOR

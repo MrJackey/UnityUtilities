@@ -1,10 +1,9 @@
 ﻿using System;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
-namespace Jackey.Behaviours.BT.Actions.Utility {
+namespace Jackey.Behaviours.Actions.Utilities {
 	[SearchPath("Utilities/Log Message")]
 	public class LogMessage : BehaviourAction {
 		public LogType Type;

@@ -1,9 +1,8 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
-namespace Jackey.Behaviours.BT.Actions.Utility {
+namespace Jackey.Behaviours.Actions.Utilities {
 	[SearchPath("Utilities/Wait Random")]
 	public class WaitRandom : BehaviourAction {
 		public BlackboardRef<float> Min;

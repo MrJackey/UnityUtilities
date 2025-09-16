@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Blackboard;
-using Jackey.Behaviours.Core.Events;
+using Jackey.Behaviours.Events;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
 namespace Jackey.Behaviours {

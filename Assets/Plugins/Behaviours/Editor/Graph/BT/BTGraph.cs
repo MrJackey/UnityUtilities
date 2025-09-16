@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Jackey.Behaviours.BT;
-using Jackey.Behaviours.BT.Actions;
+using Jackey.Behaviours.Actions;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
 using Jackey.Behaviours.BT.Nested;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Core.Conditions;
-using Jackey.Behaviours.Core.Operations;
+using Jackey.Behaviours.Conditions;
+using Jackey.Behaviours.Operations;
 using Jackey.Behaviours.Editor.CopyPaste;
 using Jackey.Behaviours.Editor.PropertyDrawers;
 using Jackey.Behaviours.Editor.TypeSearch;

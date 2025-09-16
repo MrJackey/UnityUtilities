@@ -2,7 +2,7 @@
 using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Blackboard {
+namespace Jackey.Behaviours.Variables {
 	[Serializable]
 	public struct BlackboardOnlyRef<T> : IBlackboardRef, ISerializationCallbackReceiver {
 		[SerializeField] private ObjectBehaviour m_behaviour;

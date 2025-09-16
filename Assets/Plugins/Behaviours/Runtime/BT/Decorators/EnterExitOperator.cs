@@ -1,5 +1,5 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Operations;
+using Jackey.Behaviours.Operations;
 using Jackey.Behaviours.Utilities;
 using UnityEngine;
 

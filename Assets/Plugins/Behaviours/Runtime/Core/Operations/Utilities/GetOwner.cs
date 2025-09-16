@@ -1,7 +1,7 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Variables;
 
-namespace Jackey.Behaviours.Core.Operations.Utilities {
+namespace Jackey.Behaviours.Operations.Utilities {
 	[SearchPath("Utilities/Get Owner")]
 	public class GetOwner : Operation {
 		public BlackboardOnlyRef<BehaviourOwner> Out;

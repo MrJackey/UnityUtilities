@@ -1,11 +1,10 @@
 ﻿
 
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Blackboard;
-using Jackey.Behaviours.Core.Operations;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Operations {
+namespace Jackey.Behaviours.Operations {
 	[DisplayName("Set Bool")]
 	[SearchPath("Blackboard/Set Bool")]
 	public class SetBool : Operation {

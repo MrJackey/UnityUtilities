@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Blackboard {
+namespace Jackey.Behaviours.Variables {
 	internal interface IBlackboardRef {
 		public static string Editor_VariableInfo<T>(ObjectBehaviour behaviour, SerializedGUID guid, string name, ref BlackboardVar cachedVar) {
 			if (guid != default) {

@@ -1,5 +1,5 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Operations;
+using Jackey.Behaviours.Operations;
 using UnityEngine;
 
 namespace Jackey.Behaviours.FSM.States {

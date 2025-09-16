@@ -1,12 +1,12 @@
 ﻿using System;
 using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.BT;
-using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.FSM;
+using Jackey.Behaviours.Variables;
 using JetBrains.Annotations;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core {
+namespace Jackey.Behaviours.Actions {
 	[Serializable]
 	public abstract class BehaviourAction {
 		protected ObjectBehaviour m_runtimeBehaviour;

@@ -1,5 +1,5 @@
 ﻿using System;
-using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Actions;
 using Jackey.Behaviours.Editor.Graph.FSM;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Utilities;

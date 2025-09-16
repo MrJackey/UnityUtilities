@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Utilities;
+using Jackey.Behaviours.Variables;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.UIElements;

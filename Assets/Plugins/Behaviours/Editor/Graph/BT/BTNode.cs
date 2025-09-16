@@ -2,7 +2,7 @@
 using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
-using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Actions;
 using Jackey.Behaviours.Utilities;
 using UnityEditor;
 using UnityEngine;

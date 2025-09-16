@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Reflection;
-using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Utilities;
+using Jackey.Behaviours.Variables;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;

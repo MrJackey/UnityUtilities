@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Actions;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Composites {

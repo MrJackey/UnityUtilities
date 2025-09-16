@@ -1,9 +1,8 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Core.Operations;
+using Jackey.Behaviours.Operations;
 using UnityEngine;
 
-namespace Jackey.Behaviours.BT.Actions {
+namespace Jackey.Behaviours.Actions {
 	[SearchPath("Utilities/Operator")]
 	public class Operator : BehaviourAction {
 		[SerializeField] private OperationList m_operations = new();

@@ -4,7 +4,7 @@ using Jackey.Behaviours.Utilities;
 using JetBrains.Annotations;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Blackboard {
+namespace Jackey.Behaviours.Variables {
 	[Serializable]
 	public class Blackboard {
 #if UNITY_EDITOR

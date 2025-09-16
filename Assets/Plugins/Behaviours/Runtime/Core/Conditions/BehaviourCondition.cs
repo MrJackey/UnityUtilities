@@ -1,8 +1,8 @@
 ﻿using System;
-using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Conditions {
+namespace Jackey.Behaviours.Conditions {
 	[Serializable]
 	public abstract class BehaviourCondition {
 		public virtual string Editor_Info => string.Empty;

@@ -1,6 +1,6 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Utilities;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {

@@ -1,8 +1,8 @@
 ﻿using System;
-using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Operations {
+namespace Jackey.Behaviours.Operations {
 	[Serializable]
 	public abstract class Operation {
 		public virtual string Editor_Info => string.Empty;

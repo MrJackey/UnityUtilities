@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Jackey.Behaviours.Core.Blackboard {
+namespace Jackey.Behaviours.Variables {
 	[Serializable]
 	public sealed class BlackboardVar : ISerializationCallbackReceiver {
 		[SerializeField] private string m_variableName;

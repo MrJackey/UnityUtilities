@@ -1,7 +1,7 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Variables;
 
-namespace Jackey.Behaviours.Core.Conditions.Comparisons {
+namespace Jackey.Behaviours.Conditions.Comparisons {
 	[SearchPath("Blackboard/Compare Bool")]
 	public class CompareBool : BehaviourCondition {
 		public BlackboardOnlyRef<bool> Comparand;

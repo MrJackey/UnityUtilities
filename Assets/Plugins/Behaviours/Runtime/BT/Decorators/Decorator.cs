@@ -1,4 +1,4 @@
-﻿using Jackey.Behaviours.Core;
+﻿using Jackey.Behaviours.Actions;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {

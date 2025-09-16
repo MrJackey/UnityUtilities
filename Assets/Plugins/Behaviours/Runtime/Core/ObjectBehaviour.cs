@@ -2,8 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Actions;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
 #if UNITY_EDITOR

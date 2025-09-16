@@ -1,5 +1,5 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Events;
+using Jackey.Behaviours.Events;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {

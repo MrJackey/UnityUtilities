@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Jackey.Behaviours.BT.Actions;
+using Jackey.Behaviours.Actions;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
 using Jackey.Behaviours.BT.Nested;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Core.Operations;
+using Jackey.Behaviours.Operations;
 using Jackey.Behaviours.Editor.CopyPaste;
 using Jackey.Behaviours.Editor.Manipulators;
 using Jackey.Behaviours.Editor.PropertyDrawers;

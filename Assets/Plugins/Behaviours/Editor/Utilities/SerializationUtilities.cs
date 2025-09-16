@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text.RegularExpressions;
-using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Actions;
 using Jackey.Behaviours.FSM.States;
 using UnityEditor;
 using UnityEngine;

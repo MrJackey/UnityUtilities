@@ -2,7 +2,7 @@
 using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Operations {
+namespace Jackey.Behaviours.Operations {
 	[Serializable]
 	public class OperationList {
 		[SerializeReference] private Operation[] m_operations = Array.Empty<Operation>();

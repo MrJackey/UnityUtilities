@@ -1,6 +1,6 @@
 ﻿using System;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Conditions;
+using Jackey.Behaviours.Conditions;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Blackboard {
+namespace Jackey.Behaviours.Variables {
 	public static class BlackboardConverter {
 		private static Dictionary<(Type from, Type to), Delegate> s_conversions = new();
 

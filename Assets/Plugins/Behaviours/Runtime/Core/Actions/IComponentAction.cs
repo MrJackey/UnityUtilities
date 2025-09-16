@@ -1,6 +1,4 @@
-﻿using Jackey.Behaviours.Core;
-
-namespace Jackey.Behaviours.BT.Actions {
+﻿namespace Jackey.Behaviours.Actions {
 	public interface IComponentAction {
 		ExecutionStatus OnEnter(BehaviourAction action);
 		ExecutionStatus OnTick(BehaviourAction action);

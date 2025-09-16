@@ -1,9 +1,9 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Utilities;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Conditions.Comparisons {
+namespace Jackey.Behaviours.Conditions.Comparisons {
 	[SearchPath("Utilities/Compare Vector3 Distance")]
 	public class CompareDistance3D : BehaviourCondition {
 		public BlackboardRef<Vector3> From;

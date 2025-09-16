@@ -1,4 +1,4 @@
-﻿namespace Jackey.Behaviours.Core.Events {
+﻿namespace Jackey.Behaviours.Events {
 	public interface IBehaviourEventListener {
 		void OnEvent(BehaviourEvent evt);
 	}

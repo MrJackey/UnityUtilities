@@ -2,7 +2,7 @@
 using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Conditions {
+namespace Jackey.Behaviours.Conditions {
 	[Serializable]
 	public class BehaviourConditionGroup {
 		[SerializeField] private Policy m_policy;

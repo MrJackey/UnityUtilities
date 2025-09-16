@@ -1,10 +1,9 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Core.Conditions;
+using Jackey.Behaviours.Conditions;
 using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
-namespace Jackey.Behaviours.BT.Actions.Utility {
+namespace Jackey.Behaviours.Actions.Utilities {
 	[SearchPath("Utilities/Evaluate")]
 	public class Evaluate : BehaviourAction {
 		[SerializeField] private BehaviourConditionGroup m_conditions;
