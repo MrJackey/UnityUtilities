@@ -36,6 +36,10 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 			});
 			m_listView.selectedIndicesChanged += OnSelectedItemChanged;
 			m_listView.itemIndexChanged += OnItemMoved;
+			m_listView.itemsSourceChanged += () => {
+				if (m_listView.itemsSource?.Count > 0)
+					m_listView.SetSelection(0);
+			};
 			m_listView.BindProperty(m_listProperty);
 
 			Add(new Button(CreateItem) {

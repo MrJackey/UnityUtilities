@@ -29,6 +29,10 @@ namespace Jackey.Behaviours.Editor.PropertyDrawers {
 				selectionType = SelectionType.Single,
 			});
 			m_groupsListView.selectedIndicesChanged += OnSelectedGroupChanged;
+			m_groupsListView.itemsSourceChanged += () => {
+				if (m_groupsListView.itemsSource?.Count > 0)
+					m_groupsListView.SetSelection(0);
+			};
 
 			Add(m_groupInspector = new VisualElement() {
 				name = "TransitionGroupInspector",
