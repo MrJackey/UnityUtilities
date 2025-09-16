@@ -13,7 +13,7 @@ namespace Jackey.Behaviours.Operations.Utilities {
 				if (m_event == null)
 					return "Send Event: Missing Event";
 
-				return $"Send {m_event.name} to {TargetInfo}";
+				return $"Send {m_event.name} to {Editor_TargetInfo}";
 			}
 		}
 #endif

@@ -9,7 +9,6 @@ namespace Jackey.Behaviours.Conditions {
 		[SerializeReference] internal BehaviourCondition[] m_conditions = Array.Empty<BehaviourCondition>();
 		[SerializeField] private bool m_invert;
 
-#if UNITY_EDITOR
 		public string Editor_Info {
 			get {
 				if (m_conditions.Length == 0)
@@ -37,7 +36,6 @@ namespace Jackey.Behaviours.Conditions {
 				return output;
 			}
 		}
-#endif
 
 	public void Enable(BehaviourOwner owner) {
 		int conditionCount = m_conditions.Length;
