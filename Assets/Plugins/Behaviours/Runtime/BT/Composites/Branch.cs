@@ -20,7 +20,7 @@ namespace Jackey.Behaviours.BT.Composites {
 					return m_conditions?.Editor_Info;
 
 				return $"{InfoUtilities.AlignCenter("<b>DYNAMIC</b>")}\n" +
-				       $"Switch {m_conditions?.Editor_Info}";
+				       $"{m_conditions?.Editor_Info}";
 			}
 		}
 
