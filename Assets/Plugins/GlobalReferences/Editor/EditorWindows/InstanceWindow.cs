@@ -16,7 +16,7 @@ namespace Jackey.GlobalReferences.Editor.EditorWindows {
 
 		private SearchField m_searchField;
 
-		private ListView m_listView;
+		private MultiColumnListView m_listView;
 		private List<int> m_searchList = new();
 
 		private List<(GlobalObjectAsset asset, GlobalId instance)> m_instances = new();
@@ -32,22 +32,42 @@ namespace Jackey.GlobalReferences.Editor.EditorWindows {
 
 			rootVisualElement.styleSheets.Add(m_styleSheet);
 
-			m_listView = new ListView {
+			m_listView = new MultiColumnListView() {
+				columns = {
+					new Column() {
+						makeCell = CreateGUIDCell,
+						bindCell = BindGUIDCell,
+						title = "GUID",
+						width = 275f,
+						resizable = false,
+						sortable = false,
+					},
+					new Column() {
+						makeCell = CreateNameCell,
+						bindCell = BindNameCell,
+						title = "Name",
+						stretchable = true,
+						// sortable = true,
+					},
+					new Column() {
+						makeCell = CreateInstanceCell,
+						bindCell = BindInstanceCell,
+						title = "Instance",
+						stretchable = true,
+						resizable = false,
+						// sortable = true,
+					},
+				},
 				itemsSource = m_instances,
-				makeItem = CreateListItem,
-				bindItem = BindListItem,
-				showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
 				selectionType = SelectionType.None,
+				showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
+				showBoundCollectionSize = true,
+				// sortingEnabled = true,
 			};
+
 			m_listView.TrackPropertyValue(GlobalObjectDatabase.AssetsProperty, OnPropertyChanged);
 
 			rootVisualElement.Add(m_searchField = new SearchField(OnSearchValueChanged));
-
-			VisualElement header = new VisualElement() { name = "Header" };
-			header.Add(new Label("GUID") { name = "GUIDHeader" });
-			header.Add(new Label("Name"));
-			header.Add(new Label("Instance"));
-			rootVisualElement.Add(header);
 			rootVisualElement.Add(m_listView);
 
 			GlobalReferenceManager.ListUpdated += OnListUpdated;
@@ -61,36 +81,44 @@ namespace Jackey.GlobalReferences.Editor.EditorWindows {
 			GlobalObjectDatabase.AssetsLoaded -= OnAssetsLoaded;
 		}
 
-		private VisualElement CreateListItem() {
-			VisualElement listItem = new VisualElement() { name = "ListItem" };
+		private VisualElement CreateGUIDCell() {
+			TextField field = new TextField() { name = "GUIDField" };
+			field.Q<TextElement>().SetEnabled(false);
+			field.AddManipulator(new ContextualMenuManipulator(evt => evt.menu.AppendAction("Copy", _ => EditorGUIUtility.systemCopyBuffer = field.value )));
 
-			TextField guidField = new TextField() { name = "GUIDField" };
-			guidField.Q<TextElement>().SetEnabled(false);
-			guidField.AddManipulator(new ContextualMenuManipulator(evt => evt.menu.AppendAction("Copy", _ => EditorGUIUtility.systemCopyBuffer = guidField.value )));
-			listItem.Add(guidField);
-
-			listItem.Add(new Label() { name = "NameField" });
-
-			ObjectField instanceField = new ObjectField() { allowSceneObjects = true, objectType = typeof(GameObject) };
-			instanceField.SetEnabled(false);
-			listItem.Add(instanceField);
-
-			return listItem;
+			return field;
 		}
 
-		private void BindListItem(VisualElement element, int index) {
+		private void BindGUIDCell(VisualElement element, int index) {
 			(GlobalObjectAsset asset, GlobalId instance) = m_instances[index];
-			bool missing = asset == s_missingAsset;
 
-			TextField guidField = element.Q<TextField>();
-			guidField.SetValueWithoutNotify(instance.GUID.ToString());
-			guidField.EnableInClassList("Missing", missing);
+			TextField field = (TextField)element;
+			field.SetValueWithoutNotify(instance.GUID.ToString());
+			field.EnableInClassList("Missing", asset == s_missingAsset);
+		}
 
-			Label nameLabel = element.Q<Label>();
-			nameLabel.text = asset.Name;
-			nameLabel.EnableInClassList("Missing", missing);
+		private VisualElement CreateNameCell() {
+			return new Label() { name = "NameLabel" };
+		}
 
-			element.Q<ObjectField>().SetValueWithoutNotify(instance);
+		private void BindNameCell(VisualElement element, int index) {
+			(GlobalObjectAsset asset, GlobalId _) = m_instances[index];
+
+			Label label = (Label)element;
+			label.text = asset.Name;
+			label.EnableInClassList("Missing", asset == s_missingAsset);
+		}
+
+		private VisualElement CreateInstanceCell() {
+			ObjectField field = new ObjectField() { allowSceneObjects = true, objectType = typeof(GameObject) };
+			field.SetEnabled(false);
+
+			return field;
+		}
+
+		private void BindInstanceCell(VisualElement element, int index) {
+			(GlobalObjectAsset _, GlobalId instance) = m_instances[index];
+			((ObjectField)element).SetValueWithoutNotify(instance);
 		}
 
 		private void OnSearchValueChanged(ChangeEvent<string> evt) => RefreshSearch(evt.newValue);

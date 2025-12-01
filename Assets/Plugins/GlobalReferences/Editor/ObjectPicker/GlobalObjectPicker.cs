@@ -11,10 +11,10 @@ namespace Jackey.GlobalReferences.Editor.ObjectPicker {
 
 		private SearchField m_searchField;
 
-		private ListView m_listView;
+		private BaseListView m_listView;
 		private List<GlobalObjectAsset> m_output;
 
-		public GlobalObjectPicker(ListView listView, List<GlobalObjectAsset> output) {
+		public GlobalObjectPicker(BaseListView listView, List<GlobalObjectAsset> output) {
 			styleSheets.Add(s_styleSheet);
 
 			m_listView = listView;

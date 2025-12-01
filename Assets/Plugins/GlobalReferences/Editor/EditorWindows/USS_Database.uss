@@ -3,54 +3,19 @@ GlobalObjectPicker {
     margin: 3px;
 }
 
-#TableHeader {
-    flex-direction: row;
-    flex-shrink: 0;
-    justify-content: space-around;
-    height: 18px;
-    width: 100%;
-    margin: 3px 15px 3px 3px;
-    font-size: 14px;
-}
-
-ListView {
-    margin-left: 3px;
-}
-
-ListView #ListItem {
-    flex-direction: row;
-    align-items: flex-start;
-    min-height: 30px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-}
-
-#ListItem #GUIDField {
-    margin-right: 5px;
-    flex-grow: 1;
-    flex-shrink: 1;
-}
-
-#ListItem #NameField {
-    padding-left: 8px;
-    padding-right: 2px;
-    flex-grow: 1;
-    flex-shrink: 1;
-}
-
-#ListItem #NameField TextInput {
+MultiColumnHeaderColumn Label {
     -unity-text-align: middle-center;
 }
 
-#ListItem #DescriptionField {
-    height: 100%;
-    flex-grow: 1;
-    flex-shrink: 1;
-    padding-left: 8px;
-    margin-right: 2px;
+#GUIDField {
+    -unity-font-definition: url("./RobotoMono-SemiBold.ttf");
 }
 
-#ListItem Button {
+#DescriptionField {
+    max-height: 86px;
+}
+
+#DeleteButton {
     height: 18px;
     width: 18px;
     align-self: center;
