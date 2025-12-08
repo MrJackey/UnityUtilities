@@ -1,0 +1,24 @@
+﻿MultiColumnHeaderColumn Label {
+    -unity-text-align: middle-center;
+}
+
+#GUIDField {
+    -unity-font-definition: url("./RobotoMono-SemiBold.ttf");
+}
+
+#GUIDField.Missing TextInput {
+    background-color: rgb(155, 0, 0);
+}
+
+#NameLabel {
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+}
+
+#NameLabel.Missing {
+    color: rgb(225, 0, 0);
+}
+
+ObjectField {
+    opacity: 1;
+}

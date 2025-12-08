@@ -1,0 +1,22 @@
+GlobalObjectPicker {
+    flex-shrink: 0;
+    margin: 3px;
+}
+
+MultiColumnHeaderColumn Label {
+    -unity-text-align: middle-center;
+}
+
+#GUIDField {
+    -unity-font-definition: url("./RobotoMono-SemiBold.ttf");
+}
+
+#DescriptionField {
+    max-height: 86px;
+}
+
+#DeleteButton {
+    height: 18px;
+    width: 18px;
+    align-self: center;
+}

@@ -1,0 +1,16 @@
+﻿GlobalObjectPicker {
+    flex-direction: row;
+    align-items: center;
+}
+
+GlobalObjectPicker SearchField {
+    flex-grow: 1;
+}
+
+GlobalObjectPicker Button {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+}

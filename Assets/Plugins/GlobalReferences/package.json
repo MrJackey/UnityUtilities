@@ -1,0 +1,17 @@
+{
+	"name": "com.jackey.global-references",
+	"version": "0.1.0",
+	"description": "",
+	"displayName": "Global References",
+	"unity": "2022.3",
+	"keywords": [
+		"global",
+		"references",
+		"unique ids",
+		"weak references",
+		"search"
+	],
+	"author": {
+		"name": "Jacob Lundberg"
+	}
+}
