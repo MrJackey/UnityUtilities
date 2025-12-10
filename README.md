@@ -7,6 +7,7 @@ Everything in this repository is free to use and modify however you see fit. If 
   
 - [Packages](#packages)
 	- [Object Behaviours](#object-behaviours--link)
+	- [Global References](#global-references--link)
 	- [Object Pool](#object-pool--link)
 	- [Hierarchy Organizer](#hierarchy-organizer--link)
 	- [Event Bus](#event-bus--link)
@@ -32,20 +33,48 @@ Everything in this repository is free to use and modify however you see fit. If 
 	- [Other Utilities](#other-utilities)
 
 # Packages
-All work on my packages can be found in separate branches following the naming convention of `plugin/{name of package}`. Though the most stable versions will be present on the `master` branch. Everything that is needed to use a package is available in their respective [Plugins](Assets/Plugins/) folder. You can also find the latest version of each package on the `master` branch as Unity packages in the [Releases](Assets/Plugins/_Releases/) folder.
+All work on my packages can be found in separate branches following the naming convention of `plugin/{name of package}`. Though the most stable versions/release will be present on the `master` branch. Everything that is needed to use a package is available in their respective [Plugins](Assets/Plugins/) folder. You can also find the latest version of each package on the `master` branch as Unity packages in the [Releases](Assets/Plugins/_Releases/) folder.
+
+All packages are currently maintained in Unity 2022.3. They will probably work in earlier and later versions but may require some minor fixes due to API changes. 
 
 ## Object Behaviours | [Link](Assets/Plugins/Behaviours)
 
-Object behaviours is my take on implementing behaviours for game objects. It currently only supports behaviour trees but is planned to have finite state machines as well sometime in the future.
-
-One of my main goals have been to reduce tree traversal as much as possible and only tick nodes that actually require being ticked to reduce overhead in deep trees.
+Object behaviours is my take on implementing behaviours for game objects. It contains node based behaviour trees and state machines that can be seamlessly nested and combined.
 
 ![](.github/Resources/Images/BehaviourTree.png)
+![](.github/Resources/Images/StateMachine.png)
 The editor window style is inspired by [NodeCanvas](https://assetstore.unity.com/packages/tools/visual-scripting/nodecanvas-14914), another behaviour package available on the Unity asset store.
 
-> Disclaimer: I haven't used my `Object Behaviours` yet in a large scale project. It's in use in my personal hobby project but nothing bigger than that. It should work but it has not been tested at scale. 
+One of my main goals have been to reduce tree traversal as much as possible in behaviour trees and only tick nodes that actually require being ticked to reduce overhead in deep trees. I'm also focusing on keeping runtime post-initialization allocations as low as possible.
 
-## Object Pool | [Link](Assets/Plugins/ObjectPool/)
+> Disclaimer: I haven't used my `Object Behaviours` yet in a large scale project. It's in use in my personal projects but nothing bigger than that. It should work, but it has not been tested at scale. 
+
+## Global References | [Link](Assets/Plugins/GlobalReferences)
+
+Global References lets you create unique identifiers with names and descriptions that can be assigned to game objects. Anything can reference these game objects - including components in other scenes and scriptable objects. All identifiers are listed in a database where its name and description can be freely edited and new identifiers can be created.
+
+This package could technically also be used to just have named unique identifiers without assigning them to anything, only making use of the generated id.
+
+![](.github/Resources/Images/GlobalReferencesDatabase.png)
+
+All entries in the database are stored in separate files in the `**/GlobalReferences/Assets/` folder. Storing the data in multiple files is done to reduce risk of version control conflicts and making changes easier to track.
+
+Resolving a reference will give you the game object which has the `GlobalId` component with the matching id (if any).
+```cs
+public class ExampleMonoBehaviour : MonoBehaviour {
+	public GlobalRef ExampleRef;
+    
+	private void ExampleMethod() {
+		GameObject referencedObject = ExampleRef.Resolve();
+	}
+}
+```
+
+![](.github/Resources/Images/GlobalReferencesComponents.png)
+
+> Disclaimer: I haven't used my `Global References` yet in a large scale project. It's in use in my personal projects but nothing bigger than that. It should work, but it has not been tested at scale.
+
+## Object Pool | [Link](Assets/Plugins/ObjectPool)
 
 One of many object pool implementations out there. This one is designed to look and work like Unity's normal `Object.Instantiate()` and `Object.Destroy()`, the only difference being that you replace `Object` with `ObjectPool` resulting in `ObjectPool.Instantiate()` and `ObjectPool.Destroy()`. 
 
@@ -57,7 +86,7 @@ It also comes with an editor window to display all global pools and their object
 
 ![](.github/Resources/Images/PoolBrowser.png)
 
-> Disclaimer: I haven't used my `Object Pool` yet in a large scale project. It's in use in my personal hobby project but nothing bigger than that. It should work but its not been tested at scale.
+> Disclaimer: I haven't used my `Object Pool` yet in a large scale project. It's in use in my personal projects but nothing bigger than that. It should work but its not been tested at scale.
 
 ## Hierarchy Organizer | [Link](Assets/Plugins/HierarchyOrganizer/)
 
