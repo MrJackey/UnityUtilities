@@ -1,8 +1,8 @@
 ﻿using System;
-using Jackey.Behaviours.Core.Blackboard;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Conditions {
+namespace Jackey.Behaviours.Conditions {
 	[Serializable]
 	public abstract class BehaviourCondition {
 		public virtual string Editor_Info => string.Empty;
@@ -18,7 +18,7 @@ namespace Jackey.Behaviours.Core.Conditions {
 	public abstract class BehaviourCondition<T> : BehaviourCondition {
 		[SerializeField] private BlackboardRef<T> m_target;
 
-		protected string TargetInfo => m_target.IsVariable ? m_target.Editor_Info : "SELF";
+		protected string Editor_TargetInfo => m_target.IsVariable ? m_target.Editor_Info : "SELF";
 
 		protected T GetTarget() => m_target.GetValue();
 

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Collections.Generic;
+using Jackey.Behaviours.Actions;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Core.Blackboard;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT {
@@ -20,8 +16,6 @@ namespace Jackey.Behaviours.BT {
 		private bool m_inTreeTraversal;
 		private int m_tickIndex;
 
-		public ActionStatus Status { get; private set; } = ActionStatus.Inactive;
-
 		internal override void Initialize(BehaviourOwner owner) {
 			if (m_entry == null) {
 				Debug.LogError("Behaviour Tree does not have an entry action. Unable to initialize", this);
@@ -31,17 +25,15 @@ namespace Jackey.Behaviours.BT {
 			base.Initialize(owner);
 
 			int index = 0;
-			m_entry.Initialize(this, null, ref index);
+			m_entry.BT_Initialize(this, null, ref index);
 		}
 
 		internal override void Start() {
-			if (Status != ActionStatus.Inactive)
+			if (Status != BehaviourStatus.Inactive)
 				return;
 
-			Status = ActionStatus.Running;
-
 			m_inTreeTraversal = true;
-			m_entry.EnterSequence();
+			Status = (BehaviourStatus)m_entry.EnterSequence();
 			m_inTreeTraversal = false;
 		}
 
@@ -97,10 +89,10 @@ namespace Jackey.Behaviours.BT {
 		internal override void Stop() {
 			m_entry.Interrupt();
 			m_entry.Reset();
-			Status = ActionStatus.Inactive;
+			Status = BehaviourStatus.Inactive;
 		}
 
-		public void EnableTicking(BehaviourAction action) {
+		internal override void EnableTicking(BehaviourAction action) {
 			if (m_inTreeTraversal) {
 				m_pendingTickingActions.Add(action);
 				return;
@@ -125,7 +117,7 @@ namespace Jackey.Behaviours.BT {
 			m_tickingActions.Add(action);
 		}
 
-		public void DisableTicking(BehaviourAction action) {
+		internal override void DisableTicking(BehaviourAction action) {
 			m_pendingTickingActions.Remove(action);
 
 			int tickingIndex = m_tickingActions.IndexOf(action);
@@ -145,61 +137,21 @@ namespace Jackey.Behaviours.BT {
 		}
 
 #if UNITY_EDITOR
-		private void OnValidate() {
+		protected override void OnValidate() {
+			base.OnValidate();
+
 			if (UnityEditor.SerializationUtility.HasManagedReferencesWithMissingTypes(this))
 				return;
-
-			ConnectBlackboardRefs();
 
 			if (m_entry != null && !m_allActions.Contains(m_entry))
 				m_entry = null;
 
-			for (int i = m_blackboard.m_variables.Count - 1; i >= 0; i--) {
-				if (m_blackboard.m_variables[i] == null)
-					m_blackboard.m_variables.RemoveAt(i);
-			}
+			ConnectAllBlackboardRefs();
 		}
 
-		internal void ConnectBlackboardRefs() {
-			void Inner(Type type, object instance) {
-				foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) {
-					Type fieldType = field.FieldType;
-
-					if (!fieldType.IsSerializable) continue;
-					if (fieldType.IsPrimitive) continue;
-
-					if (fieldType.IsGenericType) {
-						Type typeDefinition = fieldType.GetGenericTypeDefinition();
-
-						if (typeDefinition == typeof(BlackboardRef<>) || typeDefinition == typeof(BlackboardOnlyRef<>)) {
-							FieldInfo behaviourField = fieldType.GetField("m_behaviour", BindingFlags.Instance | BindingFlags.NonPublic);
-							Debug.Assert(behaviourField != null);
-
-							object blackboardRefValue = field.GetValue(instance);
-							behaviourField.SetValue(blackboardRefValue, this);
-							field.SetValue(instance, blackboardRefValue);
-						}
-					}
-
-					object fieldValue = field.GetValue(instance);
-					if (fieldValue == null) continue;
-
-					// Only lists and arrays are serializable collections in Unity
-					if (fieldValue is IList list) {
-						foreach (object item in list)
-							Inner(item.GetType(), item);
-					}
-					else {
-						Inner(fieldType, fieldValue);
-
-						if (fieldType.IsValueType)
-							field.SetValue(instance, fieldValue);
-					}
-				}
-			}
-
+		internal void ConnectAllBlackboardRefs() {
 			foreach (BehaviourAction action in m_allActions) {
-				Inner(action.GetType(), action);
+				ConnectBlackboardRefs(action);
 			}
 		}
 #endif

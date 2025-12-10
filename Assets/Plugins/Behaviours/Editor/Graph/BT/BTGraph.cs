@@ -2,16 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using Jackey.Behaviours.BT;
+using Jackey.Behaviours.Actions;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
 using Jackey.Behaviours.BT.Nested;
-using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Conditions;
+using Jackey.Behaviours.Operations;
 using Jackey.Behaviours.Editor.CopyPaste;
+using Jackey.Behaviours.Editor.PropertyDrawers;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Editor.Utilities;
 using JetBrains.Annotations;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -19,32 +21,24 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 	public class BTGraph : BehaviourGraph<BehaviourTree> {
 		internal static readonly Type[] s_actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>().Where(type => !type.IsAbstract).ToArray();
 
+		private IEnumerable<TypeProvider.SearchEntry> GroupedBTTypes => TypeProvider.TypesToSearch(s_actionTypes).Select(entry => {
+				entry.Path = $"Actions/{entry.Path}";
+				return entry;
+			})
+			.Concat(TypeProvider.TypesToSearch(OperationListPropertyDrawer.s_operationTypes).Select(entry => {
+				entry.Path = $"Operations/{entry.Path}";
+				return entry;
+			}))
+			.Concat(TypeProvider.TypesToSearch(BehaviourConditionListPropertyDrawer.s_conditionTypes).Select(entry => {
+				entry.Path = $"Conditions/{entry.Path}";
+				return entry;
+			}));
+
 		public BTGraph() {
 			m_connectionManipulator.ConnectionVoided += OnConnectionVoided;
 			m_connectionManipulator.ConnectionCreated += OnConnectionCreated;
 			m_connectionManipulator.ConnectionMoved += OnConnectionMoved;
 			m_connectionManipulator.ConnectionRemoved += OnConnectionRemoved;
-		}
-
-		public void UpdateBehaviour(BehaviourTree behaviour) {
-			m_serializedBehaviour?.Dispose();
-
-			m_behaviour = behaviour;
-			m_serializedBehaviour = new SerializedObject(behaviour);
-
-			bool isPersistent = EditorUtility.IsPersistent(m_behaviour);
-			m_graphInstanceInfo.text = isPersistent ? "(Asset)" : "(Instance)";
-			m_isEditable = isPersistent;
-
-			ClearGraph();
-			BuildGraph();
-
-			m_graphHeader.Bind(m_serializedBehaviour);
-
-			m_blackboardInspector.SetSecondaryBlackboard(behaviour.Blackboard, m_serializedBehaviour.FindProperty(nameof(ObjectBehaviour.m_blackboard)));
-
-			this.ClearSelection();
-			OnSelectionChange();
 		}
 
 		protected override void SyncGraph() {
@@ -119,14 +113,28 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			base.BeginNodeCreation(GUIPosition);
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(GUIPosition);
-			TypeProvider.Instance.AskForType(mouseScreenPosition, s_actionTypes, type => CreateNode(type));
+			TypeProvider.Instance.AskForType(mouseScreenPosition, GroupedBTTypes, type => CreateNode(type));
 		}
 
 		private BTNode CreateNode(Type type) {
 			int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
 			Undo.RecordObject(m_behaviour, $"Create {type.Name} node");
 
-			BehaviourAction action = (BehaviourAction)Activator.CreateInstance(type);
+			BehaviourAction action;
+			if (typeof(BehaviourOperation).IsAssignableFrom(type)) {
+				Operator operatorAction = new Operator();
+				operatorAction.Operations.Add((BehaviourOperation)Activator.CreateInstance(type));
+				action = operatorAction;
+			}
+			else if (typeof(BehaviourCondition).IsAssignableFrom(type)) {
+				Conditional conditionalAction = new Conditional();
+				conditionalAction.Conditions.Add((BehaviourCondition)Activator.CreateInstance(type));
+				action = conditionalAction;
+			}
+			else {
+				action = (BehaviourAction)Activator.CreateInstance(type);
+			}
+
 			BTNode node = new BTNode(action);
 			m_behaviour.m_allActions.Add(action);
 
@@ -217,7 +225,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				if (selectedElement is not BTNode btNode)
 					continue;
 
-				BehaviourAction actionClone = SerializationUtilities.DeepClone(btNode.Action);
+				BehaviourAction actionClone = SerializationUtilities.DeepCloneAction(btNode.Action);
 				BTNode nodeClone = new BTNode(actionClone);
 
 				originals.Add(btNode);
@@ -323,22 +331,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		}
 
 		public override void Paste(Vector2 GUIPosition) {
-			CopyPasteData pasteData;
-			try {
-				pasteData = JsonUtility.FromJson<CopyPasteData>(GUIUtility.systemCopyBuffer);
-			}
-			catch (ArgumentException) {
-				Debug.LogWarning("Invalid clipboard content. Unable to paste");
-				return;
-			}
-
-			if (pasteData is not { Context: CopyPasteContext.BT }) return;
-
-			BTCopyData btData;
-			try {
-				btData = JsonUtility.FromJson<BTCopyData>(pasteData.Data);
-			}
-			catch (ArgumentException) {
+			if (!CopyPasteData.TryParse(CopyPasteContext.BT, out BTCopyData data)) {
 				Debug.LogWarning("Invalid clipboard content. Unable to paste");
 				return;
 			}
@@ -346,10 +339,10 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			Undo.RecordObject(m_behaviour, "Paste nodes");
 
 			// Create nodes
-			BehaviourAction[] actions = new BehaviourAction[btData.Actions.Length];
-			BTNode[] nodes = new BTNode[btData.Actions.Length];
+			BehaviourAction[] actions = new BehaviourAction[data.Actions.Length];
+			BTNode[] nodes = new BTNode[data.Actions.Length];
 			for (int i = 0; i < actions.Length; i++) {
-				BehaviourAction action = (BehaviourAction)JsonUtility.FromJson(btData.Actions[i], Type.GetType(btData.ActionTypes[i]));
+				BehaviourAction action = (BehaviourAction)JsonUtility.FromJson(data.Actions[i], Type.GetType(data.ActionTypes[i]));
 				actions[i] = action;
 				m_behaviour.m_allActions.Add(action);
 
@@ -368,8 +361,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			}
 
 			// Setup connections
-			for (int i = 0; i < btData.ParentIndices.Length; i++) {
-				int parentIndex = btData.ParentIndices[i];
+			for (int i = 0; i < data.ParentIndices.Length; i++) {
+				int parentIndex = data.ParentIndices[i];
 				if (parentIndex == -1) continue;
 
 				BehaviourAction parentAction = actions[parentIndex];
@@ -388,18 +381,8 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			}
 
 			// Move nodes to cursor location keeping relative offsets
-			Vector2 pasteCenter = this.ChangeCoordinatesTo(contentContainer, GUIPosition) - new Vector2(Node.DEFAULT_WIDTH / 2f, Node.DEFAULT_HEIGHT / 2f);
-			Rect pasteRect = new Rect(nodes[0].transform.position, Vector2.zero);
-
-			for (int i = 1; i < nodes.Length; i++) {
-				Vector3 nodePosition = nodes[i].transform.position;
-				pasteRect.min = Vector2.Min(pasteRect.min, nodePosition);
-				pasteRect.max = Vector2.Max(pasteRect.max, nodePosition);
-			}
-
-			Vector2 offset = pasteCenter - pasteRect.center;
-			foreach (BTNode node in nodes)
-				node.transform.position += (Vector3)offset;
+			Vector2 pasteCenter = this.ChangeCoordinatesTo(contentContainer, GUIPosition) - new Vector2(Node.DEFAULT_WIDTH / 2f, Node.DEFAULT_HEIGHT / 2f);;
+			MoveNodesAroundPoint(nodes, pasteCenter);
 
 			ApplyChanges();
 			this.ReplaceSelection(nodes);
@@ -407,64 +390,11 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 		#endregion
 
-		private void ShowNodeContext(ContextualMenuPopulateEvent evt) {
-			BTNode btNode = (BTNode)evt.target;
-			DropdownMenuAction.Status editStatus = m_isEditable ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
-
-			evt.menu.AppendAction(
-				"Entry",
-				_ => { SetEntry(btNode); },
-				m_behaviour.m_entry == btNode.Action ? DropdownMenuAction.Status.Checked | DropdownMenuAction.Status.Disabled : editStatus
-			);
-			evt.menu.AppendAction(
-				"Decorate",
-				menuAction => {
-					Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(menuAction.eventInfo.mousePosition);
-					IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<Decorator>().Where(type => !type.IsAbstract);
-
-					TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => DecorateNode(btNode, type));
-				},
-				editStatus
-			);
-			evt.menu.AppendAction(
-				"Breakpoint",
-				_ => { ToggleBreakpoint(btNode); },
-				btNode.Action.Editor_Data.Breakpoint ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal
-			);
-
-			MonoScript script = AssetUtilities.GetScriptAsset(btNode.Action.GetType());
-			if (script != null) {
-				evt.menu.AppendSeparator();
-				evt.menu.AppendAction(
-					"Edit Script",
-					_ => AssetDatabase.OpenAsset(script)
-				);
-			}
-
-			evt.menu.AppendSeparator();
-			evt.menu.AppendAction(
-				"Smart Delete",
-				_ => {
-					SmartDelete(btNode);
-					this.ValidateSelection();
-				},
-				editStatus
-			);
-			evt.menu.AppendAction(
-				"Delete",
-				_ => {
-					DeleteNode(btNode);
-					this.ValidateSelection();
-				},
-				editStatus
-			);
-		}
-
 		protected override void OnNodeDoubleClick(Node node) {
 			BTNode btNode = (BTNode)node;
 
-			if (btNode.Action is NestedBehaviourTree nestedTree && nestedTree.InstanceOrBehaviour != null) {
-				EditorWindow.GetWindow<BehaviourEditorWindow>().PushBehaviour(nestedTree.InstanceOrBehaviour);
+			if (btNode.Action is NestedBehaviourAction nestedAction && nestedAction.InstanceOrBehaviour != null) {
+				EditorWindow.GetWindow<BehaviourEditorWindow>().PushBehaviour(nestedAction.InstanceOrBehaviour);
 				return;
 			}
 
@@ -519,10 +449,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		}
 
 		protected override void InspectElement(VisualElement element) {
-			// TODO: Remove guard?
-			if (m_behaviour == null)
-				return;
-
 			if (element is not BTNode node)
 				return;
 
@@ -540,7 +466,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			SaveCreatePosition();
 
 			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-			TypeProvider.Instance.AskForType(mouseScreenPosition, s_actionTypes, type => {
+			TypeProvider.Instance.AskForType(mouseScreenPosition, GroupedBTTypes, type => {
 				int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
 
 				BTNode toNode = CreateNode(type);
@@ -687,7 +613,60 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 		#endregion
 
-		#region Context Actions
+		#region Context Menu
+
+		private void ShowNodeContext(ContextualMenuPopulateEvent evt) {
+			BTNode btNode = (BTNode)evt.target;
+			DropdownMenuAction.Status editStatus = m_isEditable ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
+
+			evt.menu.AppendAction(
+				"Entry",
+				_ => { SetEntry(btNode); },
+				m_behaviour.m_entry == btNode.Action ? DropdownMenuAction.Status.Checked | DropdownMenuAction.Status.Disabled : editStatus
+			);
+			evt.menu.AppendAction(
+				"Decorate",
+				menuAction => {
+					Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(menuAction.eventInfo.mousePosition);
+					IEnumerable<Type> actionTypes = TypeCache.GetTypesDerivedFrom<Decorator>().Where(type => !type.IsAbstract);
+
+					TypeProvider.Instance.AskForType(mouseScreenPosition, actionTypes, type => DecorateNode(btNode, type));
+				},
+				editStatus
+			);
+			evt.menu.AppendAction(
+				"Breakpoint",
+				_ => { ToggleBreakpoint(btNode); },
+				btNode.Action.Editor_Data.Breakpoint ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal
+			);
+
+			MonoScript script = AssetUtilities.GetScriptAsset(btNode.Action.GetType());
+			if (script != null) {
+				evt.menu.AppendSeparator();
+				evt.menu.AppendAction(
+					"Edit Script",
+					_ => AssetDatabase.OpenAsset(script)
+				);
+			}
+
+			evt.menu.AppendSeparator();
+			evt.menu.AppendAction(
+				"Smart Delete",
+				_ => {
+					SmartDelete(btNode);
+					this.ValidateSelection();
+				},
+				editStatus
+			);
+			evt.menu.AppendAction(
+				"Delete",
+				_ => {
+					DeleteNode(btNode);
+					this.ValidateSelection();
+				},
+				editStatus
+			);
+		}
 
 		private void SetEntry(BTNode node) {
 			if (m_behaviour.m_entry == node.Action)
@@ -755,7 +734,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		#endregion
 
 		protected override void ApplyChanges() {
-			m_behaviour.ConnectBlackboardRefs();
+			m_behaviour.ConnectAllBlackboardRefs();
 
 			base.ApplyChanges();
 		}

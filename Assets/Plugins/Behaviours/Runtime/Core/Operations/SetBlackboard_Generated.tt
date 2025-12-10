@@ -17,16 +17,15 @@
 #>
 
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Blackboard;
-using Jackey.Behaviours.Core.Operations;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Operations {<#
+namespace Jackey.Behaviours.Operations {<#
 	foreach ((string name, string type) in types) {
 		Write($@"
 	[DisplayName(""Set {name}"")]
 	[SearchPath(""Blackboard/Set {name}"")]
-	public class Set{name} : Operation {{
+	public class Set{name} : BehaviourOperation {{
 		[SerializeField] private BlackboardOnlyRef<{type}> m_variable;
 		[SerializeField] private BlackboardRef<{type}> m_value;
 

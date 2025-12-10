@@ -1,12 +1,12 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Conditions;
+using Jackey.Behaviours.Conditions;
 using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {
 	[SearchPath("Decorators/Wait Until")]
 	public class WaitUntil : Decorator {
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionList m_conditions;
 
 		private bool m_isTicking;
 

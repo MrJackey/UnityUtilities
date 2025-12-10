@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Jackey.Behaviours.BT;
 using Jackey.Behaviours.Editor.Graph.BT;
+using Jackey.Behaviours.Editor.Graph.FSM;
 using Jackey.Behaviours.Editor.PropertyDrawers;
 using Jackey.Behaviours.Editor.TypeSearch;
 using Jackey.Behaviours.Editor.Utilities;
+using Jackey.Behaviours.FSM;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -221,19 +223,40 @@ namespace Jackey.Behaviours.Editor.Graph {
 		private IEnumerable<TypeProvider.SearchEntry> GetAllSearchTypes() {
 			switch (m_behaviour) {
 				case BehaviourTree:
-					IEnumerable<TypeProvider.SearchEntry> actions = TypeProvider.TypesToSearch(BTGraph.s_actionTypes).Select(entry => {
+					return TypeProvider.TypesToSearch(BTGraph.s_actionTypes).Select(entry => {
 						entry.Path = $"Actions/{entry.Path}";
 						return entry;
-					});
-					IEnumerable<TypeProvider.SearchEntry> operations = TypeProvider.TypesToSearch(OperationListPropertyDrawer.s_operationTypes).Select(entry => {
+					})
+					.Concat(
+					TypeProvider.TypesToSearch(OperationListPropertyDrawer.s_operationTypes).Select(entry => {
 						entry.Path = $"Operations/{entry.Path}";
 						return entry;
-					});
-					IEnumerable<TypeProvider.SearchEntry> conditions = TypeProvider.TypesToSearch(BehaviourConditionGroupPropertyDrawer.s_conditionTypes).Select(entry => {
+					}))
+					.Concat(
+					TypeProvider.TypesToSearch(BehaviourConditionListPropertyDrawer.s_conditionTypes).Select(entry => {
 						entry.Path = $"Conditions/{entry.Path}";
 						return entry;
-					});
-					return actions.Concat(operations).Concat(conditions);
+					}));
+				case StateMachine:
+					return TypeProvider.TypesToSearch(FSMGraph.s_stateTypes).Select(entry => {
+						entry.Path = $"States/{entry.Path}";
+						return entry;
+					})
+					.Concat(
+					TypeProvider.TypesToSearch(FSMGraph.s_actionTypes).Select(entry => {
+						entry.Path = $"Actions/{entry.Path}";
+						return entry;
+					}))
+					.Concat(
+					TypeProvider.TypesToSearch(OperationListPropertyDrawer.s_operationTypes).Select(entry => {
+						entry.Path = $"Operations/{entry.Path}";
+						return entry;
+					}))
+					.Concat(
+					TypeProvider.TypesToSearch(BehaviourConditionListPropertyDrawer.s_conditionTypes).Select(entry => {
+						entry.Path = $"Conditions/{entry.Path}";
+						return entry;
+					}));
 			}
 
 			return Enumerable.Empty<TypeProvider.SearchEntry>();

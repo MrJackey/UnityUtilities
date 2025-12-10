@@ -1,3 +1,657 @@
-﻿namespace Jackey.Behaviours.Editor.Graph.FSM {
-	public class FSMGraph : BehaviourGraph { }
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Jackey.Behaviours.Actions;
+using Jackey.Behaviours.BT.Composites;
+using Jackey.Behaviours.BT.Decorators;
+using Jackey.Behaviours.BT.Nested;
+using Jackey.Behaviours.Operations;
+using Jackey.Behaviours.Editor.CopyPaste;
+using Jackey.Behaviours.Editor.Manipulators;
+using Jackey.Behaviours.Editor.PropertyDrawers;
+using Jackey.Behaviours.Editor.TypeSearch;
+using Jackey.Behaviours.Editor.Utilities;
+using Jackey.Behaviours.FSM;
+using Jackey.Behaviours.FSM.States;
+using JetBrains.Annotations;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.UIElements;
+
+namespace Jackey.Behaviours.Editor.Graph.FSM {
+	public class FSMGraph : BehaviourGraph<StateMachine> {
+		internal static readonly Type[] s_stateTypes = TypeCache.GetTypesDerivedFrom<BehaviourState>().Where(type => !type.IsAbstract).ToArray();
+		internal static readonly Type[] s_actionTypes = TypeCache.GetTypesDerivedFrom<BehaviourAction>()
+			.Where(type =>
+				!type.IsAbstract && !typeof(Decorator).IsAssignableFrom(type) && !typeof(Composite).IsAssignableFrom(type) &&
+				type != typeof(NestedBehaviourAction) && type != typeof(Operator))
+			.ToArray();
+
+		private IEnumerable<TypeProvider.SearchEntry> GroupedFSMTypes => TypeProvider.TypesToSearch(s_stateTypes).Select(entry => {
+					entry.Path = $"States/{entry.Path}";
+					return entry;
+				})
+			.Concat(TypeProvider.TypesToSearch(s_actionTypes).Select(entry => {
+					entry.Path = $"Actions/{entry.Path}";
+					return entry;
+				}))
+			.Concat(TypeProvider.TypesToSearch(OperationListPropertyDrawer.s_operationTypes).Select(entry => {
+					entry.Path = $"Operations/{entry.Path}";
+					return entry;
+				}));
+
+		public FSMGraph() {
+			m_connectionManipulator.ConnectionVoided += OnConnectionVoided;
+			m_connectionManipulator.ConnectionCreated += OnConnectionCreated;
+			m_connectionManipulator.ConnectionMoved += OnConnectionMoved;
+			m_connectionManipulator.ConnectionRemoved += OnConnectionRemoved;
+		}
+
+		protected override void SyncGraph() {
+			base.SyncGraph();
+
+			// Remove excess nodes
+			for (int i = m_nodes.Count - 1; i >= 0; i--) {
+				FSMNode node = (FSMNode)m_nodes[i];
+				if (m_behaviour.m_allStates.Contains(node.State))
+					continue;
+
+				RemoveNode(node);
+			}
+
+			// Add missing nodes
+			foreach (BehaviourState state in m_behaviour.m_allStates) {
+				if (GetNodeOfState(state) != null)
+					continue;
+
+				AddNode(new FSMNode(state));
+			}
+
+			// Remove connections
+			for (int i = m_connections.Count - 1; i >= 0; i--) {
+				Connection connection = m_connections[i];
+				// with invalid start or end
+				if (connection.Start?.Element.panel == null || connection.End?.Element.panel == null) {
+					RemoveConnection(connection);
+				}
+				else { // without matching transition
+					BehaviourState startState = connection.Start.Element.GetFirstOfType<FSMNode>().State;
+					BehaviourState destination = connection.End.Element.GetFirstOfType<FSMNode>().State;
+
+					for (int j = startState.Transitions.Count - 1; j >= 0; j--) {
+						if (startState.Transitions[j].Destination == destination)
+							goto skipRemove;
+					}
+
+					RemoveConnection(connection);
+					skipRemove:;
+				}
+			}
+
+			// Sync node states and add missing connections
+			foreach (FSMNode node in m_nodes) {
+				BehaviourState state = node.State;
+
+				node.transform.position = state.Editor_Data.Position;
+				node.SetEntry(m_behaviour.m_entry == state);
+
+				foreach (StateTransition transition in state.Transitions) {
+					FSMNode destinationNode = GetNodeOfState(transition.Destination);
+
+					if (GetConnectionBetweenNodes(node, destinationNode) == null) {
+						AddConnection(new Connection(node, destinationNode));
+					}
+				}
+			}
+
+			this.ValidateSelection();
+		}
+
+		public override void Tick() {
+			foreach (Connection connection in m_connections) {
+				if (connection.Start == null || connection.End == null) continue;
+
+				FSMNode startNode = connection.Start.Element.GetFirstOfType<FSMNode>();
+				BehaviourState destination = connection.End.Element.GetFirstOfType<FSMNode>().State;
+
+				// Update connection label
+				List<StateTransition> transitions = startNode.State.Transitions;
+				for (int i = 0; i < transitions.Count; i++) {
+					StateTransition transition = transitions[i];
+					if (transition.Destination != destination) continue;
+
+					connection.SetLabel($"{i + 1}\n{transition.Editor_Info}");
+					break;
+				}
+			}
+
+			base.Tick();
+		}
+
+		protected override void UpdateEditorData() {
+			base.UpdateEditorData();
+
+			foreach (FSMNode node in m_nodes) {
+				node.UpdateEditorData();
+			}
+		}
+
+		#region Node CRUD
+
+		public override void BeginNodeCreation(Vector2 GUIPosition) {
+			base.BeginNodeCreation(GUIPosition);
+
+			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(GUIPosition);
+			TypeProvider.Instance.AskForType(mouseScreenPosition, GroupedFSMTypes, type => CreateNode(type));
+		}
+
+		private FSMNode CreateNode(Type type) {
+			int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
+			Undo.RecordObject(m_behaviour, $"Create {type.Name} node");
+
+			BehaviourState state;
+			if (typeof(BehaviourAction).IsAssignableFrom(type)) {
+				ActionState actionState = new ActionState();
+				actionState.SetAction((BehaviourAction)Activator.CreateInstance(type));
+				state = actionState;
+			}
+			else if (typeof(BehaviourOperation).IsAssignableFrom(type)) {
+				OperationState operationState = new OperationState();
+				operationState.Operations.Add((BehaviourOperation)Activator.CreateInstance(type));
+				state = operationState;
+			}
+			else {
+				state = (BehaviourState)Activator.CreateInstance(type);
+			}
+
+			FSMNode node = new FSMNode(state);
+			m_behaviour.m_allStates.Add(state);
+
+			Vector2 createPosition = this.ChangeCoordinatesTo(contentContainer, m_createNodePosition);
+			createPosition.x -= Node.DEFAULT_WIDTH / 2f;
+			createPosition.y -= Node.DEFAULT_HEIGHT / 2f;
+			node.transform.position = createPosition;
+
+			AddNode(node);
+
+			ApplyChanges();
+			Undo.CollapseUndoOperations(undoGroup);
+
+			this.ReplaceSelection(node);
+
+			return node;
+		}
+
+		protected override void OnNodeAdded(Node node) {
+			FSMNode fsmNode = (FSMNode)node;
+			fsmNode.SetEntry(m_behaviour.m_entry == fsmNode.State);
+
+			fsmNode.AddManipulator(new ContextualMenuManipulator(ShowNodeContext));
+
+			if (m_isEditable) {
+				foreach (IConnectionSocket outSocket in fsmNode.OutSockets) {
+					outSocket.Element.RegisterCallback<MouseDownEvent, IConnectionSocket>(OnSocketMouseDown, outSocket);
+				}
+			}
+		}
+
+		public override void DeleteNode(Node node) {
+			FSMNode fsmNode = (FSMNode)node;
+			BehaviourState state = fsmNode.State;
+
+			Undo.RecordObject(m_behaviour, $"Delete {state.GetType().Name} node");
+
+			if (state == m_behaviour.m_entry)
+				m_behaviour.m_entry = null;
+
+			// Remove transitions to deleted state
+			foreach (BehaviourState other in m_behaviour.m_allStates) {
+				List<StateTransition> otherTransitions = other.Transitions;
+
+				for (int i = otherTransitions.Count - 1; i >= 0; i--) {
+					if (otherTransitions[i].Destination != state) continue;
+
+					otherTransitions.RemoveAt(i);
+				}
+			}
+
+			bool removed = m_behaviour.m_allStates.Remove(state);
+			Debug.Assert(removed);
+
+			ApplyChanges();
+
+			RemoveNode(node);
+		}
+
+		protected override void OnNodeRemoval(Node node) {
+			FSMNode fsmNode = (FSMNode)node;
+
+			for (int i = m_connections.Count - 1; i >= 0; i--) {
+				Connection connection = m_connections[i];
+
+				if (fsmNode == connection.Start.Element || connection.End.Element == node) {
+					RemoveConnection(connection);
+				}
+			}
+		}
+
+		#endregion
+
+		protected override void OnNodeDoubleClick(Node node) {
+			FSMNode fsmNode = (FSMNode)node;
+
+			if (fsmNode.State is NestedBehaviourState nestedState && nestedState.InstanceOrBehaviour != null) {
+				EditorWindow.GetWindow<BehaviourEditorWindow>().PushBehaviour(nestedState.InstanceOrBehaviour);
+			}
+		}
+
+		#region CopyPaste
+
+		public override void DuplicateSelection() {
+			if (SelectedElements.Count == 0) return;
+
+			List<FSMNode> originals = new List<FSMNode>();
+			List<FSMNode> clones = new List<FSMNode>();
+
+			Undo.RecordObject(m_behaviour, "Duplicate selected elements");
+
+			// Duplicate Nodes
+			foreach (ISelectableElement selectedElement in SelectedElements) {
+				if (selectedElement is not FSMNode fsmNode)
+					continue;
+
+				BehaviourState stateClone = SerializationUtilities.DeepCloneState(fsmNode.State);
+				FSMNode nodeClone = new FSMNode(stateClone);
+
+				originals.Add(fsmNode);
+				clones.Add(nodeClone);
+
+				m_behaviour.m_allStates.Add(stateClone);
+
+				AddNode(nodeClone);
+				nodeClone.transform.position += Node.DUPLICATE_OFFSET;
+			}
+
+			ApplyChanges();
+
+			// Clear/Duplicate Connections
+			for (int i = 0; i < clones.Count; i++) {
+				FSMNode original = originals[i];
+				FSMNode clone = clones[i];
+
+				BehaviourState originalState = original.State;
+				BehaviourState cloneState = clone.State;
+
+				List<StateTransition> originalTransitions = originalState.Transitions;
+				List<StateTransition> cloneTransitions = cloneState.Transitions;
+
+				for (int j = originalTransitions.Count - 1; j >= 0; j--) {
+					StateTransition originalTransition = originalTransitions[j];
+
+					int destinationIndex = originals.FindIndex(x => x.State == originalTransition.Destination);
+					if (destinationIndex == -1) {
+						cloneTransitions.RemoveAt(j);
+						continue;
+					}
+
+					cloneTransitions[j].Destination = clones[destinationIndex].State;
+
+					AddConnection(new Connection(
+						start: clone,
+						end: clones[destinationIndex]
+					));
+				}
+			}
+
+			this.ReplaceSelection(clones);
+		}
+
+		public override void CopySelection() {
+			if (SelectedElements.Count == 0) return;
+
+			// Get all selected states
+			List<BehaviourState> states = new List<BehaviourState>();
+			foreach (ISelectableElement selected in SelectedElements) {
+				if (selected.Element is FSMNode node)
+					states.Add(node.State);
+			}
+
+			if (states.Count == 0)
+				return;
+
+			// Save their transition destinations if part of selection
+			List<int> transitionIndices = new List<int>();
+			foreach (BehaviourState state in states) {
+				foreach (StateTransition transition in state.Transitions) {
+					int transitionIndex = states.IndexOf(transition.Destination);
+					transitionIndices.Add(transitionIndex);
+				}
+			}
+
+			// Save data to clipboard
+			FSMCopyData fsmData = new FSMCopyData() {
+				StateTypes = states.Select(state => state.GetType().AssemblyQualifiedName).ToArray(),
+				States = states.Select(JsonUtility.ToJson).ToArray(),
+				TransitionIndices = transitionIndices.ToArray(),
+			};
+			CopyPasteData copyData = new CopyPasteData() {
+				Context = CopyPasteContext.FSM,
+				Data = JsonUtility.ToJson(fsmData),
+			};
+			GUIUtility.systemCopyBuffer = JsonUtility.ToJson(copyData);
+		}
+
+		public override void Paste(Vector2 GUIPosition) {
+			if (!CopyPasteData.TryParse(CopyPasteContext.FSM, out FSMCopyData data)) {
+				Debug.LogWarning("Invalid clipboard content. Unable to paste");
+				return;
+			}
+
+			Undo.RecordObject(m_behaviour, "Paste nodes");
+
+			// Create nodes
+			BehaviourState[] states = new BehaviourState[data.States.Length];
+			FSMNode[] nodes = new FSMNode[data.States.Length];
+			for (int i = 0; i < states.Length; i++) {
+				BehaviourState state = (BehaviourState)JsonUtility.FromJson(data.States[i], Type.GetType(data.StateTypes[i]));
+				states[i] = state;
+				m_behaviour.m_allStates.Add(state);
+
+				FSMNode node = new FSMNode(state);
+				nodes[i] = node;
+				AddNode(node);
+			}
+
+			// Setup transitions
+			int dataIndex = 0;
+			for (int stateIndex = 0; stateIndex < states.Length; stateIndex++) {
+				BehaviourState state = states[stateIndex];
+				List<StateTransition> stateTransitions = state.Transitions;
+				int transitionCount = stateTransitions.Count;
+
+				for (int j = transitionCount - 1; j >= 0; j--) {
+					int destinationIndex = data.TransitionIndices[dataIndex + j];
+					if (destinationIndex == -1) {
+						stateTransitions.RemoveAt(j);
+						continue;
+					}
+
+					stateTransitions[j].Destination = states[destinationIndex];
+
+					AddConnection(new Connection(nodes[stateIndex], nodes[destinationIndex]));
+				}
+
+				dataIndex += transitionCount;
+			}
+
+			// Move nodes to cursor location keeping relative offsets
+			Vector2 pasteCenter = this.ChangeCoordinatesTo(contentContainer, GUIPosition) - new Vector2(Node.DEFAULT_WIDTH / 2f, Node.DEFAULT_HEIGHT / 2f);;
+			MoveNodesAroundPoint(nodes, pasteCenter);
+
+			ApplyChanges();
+			this.ReplaceSelection(nodes);
+		}
+
+		#endregion
+
+		protected override void TryDeleteOther(VisualElement element) {
+			if (element is not ConnectionLabel connectionLabel) return;
+
+			Connection connection = connectionLabel.GetFirstOfType<Connection>();
+			FSMNode startNode = connection.Start.Element.GetFirstOfType<FSMNode>();
+			FSMNode endNode = connection.End.Element.GetFirstOfType<FSMNode>();
+
+			BehaviourState startState = startNode.State;
+			BehaviourState destination = endNode.State;
+			for (int i = 0; i < startState.Transitions.Count; i++) {
+				if (startState.Transitions[i].Destination != destination) continue;
+
+				Undo.RecordObject(m_behaviour, "Delete transition");
+
+				startState.Transitions.RemoveAt(i);
+				RemoveConnection(connection);
+
+				ApplyChanges();
+				break;
+			}
+		}
+
+		private void OnSocketMouseDown(MouseDownEvent evt, IConnectionSocket socket) {
+			evt.StopImmediatePropagation();
+
+			if (socket.MaxOutgoingConnections != -1 && socket.OutgoingConnections >= socket.MaxOutgoingConnections)
+				return;
+
+			m_connectionManipulator.CreateConnection(socket);
+		}
+
+		protected override void OnConnectionAdded(Connection connection) {
+			connection.Label.AddManipulator(new ClickSelector(this));
+		}
+
+		protected override void InspectElement(VisualElement element) {
+			switch (element) {
+				case ConnectionLabel label:
+					Connection connection = label.GetFirstOfType<Connection>();
+					BehaviourState startState = connection.Start.Element.GetFirstOfType<FSMNode>().State;
+					BehaviourState endState = connection.End.Element.GetFirstOfType<FSMNode>().State;
+
+					int stateIndex = m_behaviour.m_allStates.IndexOf(startState);
+					Debug.Assert(stateIndex != -1);
+
+					int transitionIndex = startState.Transitions.FindIndex(transition => transition.Destination == endState);
+					Debug.Assert(transitionIndex != -1);
+
+					SerializedProperty transitionProperty = m_serializedBehaviour.FindProperty($"{nameof(m_behaviour.m_allStates)}.Array.data[{stateIndex}].m_transitions.Array.data[{transitionIndex}]");
+					m_inspector.Inspect(typeof(StateTransition), transitionProperty);
+					break;
+				case FSMNode node:
+					int nodeIndex = m_behaviour.m_allStates.IndexOf(node.State);
+
+					Debug.Assert(nodeIndex != -1);
+
+					SerializedProperty nodeProperty = m_serializedBehaviour.FindProperty($"{nameof(m_behaviour.m_allStates)}.Array.data[{nodeIndex}]");
+					m_inspector.Inspect(node.State.GetType(), nodeProperty);
+					break;
+			}
+		}
+
+		#region Connection Callbacks
+
+		private void OnConnectionVoided(Connection connection, Action<Connection, IConnectionSocket> restore) {
+			SaveCreatePosition();
+
+			Vector2 mouseScreenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
+			TypeProvider.Instance.AskForType(mouseScreenPosition, GroupedFSMTypes, type => {
+				int undoGroup = UndoUtilities.CreateGroup($"Create {type.Name} node");
+
+				FSMNode toNode = CreateNode(type);
+				restore.Invoke(connection, toNode);
+
+				Undo.CollapseUndoOperations(undoGroup);
+			});
+		}
+
+		protected override bool IsConnectionValid(IConnectionSocket start, IConnectionSocket end) {
+			FSMNode startNode = start.Element.GetFirstOfType<FSMNode>();
+			FSMNode endNode = end.Element.GetFirstOfType<FSMNode>();
+
+			// Prevent connecting to self
+			if (startNode == endNode)
+				return false;
+
+			// Prevent multiple connections with same start and end.
+			foreach (StateTransition transition in startNode.State.Transitions) {
+				if (transition.Destination == endNode.State)
+					return false;
+			}
+
+			return true;
+		}
+
+		private void OnConnectionCreated(Connection connection) {
+			Undo.RecordObject(m_behaviour, "Create connection");
+
+			FSMNode start = connection.Start.Element.GetFirstOfType<FSMNode>();
+			FSMNode end = connection.End.Element.GetFirstOfType<FSMNode>();
+
+			start.State.Transitions.Add(new StateTransition() { Destination = end.State });
+
+			// Move from socket to its node
+			connection.Start.OutgoingConnections--;
+			connection.Start = start;
+			connection.Start.OutgoingConnections++;
+
+			ApplyChanges();
+		}
+
+		private void OnConnectionMoved(Connection connection, IConnectionSocket from, IConnectionSocket to) {
+			Undo.RecordObject(m_behaviour, "Move connection");
+
+			FSMNode fromNode = from.Element.GetFirstOfType<FSMNode>();
+			FSMNode toNode = to.Element.GetFirstOfType<FSMNode>();
+			Debug.Assert(fromNode != null && toNode != null);
+
+			bool movedStart = connection.Start == to;
+
+			if (movedStart) {
+				FSMNode endNode = connection.End.Element.GetFirstOfType<FSMNode>();
+
+				List<StateTransition> fromNodeTransitions = fromNode.State.Transitions;
+				List<StateTransition> toNodeTransitions = toNode.State.Transitions;
+
+				// Find transition
+				int transitionIndex = fromNodeTransitions.FindIndex(transition => transition.Destination == endNode.State);
+				Debug.Assert(transitionIndex != -1);
+				StateTransition transition = fromNodeTransitions[transitionIndex];
+
+				// Move to new state
+				fromNodeTransitions.RemoveAt(transitionIndex);
+				toNodeTransitions.Add(transition);
+
+				// Move from socket to its node
+				connection.Start.OutgoingConnections--;
+				connection.Start = toNode;
+				connection.Start.OutgoingConnections++;
+			}
+			else { // Moved end
+				FSMNode startNode = connection.Start.Element.GetFirstOfType<FSMNode>();
+
+				// Change destination of the transition
+				StateTransition transition = startNode.State.Transitions.First(transition => transition.Destination == fromNode.State);
+				transition.Destination = toNode.State;
+			}
+
+			ApplyChanges();
+		}
+
+		private void OnConnectionRemoved(Connection connection, IConnectionSocket start, IConnectionSocket end) {
+			Undo.RecordObject(m_behaviour, "Delete connection");
+
+			FSMNode endNode = end.Element.GetFirstOfType<FSMNode>();
+			Debug.Assert(endNode != null);
+
+			foreach (FSMNode node in m_nodes) {
+				if (node != start) continue;
+
+				List<StateTransition> transitions = node.State.Transitions;
+				for (int i = 0; i < transitions.Count; i++) {
+					if (transitions[i].Destination != endNode.State) continue;
+
+					transitions.RemoveAt(i);
+					break;
+				}
+			}
+
+			m_connections.Remove(connection);
+			ApplyChanges();
+		}
+
+		#endregion
+
+		#region Context Menu
+
+		private void ShowNodeContext(ContextualMenuPopulateEvent evt) {
+			FSMNode fsmNode = (FSMNode)evt.target;
+			DropdownMenuAction.Status editStatus = m_isEditable ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
+
+			evt.menu.AppendAction(
+				"Entry",
+				_ => { SetEntry(fsmNode); },
+				m_behaviour.m_entry == fsmNode.State ? DropdownMenuAction.Status.Checked | DropdownMenuAction.Status.Disabled : editStatus
+			);
+			evt.menu.AppendAction(
+				"Breakpoint",
+				_ => { ToggleBreakpoint(fsmNode); },
+				fsmNode.State.Editor_Data.Breakpoint ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal
+			);
+
+			MonoScript script = AssetUtilities.GetScriptAsset(fsmNode.State.GetType());
+			if (script != null) {
+				evt.menu.AppendSeparator();
+				evt.menu.AppendAction(
+					"Edit Script",
+					_ => AssetDatabase.OpenAsset(script)
+				);
+			}
+
+			evt.menu.AppendSeparator();
+			evt.menu.AppendAction(
+				"Delete",
+				_ => {
+					DeleteNode(fsmNode);
+					this.ValidateSelection();
+				},
+				editStatus
+			);
+		}
+
+		private void SetEntry(FSMNode node) {
+			if (m_behaviour.m_entry == node.State)
+				return;
+
+			Undo.RecordObject(m_behaviour, $"Set {node.State.GetType().Name} as entry");
+
+			if (m_behaviour.m_entry != null) {
+				FSMNode oldStartNode = GetNodeOfState(m_behaviour.m_entry);
+				Debug.Assert(oldStartNode != null);
+
+				oldStartNode.SetEntry(false);
+			}
+
+			m_behaviour.m_entry = node.State;
+			node.SetEntry(true);
+
+			ApplyChanges();
+		}
+
+		private void ToggleBreakpoint(FSMNode node) {
+			Undo.RecordObject(m_behaviour, "Toggle node breakpoint");
+
+			node.ToggleBreakpoint();
+			ApplyChanges();
+		}
+
+		#endregion
+
+		[CanBeNull]
+		private FSMNode GetNodeOfState(BehaviourState state) {
+			foreach (FSMNode node in m_nodes) {
+				if (node.State == state)
+					return node;
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		private Connection GetConnectionBetweenNodes(FSMNode from, FSMNode to) {
+			foreach (Connection connection in m_connections) {
+				if (connection.Start.Element.GetFirstOfType<FSMNode>() == from && connection.End.Element.GetFirstOfType<FSMNode>() == to)
+					return connection;
+			}
+
+			return null;
+		}
+	}
 }

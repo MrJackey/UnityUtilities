@@ -1,7 +1,7 @@
-﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Core.Blackboard;
+﻿using Jackey.Behaviours.Actions;
+using Jackey.Behaviours.Attributes;
 using Jackey.Behaviours.Utilities;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Composites {
@@ -72,7 +72,7 @@ namespace Jackey.Behaviours.BT.Composites {
 			m_activeIndex = to;
 			BehaviourAction nextChild = m_children[m_activeIndex];
 
-			if (nextChild.Status != ActionStatus.Inactive)
+			if (nextChild.Status != BehaviourStatus.Inactive)
 				nextChild.Reset();
 
 			return nextChild.EnterSequence();

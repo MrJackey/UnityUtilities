@@ -1,6 +1,6 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Core.Conditions;
+using Jackey.Behaviours.Actions;
+using Jackey.Behaviours.Conditions;
 using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
@@ -9,7 +9,7 @@ namespace Jackey.Behaviours.BT.Composites {
 	[SearchPath("Composites/Branch")]
 	public class Branch : Composite {
 		[SerializeField] private bool m_dynamic;
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionList m_conditions;
 
 		private int m_runningIndex = -1;
 
@@ -20,7 +20,7 @@ namespace Jackey.Behaviours.BT.Composites {
 					return m_conditions?.Editor_Info;
 
 				return $"{InfoUtilities.AlignCenter("<b>DYNAMIC</b>")}\n" +
-				       $"Switch {m_conditions?.Editor_Info}";
+				       $"{m_conditions?.Editor_Info}";
 			}
 		}
 
@@ -50,7 +50,7 @@ namespace Jackey.Behaviours.BT.Composites {
 			m_runningIndex = index;
 			BehaviourAction nextChild = m_children[m_runningIndex];
 
-			if (nextChild.Status != ActionStatus.Inactive)
+			if (nextChild.Status != BehaviourStatus.Inactive)
 				nextChild.Reset();
 
 			return nextChild.EnterSequence();

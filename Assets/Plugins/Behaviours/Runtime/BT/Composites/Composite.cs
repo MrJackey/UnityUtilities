@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Actions;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Composites {
@@ -13,20 +13,20 @@ namespace Jackey.Behaviours.BT.Composites {
 
 		internal List<BehaviourAction> Children => m_children;
 
-		internal override void Initialize(BehaviourTree behaviour, BehaviourAction parent, ref int index) {
-			base.Initialize(behaviour, parent, ref index);
+		internal override void BT_Initialize(BehaviourTree behaviour, BehaviourAction parent, ref int index) {
+			base.BT_Initialize(behaviour, parent, ref index);
 
 			int childCount = m_children.Count;
 			for (int i = 0; i < childCount; i++) {
 				index++;
-				m_children[i].Initialize(behaviour, this, ref index);
+				m_children[i].BT_Initialize(behaviour, this, ref index);
 			}
 		}
 
 		internal override void InterruptChildren() {
 			int childCount = m_children.Count;
 			for (int i = 0; i < childCount; i++) {
-				if (m_children[i].Status != ActionStatus.Running) continue;
+				if (m_children[i].Status != BehaviourStatus.Running) continue;
 
 				m_children[i].Interrupt();
 			}
@@ -35,7 +35,7 @@ namespace Jackey.Behaviours.BT.Composites {
 		internal override void ResetChildren() {
 			int childCount = m_children.Count;
 			for (int i = 0; i < childCount; i++) {
-				if (m_children[i].Status == ActionStatus.Inactive) continue;
+				if (m_children[i].Status == BehaviourStatus.Inactive) continue;
 
 				m_children[i].Reset();
 			}

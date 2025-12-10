@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.BT;
-using Jackey.Behaviours.Core.Blackboard;
-using Jackey.Behaviours.Core.Events;
+using Jackey.Behaviours.Events;
+using Jackey.Behaviours.Variables;
 using UnityEngine;
 
 namespace Jackey.Behaviours {
@@ -122,7 +121,7 @@ namespace Jackey.Behaviours {
 
 		public void StartBehaviour() {
 			m_behaviour.Start();
-			m_isRunning = true;
+			m_isRunning = m_behaviour.Status == BehaviourStatus.Running;
 		}
 
 		public void TickBehaviour() {

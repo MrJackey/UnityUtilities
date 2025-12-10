@@ -1,16 +1,19 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Blackboard;
 using Jackey.Behaviours.Utilities;
+using Jackey.Behaviours.Variables;
+using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Conditions.Comparisons {
+namespace Jackey.Behaviours.Conditions.Comparisons {
 	[SearchPath("Blackboard/Compare Float")]
 	public class CompareFloat : BehaviourCondition {
-		public BlackboardOnlyRef<float> Comparand;
-		public Arithmetic.Comparison Comparison;
-		public BlackboardRef<float> Value;
+		[SerializeField] private BlackboardOnlyRef<float> m_comparand;
+		[SerializeField] private Arithmetic.Comparison m_comparison;
+		[SerializeField] private BlackboardRef<float> m_value;
 
-		public override string Editor_Info => $"{Comparand.Editor_Info} {Arithmetic.GetComparisonString(Comparison)} {Value.Editor_Info}";
+#if UNITY_EDITOR
+		public override string Editor_Info => $"{m_comparand.Editor_Info} {Arithmetic.GetComparisonString(m_comparison)} {m_value.Editor_Info}";
+#endif
 
-		public override bool Evaluate() => Arithmetic.Compare(Comparand.GetValue(), Comparison, Value.GetValue());
+		public override bool Evaluate() => Arithmetic.Compare(m_comparand.GetValue(), m_comparison, m_value.GetValue());
 	}
 }

@@ -13,6 +13,13 @@ namespace Jackey.Behaviours.Editor.Utilities {
 		}
 
 		[Pure]
+		public static Rect Encapsulate(this Rect rect, Vector2 point) {
+			rect.min = Vector2.Min(rect.min, point);
+			rect.max = Vector2.Max(rect.max, point);
+			return rect;
+		}
+
+		[Pure]
 		public static Rect ExpandToRatio(this Rect rect, float ratio) {
 			float rectRatio = rect.width / rect.height;
 

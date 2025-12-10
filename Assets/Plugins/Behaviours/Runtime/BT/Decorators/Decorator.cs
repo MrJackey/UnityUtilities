@@ -1,4 +1,4 @@
-﻿using Jackey.Behaviours.Core;
+﻿using Jackey.Behaviours.Actions;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {
@@ -15,14 +15,14 @@ namespace Jackey.Behaviours.BT.Decorators {
 			set => m_child = value;
 		}
 
-		internal override void Initialize(BehaviourTree behaviour, BehaviourAction parent, ref int index) {
-			base.Initialize(behaviour, parent, ref index);
+		internal override void BT_Initialize(BehaviourTree behaviour, BehaviourAction parent, ref int index) {
+			base.BT_Initialize(behaviour, parent, ref index);
 
 			index++;
 
 			if (m_child != null) {
 				m_child.Parent = this;
-				m_child.Initialize(behaviour, this, ref index);
+				m_child.BT_Initialize(behaviour, this, ref index);
 			}
 		}
 
@@ -32,14 +32,14 @@ namespace Jackey.Behaviours.BT.Decorators {
 
 		internal override void InterruptChildren() {
 			if (m_child == null) return;
-			if (m_child.Status != ActionStatus.Running) return;
+			if (m_child.Status != BehaviourStatus.Running) return;
 
 			m_child.Interrupt();
 		}
 
 		internal override void ResetChildren() {
 			if (m_child == null) return;
-			if (m_child.Status == ActionStatus.Inactive) return;
+			if (m_child.Status == BehaviourStatus.Inactive) return;
 
 			m_child.Reset();
 		}

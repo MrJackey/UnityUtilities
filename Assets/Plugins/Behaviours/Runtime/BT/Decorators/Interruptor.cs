@@ -1,15 +1,15 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Conditions;
+using Jackey.Behaviours.Conditions;
 using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {
 	[SearchPath("Decorators/Interruptor")]
 	public class Interruptor : Decorator {
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionList m_conditions;
 
 		[Space]
-		[SerializeField] private ActionResult m_interruptResult = ActionResult.Failure;
+		[SerializeField] private BehaviourResult m_interruptResult = BehaviourResult.Failure;
 
 #if UNITY_EDITOR
 		public override string Editor_Info => $"{InfoUtilities.AlignCenter("Interrupt if")}\n" +

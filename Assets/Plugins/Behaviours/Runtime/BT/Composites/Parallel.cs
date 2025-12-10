@@ -1,6 +1,6 @@
 ﻿using System;
+using Jackey.Behaviours.Actions;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Composites {

@@ -1,12 +1,12 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Conditions;
+using Jackey.Behaviours.Conditions;
 using Jackey.Behaviours.Utilities;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {
 	[SearchPath("Decorators/Resetter")]
 	public class Resetter : Decorator {
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionList m_conditions;
 
 #if UNITY_EDITOR
 		public override string Editor_Info => $"{InfoUtilities.AlignCenter("Reset if")}\n" +

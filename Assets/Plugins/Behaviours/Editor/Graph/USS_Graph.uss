@@ -31,24 +31,24 @@
 	transform-origin: top center;
 }
 
-.Node #Entry {
-	background-color: rgb(45, 45, 45);
-	border-color: rgb(30, 30, 30);
-	border-radius: 5px 5px 0 0;
-	border-width: 3px 3px 0 3px;
-	position: absolute;
-	height: 30px;
-	top: -33px;
-	margin: 0;
-	padding: 5px 0;
-	width: 100%;
-	-unity-text-align: middle-center;
+.Node > #Icon {
+	width: 100px;
+	height: 64px;
+	align-self: center;
 }
 
 .Node > #Content {
 	border-radius: 1px;
 	justify-content: center;
 	padding: 5px;
+}
+
+.Node Label {
+	align-self: center;
+	margin: 5px;
+	border-radius: 5px;
+	font-size: 16px;
+	-unity-text-align: middle-left;
 }
 
 .Node #Breakpoint {
@@ -75,20 +75,6 @@
 
 .Status-Failure {
 	border-color: red;
-}
-
-BTNode > #Icon {
-	width: 100px;
-	height: 64px;
-	align-self: center;
-}
-
-BTNode Label {
-	align-self: center;
-	margin: 5px;
-	border-radius: 5px;
-	font-size: 16px;
-	-unity-text-align: middle-left;
 }
 
 GraphGroup {
@@ -164,12 +150,98 @@ ConnectionSocket:hover {
 	background-color: rgb(110, 110, 110);
 }
 
+Connection > ConnectionLabel {
+	position: absolute;
+	background-color: rgb(25, 25, 25);
+	border-color: rgb(45, 45, 45);
+	border-width: 2px;
+	border-radius: 5px;
+	padding: 5px;
+	font-size: 11px;
+	-unity-text-align: middle-left;
+}
+
 BTNode > ConnectionSocket {
 	align-self: center;
 	position: absolute;
 	bottom: -20px;
 	width: 20px;
 	height: 20px;
+}
+
+BTNode #Entry {
+	background-color: rgb(45, 45, 45);
+	border-color: rgb(30, 30, 30);
+	border-radius: 5px 5px 0 0;
+	border-width: 3px 3px 0 3px;
+	position: absolute;
+	height: 30px;
+	top: -33px;
+	margin: 0;
+	padding: 5px 0;
+	width: 100%;
+	-unity-text-align: middle-center;
+}
+
+FSMNode #StateName {
+	font-size: 14px;
+	border-bottom-width: 1px;
+	border-bottom-color: rgb(210, 210, 210);
+}
+
+FSMNode ConnectionSocket {
+	align-self: center;
+	position: absolute;
+	border-radius: 5px;
+}
+
+FSMNode #UpSocket {
+	top: -14px;
+	width: 50%;
+	height: 14px;
+}
+
+FSMNode > #RightSocketCenter {
+	position: absolute;
+	right: 0;
+	height: 100%;
+	flex-direction: row;
+}
+
+FSMNode #RightSocket {
+	right: -14px;
+	width: 14px;
+	height: 50%;
+}
+
+FSMNode #DownSocket {
+	bottom: -14px;
+	width: 50%;
+	height: 14px;
+}
+
+FSMNode > #LeftSocketCenter {
+	position: absolute;
+	left: 0;
+	height: 100%;
+	flex-direction: row;
+}
+
+FSMNode #LeftSocket {
+	left: -14px;
+	width: 14px;
+	height: 50%;
+}
+
+FSMNode #Entry {
+	border-color: rgb(30, 30, 30);
+	border-radius: 0;
+	border-bottom-width: 3px;
+	height: 30px;
+	margin: 0;
+	padding: 5px 0;
+	width: 100%;
+	-unity-text-align: middle-center;
 }
 
 .FloatingPanel {
@@ -196,6 +268,24 @@ Inspector #Content {
 	border-radius: 5px;
 	margin: 5px;
 	padding: 10px 5px;
+}
+
+Inspector #SelectActionButton {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+Inspector #ActionFields {
+	background-color: rgb(55, 55, 55);
+	border-radius: 5px;
+	padding: 10px 5px;
+}
+
+Inspector #ActionFieldsHeader {
+	align-self: center;
+	font-size: 13px;
+	margin-bottom: 5px;
+	-unity-font-style: bold;
 }
 
 #BlackboardRef {
@@ -243,13 +333,15 @@ Inspector #Content {
 	-unity-text-align: middle-center;
 }
 
-#ManagedListView {
+#ManagedListView, #TransitionListView, #TransitionGroupListView {
 	background-color: rgb(75, 75, 75);
 	border-radius: 5px;
 	margin-top: 10px;
+	margin-left: 5px;
+	margin-right: 5px;
 }
 
-#ManagedListView #ItemRoot {
+#ManagedListView #ItemRoot, #TransitionListView #ItemRoot, #TransitionGroupListView #GroupRoot {
 	flex-direction: row;
 	align-items: center;
 	justify-content: space-between;
@@ -264,12 +356,43 @@ Inspector #Content {
 	background-color: rgb(48, 48, 48);
 	border-radius: 5px;
 	margin-top: 10px;
+	margin-left: 3px;
+	margin-right: 3px;
 	padding: 5px 2px;
 }
 
 #ManagedListInspector > Label {
 	-unity-text-align: upper-center;
 	margin-bottom: 5px;
+}
+
+#TransitionList {
+	margin-bottom: 10px;
+}
+
+#TransitionList > Label {
+	color: #D2D2D2;
+	margin-top: 5px;
+	margin-left: 3px;
+	-unity-font-style: bold;
+}
+
+#TransitionListInspector {
+	border-radius: 5px;
+	margin-top: 10px;
+	padding-bottom: 5px;
+}
+
+#TransitionGroupListView {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+#TransitionGroupInspector {
+	background-color: rgb(48, 48, 48);
+	border-radius: 5px;
+	margin: 5px 0;
+	padding: 10px 0;
 }
 
 #CreateButton {
@@ -324,6 +447,10 @@ GraphMinimap.Vertical:hover, GraphMinimap:active {
 	height: 355px;
 }
 
+#unity-list-view__reorderable-handle {
+	padding-top: 5px;
+}
+
 .unity-list-view__reorderable-item__container {
 	padding-left: 3px;
 }
@@ -333,5 +460,5 @@ GraphMinimap.Vertical:hover, GraphMinimap:active {
 }
 
 .unity-collection-view__item--selected {
-	background-color: #303030;
+	background-color: rgb(48, 48, 48);
 }

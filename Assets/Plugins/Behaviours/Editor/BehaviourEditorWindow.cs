@@ -6,6 +6,7 @@ using Jackey.Behaviours.Editor.Graph;
 using Jackey.Behaviours.Editor.Graph.BT;
 using Jackey.Behaviours.Editor.Graph.FSM;
 using Jackey.Behaviours.Editor.Utilities;
+using Jackey.Behaviours.FSM;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -389,12 +390,10 @@ namespace Jackey.Behaviours.Editor {
 			if (selectedObject == m_activeGraph?.SerializedBehaviour?.targetObject)
 				return false;
 
-			switch (selectedObject) {
-				case BehaviourTree bt:
-					ChangeGraph(bt);
-					break;
-			}
+			if (selectedObject is not ObjectBehaviour selectedBehaviour)
+				return false;
 
+			ShowBehaviourGraph(selectedBehaviour);
 			return true;
 		}
 
@@ -402,31 +401,34 @@ namespace Jackey.Behaviours.Editor {
 			if (selectedObject == m_activeGraph?.SerializedBehaviour?.targetObject)
 				return false;
 
-			switch (selectedObject) {
-				case BehaviourTree bt:
-					ChangeGraph(bt);
-					break;
-			}
+			if (selectedObject is not ObjectBehaviour selectedBehaviour)
+				return false;
 
+			ShowBehaviourGraph(selectedBehaviour);
 			return true;
 		}
 
-		// TODO: Implement
-		// private void ChangeGraph(StateMachine fsm) { }
-		private void ChangeGraph(BehaviourTree bt) {
+		private void ShowBehaviourGraph(ObjectBehaviour behaviour) {
+			BehaviourGraph nextGraph = behaviour switch {
+				BehaviourTree => m_btGraph,
+				StateMachine => m_fsmGraph,
+				_ => throw new ArgumentOutOfRangeException(nameof(behaviour), behaviour, null),
+			};
+			Debug.Assert(nextGraph != null);
+
 			if (m_validationPanel.parent != null)
 				m_validationPanel.RemoveFromHierarchy();
 
-			if (m_activeGraph != null && m_activeGraph != m_btGraph)
+			if (m_activeGraph != null && m_activeGraph != nextGraph)
 				m_activeGraph.RemoveFromHierarchy();
 
-			m_activeGraph = m_btGraph;
+			m_activeGraph = nextGraph;
 			m_activeGraph.BlackboardInspector.ClearBlackboards();
 
 			if (m_activeGraph.parent == null)
 				rootVisualElement.Add(m_activeGraph);
 
-			m_btGraph.UpdateBehaviour(bt);
+			m_activeGraph.UpdateBehaviour(behaviour);
 		}
 
 		#region Frame

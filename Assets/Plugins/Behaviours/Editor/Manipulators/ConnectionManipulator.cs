@@ -8,7 +8,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 	public class ConnectionManipulator : MouseManipulator {
 		private bool m_active;
 
-		private VisualElement m_container;
+		private Action<Connection> m_containerAdd;
 
 		private Connection m_connection;
 		private IConnectionSocket m_socket;
@@ -28,8 +28,8 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 		public delegate void ConnectionRemovedHandler(Connection connection, IConnectionSocket start, IConnectionSocket end);
 		public event ConnectionRemovedHandler ConnectionRemoved;
 
-		public ConnectionManipulator(VisualElement container) {
-			m_container = container;
+		public ConnectionManipulator(Action<Connection> containerAdd) {
+			m_containerAdd = containerAdd;
 		}
 
 		protected override void RegisterCallbacksOnTarget()
@@ -48,7 +48,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 			if (m_active) return;
 
 			m_connection = new Connection();
-			m_container.Add(m_connection);
+			m_containerAdd.Invoke(m_connection);
 
 			m_connection.Start = socket;
 			socket.OutgoingConnections++;
@@ -121,7 +121,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 
 					voided = false;
 
-					if (socket.IncomingConnections >= socket.MaxIncomingConnections)
+					if (socket.MaxIncomingConnections != -1 && socket.IncomingConnections >= socket.MaxIncomingConnections)
 						continue;
 
 					m_connection.End = socket;
@@ -142,7 +142,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 		}
 
 		private void RestoreCancel(Connection connection, IConnectionSocket to) {
-			m_container.Add(connection);
+			m_containerAdd.Invoke(connection);
 
 			connection.Start.OutgoingConnections++;
 
@@ -210,9 +210,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 				Debug.Assert(m_connection.Start != null || (socket.MaxOutgoingConnections == -1 || socket.OutgoingConnections < socket.MaxOutgoingConnections));
 				Debug.Assert(m_connection.End != null || (socket.MaxIncomingConnections == -1 || socket.IncomingConnections < socket.MaxIncomingConnections));
 			}
-
-			if (!IsConnectionValidWithSocket(m_connection, socket)) {
-				Debug.Assert(socket != m_socket);
+			else if (!IsConnectionValidWithSocket(m_connection, socket)) { // Assumed to be valid when moved back
 				return false;
 			}
 
@@ -224,7 +222,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 				socket.OutgoingConnections++;
 			}
 			else {
-				if (socket.IncomingConnections != -1 && socket.IncomingConnections >= socket.MaxIncomingConnections)
+				if (socket.MaxIncomingConnections != -1 && socket.IncomingConnections >= socket.MaxIncomingConnections)
 					return false;
 
 				m_connection.End = socket;

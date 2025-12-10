@@ -1,8 +1,8 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Events;
+using Jackey.Behaviours.Events;
 using UnityEngine;
 
-namespace Jackey.Behaviours.Core.Conditions {
+namespace Jackey.Behaviours.Conditions {
 	[SearchPath("Utilities/Check Event")]
 	public class CheckEvent : BehaviourCondition, IBehaviourEventListener {
 		[SerializeField] private BehaviourEvent m_event;

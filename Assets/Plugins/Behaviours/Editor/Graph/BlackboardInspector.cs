@@ -1,5 +1,5 @@
-﻿using Jackey.Behaviours.Core.Blackboard;
-using Jackey.Behaviours.Editor.Manipulators;
+﻿using Jackey.Behaviours.Editor.Manipulators;
+using Jackey.Behaviours.Variables;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;

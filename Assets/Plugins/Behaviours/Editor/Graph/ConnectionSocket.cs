@@ -10,7 +10,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public int OutgoingConnections { get; set; }
 
 		VisualElement IConnectionSocket.Element => this;
-		Vector2 IConnectionSocket.Tangent => Vector2.up;
+		public Vector2 Tangent { get; set; }
 
 		public ConnectionSocket() {
 			style.transformOrigin = new TransformOrigin(Length.Percent(50f), Length.Percent(50f));

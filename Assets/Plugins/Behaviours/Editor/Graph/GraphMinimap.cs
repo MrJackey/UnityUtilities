@@ -28,15 +28,15 @@ namespace Jackey.Behaviours.Editor.Graph {
 			RegisterCallback<MouseMoveEvent>(OnMouseMove);
 			RegisterCallback<MouseUpEvent>(OnMouseUp);
 			RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
-
-			if (s_material == null)
-				s_material = new Material(Shader.Find("Hidden/Internal-Colored"));
 		}
 
 		protected override void ImmediateRepaint() {
 			Rect mapRect = UpdateMapRect();
 			Vector2 display = layout.size;
 			display -= new Vector2(PADDING * 2f, PADDING * 2f);
+
+			if (s_material == null)
+				s_material = new Material(Shader.Find("Hidden/Internal-Colored"));
 
 			s_material.SetPass(0);
 			GL.PushMatrix();

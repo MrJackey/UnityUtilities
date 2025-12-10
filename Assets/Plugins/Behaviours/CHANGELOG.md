@@ -1,3 +1,36 @@
+# 0.6.0 (2025-12-10)
+
+### Features
+- Created state machine behaviour built upon `BehaviourState` instead of `BehaviourActions`
+- Renamed certain types to not match their names to behaviour trees
+  - `ActionStatus` to `BehaviourStatus`
+  - `ActionResult` to `BehaviourResult`
+  - `NestedBehaviourTree` to `NestedBehaviourAction`
+- Added Behaviour prefix to operation types
+  - `Operation` to `BehaviourOperation`
+  - `OperationList` to `BehaviourOperationList`
+- Renamed `BehaviourConditionGroup` to `BehaviourConditionList` for consistency
+- Updated namespaces (`Jackey.Behaviours.*`)
+  - Removed `.Core`
+  - Removed `.BT` from `BehaviourAction` implementations
+  - Moved base `BehaviourAction` class into `.Actions`
+  - Moved `Blackboard` and its variables into `.Variables`
+  - Renamed `.Utility` to `.Utilities`
+- Added `HideInNormalInspector` attribute to hide fields but keep them visible in the debug inspector
+- Added non-root types (actions/conditions/operations) shortcuts to the create node menu. They create a new node and insert themselves.
+- Increased minimum size of graph groups
+- Converted `LogMessage` and `SendEvent` actions to operations
+- Removed `Evaluate` action. Use childless `Conditional` decorator for same effect
+- Added `CheckRandom` condition which has a chance to succeed
+- Added immediate inspection of first item in list drawers
+
+### Fixes
+- Fixed `BlackboardRef` not being connected when declared in inherited types
+- Fixed exception when reordering array items containing `BlackboardRef`
+- Updated source generator to always use full type qualifications instead of `using`
+- Fixed behaviour trees not stopping correctly if finished immediately on start
+- Removed extra/wrong text in `Branch` editor info
+
 # 0.5.0 (2025-08-12)
 
 ### Features

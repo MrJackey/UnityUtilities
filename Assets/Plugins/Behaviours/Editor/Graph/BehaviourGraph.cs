@@ -2,6 +2,7 @@
 using Jackey.Behaviours.Editor.Manipulators;
 using Jackey.Behaviours.Editor.Utilities;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -70,7 +71,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			this.AddManipulator(new ContentZoomer());
 			this.AddManipulator(new RectangleSelector(this));
 
-			this.AddManipulator(m_connectionManipulator = new ConnectionManipulator(this));
+			this.AddManipulator(m_connectionManipulator = new ConnectionManipulator(InsertConnectionElement));
 			m_connectionManipulator.ConnectionCreated += OnConnectionCreated;
 			m_connectionManipulator.ConnectionValidator = IsConnectionValid;
 
@@ -80,7 +81,9 @@ namespace Jackey.Behaviours.Editor.Graph {
 			AddToClassList(nameof(BehaviourGraph));
 		}
 
-		public void Tick() {
+		public virtual void UpdateBehaviour(ObjectBehaviour behaviour) { }
+
+		public virtual void Tick() {
 			foreach (VisualElement child in contentContainer.Children()) {
 				if (child is ITickElement tickElement) {
 					tickElement.Tick();
@@ -174,6 +177,20 @@ namespace Jackey.Behaviours.Editor.Graph {
 		/// </summary>
 		protected virtual void OnNodeRemoval(Node node) { }
 
+		// Moves nodes to position keeping relative offsets
+		protected void MoveNodesAroundPoint(in Node[] nodes, Vector2 position) {
+			Rect nodeRect = new Rect(nodes[0].transform.position, Vector2.zero);
+
+			for (int i = 1; i < nodes.Length; i++) {
+				Vector3 nodePosition = nodes[i].transform.position;
+				nodeRect = nodeRect.Encapsulate(nodePosition);
+			}
+
+			Vector2 offset = position - nodeRect.center;
+			foreach (Node node in nodes)
+				node.transform.position += (Vector3)offset;
+		}
+
 		#endregion
 
 		#region Connection
@@ -182,18 +199,25 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		private void OnConnectionCreated(Connection connection) {
 			m_connections.Add(connection);
-			Insert(m_groups.Count, connection);
+			InsertConnectionElement(connection);
 
 			connection.RegisterCallback<MouseDownEvent>(OnConnectionMouseDown);
+			OnConnectionAdded(connection);
 		}
 
 		public void AddConnection(Connection connection) {
 			Debug.Assert(!m_connections.Contains(connection));
 
 			m_connections.Add(connection);
-			Insert(m_groups.Count, connection);
+			InsertConnectionElement(connection);
 
 			connection.RegisterCallback<MouseDownEvent>(OnConnectionMouseDown);
+			OnConnectionAdded(connection);
+		}
+		protected virtual void OnConnectionAdded(Connection connection) { }
+
+		private void InsertConnectionElement(Connection connection) {
+			Insert(m_groups.Count, connection);
 		}
 
 		public void RemoveAllConnections() {
@@ -257,6 +281,9 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public void AddGroup(GraphGroup group) {
 			Debug.Assert(!m_groups.Contains(group));
 
+			group.style.width = Mathf.Max(group.style.width.value.value, group.Resizer.MinWidth);
+			group.style.height = Mathf.Max(group.style.height.value.value, group.Resizer.MinHeight);
+
 			group.Dragger.Moved += OnElementMoved;
 			group.GroupDragger.Moved += OnElementMoved;
 			group.Resizer.Resized += OnElementResized;
@@ -305,14 +332,18 @@ namespace Jackey.Behaviours.Editor.Graph {
 					DeleteNode(node);
 				else if (selectedElement.Element is GraphGroup group)
 					DeleteGroup(group);
+				else
+					TryDeleteOther(selectedElement.Element);
 			}
 
 			Undo.CollapseUndoOperations(undoGroup);
 			ApplyChanges();
 
-			SelectedElements.Clear();
+			this.ClearSelection();
 			OnSelectionChange();
 		}
+
+		protected virtual void TryDeleteOther(VisualElement element) { }
 
 		public void SmartDeleteSelection() {
 			if (SelectedElements.Count == 0)
@@ -342,6 +373,8 @@ namespace Jackey.Behaviours.Editor.Graph {
 				DeleteNode(node);
 			else if (element is GraphGroup group)
 				DeleteGroup(group);
+			else
+				TryDeleteOther(element);
 
 			ApplyChanges();
 		}
@@ -352,8 +385,18 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public virtual void Paste(Vector2 GUIPosition) { }
 
 		public void UndoRedo() {
+			m_serializedBehaviour.Update();
+
 			m_connectionManipulator.Cancel();
+
+			int oldNodeCount = m_nodes.Count;
+			int oldGroupCount = m_groups.Count;
+
 			SyncGraph();
+
+			// Inspectable elements may have their indices changed thus disconnecting any active inspector
+			if (m_nodes.Count != oldNodeCount || m_groups.Count != oldGroupCount)
+				OnSelectionChange();
 		}
 
 		#endregion
@@ -409,6 +452,29 @@ namespace Jackey.Behaviours.Editor.Graph {
 		protected T m_behaviour;
 
 		public override ObjectBehaviour Behaviour => m_behaviour;
+
+		public override void UpdateBehaviour(ObjectBehaviour behaviour) {
+			if (behaviour is not T typedBehaviour) return;
+
+			m_serializedBehaviour?.Dispose();
+
+			m_behaviour = typedBehaviour;
+			m_serializedBehaviour = new SerializedObject(behaviour);
+
+			bool isPersistent = EditorUtility.IsPersistent(m_behaviour);
+			m_graphInstanceInfo.text = isPersistent ? "(Asset)" : "(Instance)";
+			m_isEditable = isPersistent;
+
+			ClearGraph();
+			BuildGraph();
+
+			m_graphHeader.Bind(m_serializedBehaviour);
+
+			m_blackboardInspector.SetSecondaryBlackboard(behaviour.Blackboard, m_serializedBehaviour.FindProperty(nameof(ObjectBehaviour.m_blackboard)));
+
+			this.ClearSelection();
+			OnSelectionChange();
+		}
 
 		protected override void SyncGraph() {
 			base.SyncGraph();

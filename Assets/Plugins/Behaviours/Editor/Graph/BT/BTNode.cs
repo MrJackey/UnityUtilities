@@ -1,11 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Reflection;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.BT;
 using Jackey.Behaviours.BT.Composites;
 using Jackey.Behaviours.BT.Decorators;
-using Jackey.Behaviours.Core;
-using Jackey.Behaviours.Editor.Utilities;
+using Jackey.Behaviours.Actions;
 using Jackey.Behaviours.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -13,10 +10,8 @@ using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.Graph.BT {
 	public class BTNode : Node, ITickElement, IConnectionSocketOwner, IConnectionSocket {
-		private static Dictionary<string, Texture> s_iconCache = new();
-
 		private BehaviourAction m_action;
-		private ActionStatus m_actionStatus = ActionStatus.Inactive;
+		private BehaviourStatus m_lastRuntimeActionStatus = BehaviourStatus.Inactive;
 
 		private Image m_icon;
 		private Label m_label;
@@ -32,7 +27,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		#region IConnectionSocket
 
 		VisualElement IConnectionSocket.Element => this;
-		Vector2 IConnectionSocket.Tangent => Vector2.down;
+		Vector2 IConnectionSocket.Tangent { get; set; } = Vector2.down;
 		List<IConnectionSocket> IConnectionSocketOwner.Sockets => m_sockets;
 
 		int IConnectionSocket.MaxIncomingConnections { get; set; } = 1;
@@ -63,7 +58,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				pickingMode = PickingMode.Ignore,
 			});
 
-			hierarchy.Add(m_outSocket = new ConnectionSocket());
+			hierarchy.Add(m_outSocket = new ConnectionSocket() { Tangent = Vector2.up });
 			m_sockets = new List<IConnectionSocket> { this, m_outSocket };
 
 			transform.position = action.Editor_Data.Position;
@@ -75,7 +70,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		public void SetAction(BehaviourAction action) {
 			m_action = action;
 
-			Texture icon = GetActionIcon(m_action);
+			Texture icon = GraphIconAttribute.GetTexture(m_action.GetType());
 			m_icon.image = icon;
 			m_icon.style.display = icon ? DisplayStyle.Flex : DisplayStyle.None;
 
@@ -104,7 +99,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 					m_label.style.display = DisplayStyle.None;
 				}
 				else {
-					m_label.text = m_action.GetType().GetDisplayOrTypeName();
+					m_label.text = m_action.GetType().Editor_GetDisplayOrTypeName();
 					m_label.style.display = DisplayStyle.Flex;
 				}
 			}
@@ -117,13 +112,13 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 		}
 
 		private void RuntimeTick() {
-			if (m_action.Status == m_actionStatus)
+			if (m_action.Status == m_lastRuntimeActionStatus)
 				return;
 
-			string previousClass = m_actionStatus switch {
-				ActionStatus.Running => "Status-Running",
-				ActionStatus.Success => "Status-Success",
-				ActionStatus.Failure => "Status-Failure",
+			string previousClass = m_lastRuntimeActionStatus switch {
+				BehaviourStatus.Running => "Status-Running",
+				BehaviourStatus.Success => "Status-Success",
+				BehaviourStatus.Failure => "Status-Failure",
 				_ => null,
 			};
 
@@ -131,16 +126,16 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				contentContainer.RemoveFromClassList(previousClass);
 
 			string nextClass = m_action.Status switch {
-				ActionStatus.Running => "Status-Running",
-				ActionStatus.Success => "Status-Success",
-				ActionStatus.Failure => "Status-Failure",
+				BehaviourStatus.Running => "Status-Running",
+				BehaviourStatus.Success => "Status-Success",
+				BehaviourStatus.Failure => "Status-Failure",
 				_ => null,
 			};
 
 			if (!string.IsNullOrEmpty(nextClass))
-				contentContainer.EnsureClass(nextClass);
+				contentContainer.AddToClassList(nextClass);
 
-			m_actionStatus = m_action.Status;
+			m_lastRuntimeActionStatus = m_action.Status;
 		}
 
 		public void UpdateEditorData() {
@@ -156,26 +151,6 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 
 			m_action.Editor_Data.Breakpoint = isBreakpoint;
 			m_breakpointElement.visible = isBreakpoint;
-		}
-
-		private static Texture GetActionIcon(BehaviourAction action) {
-			if (action == null)
-				return null;
-
-			GraphIconAttribute iconAttribute = (GraphIconAttribute)action.GetType().GetCustomAttribute(typeof(GraphIconAttribute));
-
-			if (iconAttribute == null)
-				return null;
-
-			if (s_iconCache.TryGetValue(iconAttribute.Path, out Texture iconTexture))
-				return iconTexture;
-
-			iconTexture = Resources.Load<Texture>(iconAttribute.Path);
-
-			if (iconTexture)
-				s_iconCache.Add(iconAttribute.Path, iconTexture);
-
-			return iconTexture;
 		}
 	}
 }

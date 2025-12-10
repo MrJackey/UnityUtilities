@@ -22,12 +22,5 @@ namespace Jackey.Behaviours.Editor.Utilities {
 
 			return local;
 		}
-
-		public static void EnsureClass(this VisualElement element, string className) {
-			if (element.ClassListContains(className))
-				return;
-
-			element.AddToClassList(className);
-		}
 	}
 }

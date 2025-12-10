@@ -12,9 +12,9 @@ namespace Jackey.Behaviours.BT.Composites {
 		}
 
 		protected override ExecutionStatus OnChildFinished() {
-			ActionStatus childStatus = m_children[m_runningIndex].Status;
+			BehaviourStatus childStatus = m_children[m_runningIndex].Status;
 
-			if (childStatus == ActionStatus.Failure)
+			if (childStatus == BehaviourStatus.Failure)
 				return ExecutionStatus.Failure;
 
 			return ContinueSequence();

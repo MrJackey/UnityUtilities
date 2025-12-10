@@ -78,7 +78,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 			bool notifyChange = false;
 
 			for (int i = manager.SelectedElements.Count - 1; i >= 0; i--) {
-				if (manager.SelectedElements[i]?.Element.parent == null) {
+				if (manager.SelectedElements[i]?.Element.panel == null) {
 					manager.SelectedElements.RemoveAt(i);
 					notifyChange = true;
 				}

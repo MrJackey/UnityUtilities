@@ -44,7 +44,7 @@ namespace Jackey.Behaviours.Editor.Manipulators {
 				return;
 
 			m_start = GetMousePosition(evt);
-			m_group = new GraphGroup(new Rect(m_start, new Vector2(50f, 50f)));
+			m_group = new GraphGroup(new Rect(m_start, new Vector2(0f, 0f)));
 
 			target.contentContainer.Add(m_group);
 			m_group.SendToBack();

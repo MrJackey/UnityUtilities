@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using Jackey.Behaviours.Editor.Manipulators;
+using Jackey.Behaviours.Editor.PropertyDrawers;
+using Jackey.Behaviours.FSM;
 using Jackey.Behaviours.Utilities;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -40,7 +42,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 		public void Inspect(Type type, SerializedProperty property) {
 			Clear();
 
-			m_header.text = type.GetDisplayOrTypeName();
+			m_header.text = type.Editor_GetDisplayOrTypeName();
 
 			SerializedProperty targetProperty = property.FindPropertyRelative("m_target");
 			if (targetProperty != null) {
@@ -51,7 +53,12 @@ namespace Jackey.Behaviours.Editor.Graph {
 			for (bool enterChildren = true; property.NextVisible(enterChildren) && property.depth > startDepth; enterChildren = false) {
 				if (s_hiddenProperties.Contains(property.name)) continue;
 
-				Add(new PropertyField(property));
+				if (property.isArray && property.arrayElementType == nameof(StateTransition))
+					Add(new StateTransitionListPropertyDrawer(property));
+				else if (property.isArray && property.arrayElementType == nameof(StateTransitionGroup))
+					Add(new StateTransitionGroupListPropertyDrawer(property));
+				else
+					Add(new PropertyField(property));
 			}
 
 			this.Bind(property.serializedObject);

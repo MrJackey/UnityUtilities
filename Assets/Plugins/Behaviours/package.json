@@ -1,12 +1,16 @@
 {
 	"name": "com.jackey.behaviours",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"description": "",
 	"displayName": "Behaviours",
 	"unity": "2022.3",
 	"keywords": [
 		"behaviours",
 		"behaviour tree",
+		"state machine",
+		"bt",
+		"fsm",
+		"node editor",
 		"graph editor"
 	],
 	"author": {

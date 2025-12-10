@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Text.RegularExpressions;
-using Jackey.Behaviours.Core;
+using Jackey.Behaviours.Actions;
+using Jackey.Behaviours.FSM.States;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -33,7 +34,18 @@ namespace Jackey.Behaviours.Editor.Utilities {
 			File.WriteAllText(absoluteAssetPath, removedContent);
 		}
 
-		public static T DeepClone<T>(T original) where T : BehaviourAction {
+		public static T DeepCloneAction<T>(T original) where T : BehaviourAction {
+			if (original == null)
+				return default;
+
+			string json = JsonUtility.ToJson(original);
+			T clone = (T)Activator.CreateInstance(original.GetType());
+			JsonUtility.FromJsonOverwrite(json, clone);
+
+			return clone;
+		}
+
+		public static T DeepCloneState<T>(T original) where T : BehaviourState {
 			if (original == null)
 				return default;
 

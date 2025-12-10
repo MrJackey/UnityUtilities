@@ -1,6 +1,6 @@
 ﻿using System;
 using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Conditions;
+using Jackey.Behaviours.Conditions;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {
@@ -13,10 +13,10 @@ namespace Jackey.Behaviours.BT.Decorators {
 		[SerializeField] private int m_iterations = 1;
 
 		[ShowIf(nameof(m_policy), IfAttribute.Comparison.Equal, (int)Policy.UntilStatus)]
-		[SerializeField] private ActionResult m_result = ActionResult.Success;
+		[SerializeField] private BehaviourResult m_result = BehaviourResult.Success;
 
 		[CustomShowIf(nameof(m_policy), IfAttribute.Comparison.Equal, (int)Policy.WhileConditions)]
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionList m_conditions;
 
 		private bool m_isTicking;
 
@@ -73,12 +73,12 @@ namespace Jackey.Behaviours.BT.Decorators {
 
 					break;
 				case Policy.UntilStatus:
-					if ((ActionResult)m_child.Status == m_result)
+					if ((BehaviourResult)m_child.Status == m_result)
 						return ExecutionStatus.Success;
 
 					repeatStatus = RepeatChild();
 
-					if ((ActionResult)repeatStatus == m_result)
+					if ((BehaviourResult)repeatStatus == m_result)
 						return ExecutionStatus.Success;
 
 					break;

@@ -1,7 +1,7 @@
-﻿namespace Jackey.Behaviours.BT {
+﻿namespace Jackey.Behaviours {
 	public enum ExecutionStatus {
-		Running = ActionStatus.Running,
-		Success = ActionStatus.Success,
-		Failure = ActionStatus.Failure,
+		Running = BehaviourStatus.Running,
+		Success = BehaviourStatus.Success,
+		Failure = BehaviourStatus.Failure,
 	}
 }

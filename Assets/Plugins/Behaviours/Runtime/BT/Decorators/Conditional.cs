@@ -1,12 +1,14 @@
 ﻿using Jackey.Behaviours.Attributes;
-using Jackey.Behaviours.Core.Conditions;
+using Jackey.Behaviours.Conditions;
 using UnityEngine;
 
 namespace Jackey.Behaviours.BT.Decorators {
 	[GraphIcon("Conditional")]
 	[SearchPath("Decorators/Conditional")]
 	public class Conditional : Decorator {
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionList m_conditions = new();
+
+		internal BehaviourConditionList Conditions => m_conditions;
 
 		public override string Editor_Info => m_conditions?.Editor_Info;
 
@@ -18,7 +20,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 			if (!condition)
 				return ExecutionStatus.Failure;
 
-			return m_child.EnterSequence();
+			return m_child?.EnterSequence() ?? ExecutionStatus.Success;
 		}
 	}
 }

@@ -9,9 +9,6 @@ namespace Jackey.Behaviours.Editor.Graph {
 
 		public GraphBackground() {
 			this.StretchToParentSize();
-
-			if (s_material == null)
-				s_material = new Material(Shader.Find("Hidden/Internal-Colored"));
 		}
 
 		protected override void ImmediateRepaint() {
@@ -26,6 +23,9 @@ namespace Jackey.Behaviours.Editor.Graph {
 				position.y % (Spacing * scale.y)
 			);
 			Rect bound = localBound;
+
+			if (s_material == null)
+				s_material = new Material(Shader.Find("Hidden/Internal-Colored"));
 
 			s_material.SetPass(0);
 
