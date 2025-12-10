@@ -29,7 +29,7 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 				entry.Path = $"Operations/{entry.Path}";
 				return entry;
 			}))
-			.Concat(TypeProvider.TypesToSearch(BehaviourConditionGroupPropertyDrawer.s_conditionTypes).Select(entry => {
+			.Concat(TypeProvider.TypesToSearch(BehaviourConditionListPropertyDrawer.s_conditionTypes).Select(entry => {
 				entry.Path = $"Conditions/{entry.Path}";
 				return entry;
 			}));
@@ -121,9 +121,9 @@ namespace Jackey.Behaviours.Editor.Graph.BT {
 			Undo.RecordObject(m_behaviour, $"Create {type.Name} node");
 
 			BehaviourAction action;
-			if (typeof(Operation).IsAssignableFrom(type)) {
+			if (typeof(BehaviourOperation).IsAssignableFrom(type)) {
 				Operator operatorAction = new Operator();
-				operatorAction.Operations.Add((Operation)Activator.CreateInstance(type));
+				operatorAction.Operations.Add((BehaviourOperation)Activator.CreateInstance(type));
 				action = operatorAction;
 			}
 			else if (typeof(BehaviourCondition).IsAssignableFrom(type)) {

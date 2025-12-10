@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Jackey.Behaviours.BT.Decorators {
 	[SearchPath("Decorators/Interruptor")]
 	public class Interruptor : Decorator {
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionList m_conditions;
 
 		[Space]
 		[SerializeField] private BehaviourResult m_interruptResult = BehaviourResult.Failure;

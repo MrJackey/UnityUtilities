@@ -25,7 +25,7 @@ namespace Jackey.Behaviours.Operations {<#
 		Write($@"
 	[DisplayName(""Set {name}"")]
 	[SearchPath(""Blackboard/Set {name}"")]
-	public class Set{name} : Operation {{
+	public class Set{name} : BehaviourOperation {{
 		[SerializeField] private BlackboardOnlyRef<{type}> m_variable;
 		[SerializeField] private BlackboardRef<{type}> m_value;
 

@@ -7,9 +7,9 @@ using UnityEditor;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.PropertyDrawers {
-	[CustomPropertyDrawer(typeof(OperationList))]
+	[CustomPropertyDrawer(typeof(BehaviourOperationList))]
 	public class OperationListPropertyDrawer : PropertyDrawer {
-		internal static readonly Type[] s_operationTypes = TypeCache.GetTypesDerivedFrom<Operation>().Where(type => !type.IsAbstract).ToArray();
+		internal static readonly Type[] s_operationTypes = TypeCache.GetTypesDerivedFrom<BehaviourOperation>().Where(type => !type.IsAbstract).ToArray();
 
 		public override VisualElement CreatePropertyGUI(SerializedProperty property) {
 			VisualElement rootVisualElement = new VisualElement();

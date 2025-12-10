@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Jackey.Behaviours.Operations {
 	[SearchPath("Blackboard/Toggle Bool")]
-	public class ToggleBool : Operation {
+	public class ToggleBool : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<bool> m_variable;
 
 #if UNITY_EDITOR

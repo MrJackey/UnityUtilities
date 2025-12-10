@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Jackey.Behaviours.Operations {
 	[DisplayName("Set Bool")]
 	[SearchPath("Blackboard/Set Bool")]
-	public class SetBool : Operation {
+	public class SetBool : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<bool> m_variable;
 		[SerializeField] private BlackboardRef<bool> m_value;
 
@@ -20,7 +20,7 @@ namespace Jackey.Behaviours.Operations {
 
 	[DisplayName("Set String")]
 	[SearchPath("Blackboard/Set String")]
-	public class SetString : Operation {
+	public class SetString : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<string> m_variable;
 		[SerializeField] private BlackboardRef<string> m_value;
 
@@ -33,7 +33,7 @@ namespace Jackey.Behaviours.Operations {
 
 	[DisplayName("Set Int")]
 	[SearchPath("Blackboard/Set Int")]
-	public class SetInt : Operation {
+	public class SetInt : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<int> m_variable;
 		[SerializeField] private BlackboardRef<int> m_value;
 
@@ -46,7 +46,7 @@ namespace Jackey.Behaviours.Operations {
 
 	[DisplayName("Set uInt")]
 	[SearchPath("Blackboard/Set uInt")]
-	public class SetuInt : Operation {
+	public class SetuInt : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<uint> m_variable;
 		[SerializeField] private BlackboardRef<uint> m_value;
 
@@ -59,7 +59,7 @@ namespace Jackey.Behaviours.Operations {
 
 	[DisplayName("Set Long")]
 	[SearchPath("Blackboard/Set Long")]
-	public class SetLong : Operation {
+	public class SetLong : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<long> m_variable;
 		[SerializeField] private BlackboardRef<long> m_value;
 
@@ -72,7 +72,7 @@ namespace Jackey.Behaviours.Operations {
 
 	[DisplayName("Set uLong")]
 	[SearchPath("Blackboard/Set uLong")]
-	public class SetuLong : Operation {
+	public class SetuLong : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<ulong> m_variable;
 		[SerializeField] private BlackboardRef<ulong> m_value;
 
@@ -85,7 +85,7 @@ namespace Jackey.Behaviours.Operations {
 
 	[DisplayName("Set Float")]
 	[SearchPath("Blackboard/Set Float")]
-	public class SetFloat : Operation {
+	public class SetFloat : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<float> m_variable;
 		[SerializeField] private BlackboardRef<float> m_value;
 
@@ -98,7 +98,7 @@ namespace Jackey.Behaviours.Operations {
 
 	[DisplayName("Set Double")]
 	[SearchPath("Blackboard/Set Double")]
-	public class SetDouble : Operation {
+	public class SetDouble : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<double> m_variable;
 		[SerializeField] private BlackboardRef<double> m_value;
 
@@ -111,7 +111,7 @@ namespace Jackey.Behaviours.Operations {
 
 	[DisplayName("Set GameObject")]
 	[SearchPath("Blackboard/Set GameObject")]
-	public class SetGameObject : Operation {
+	public class SetGameObject : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<GameObject> m_variable;
 		[SerializeField] private BlackboardRef<GameObject> m_value;
 
@@ -124,7 +124,7 @@ namespace Jackey.Behaviours.Operations {
 
 	[DisplayName("Set MonoBehaviour")]
 	[SearchPath("Blackboard/Set MonoBehaviour")]
-	public class SetMonoBehaviour : Operation {
+	public class SetMonoBehaviour : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<MonoBehaviour> m_variable;
 		[SerializeField] private BlackboardRef<MonoBehaviour> m_value;
 

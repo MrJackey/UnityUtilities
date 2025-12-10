@@ -9,7 +9,7 @@ namespace Jackey.Behaviours.BT.Composites {
 	[SearchPath("Composites/Branch")]
 	public class Branch : Composite {
 		[SerializeField] private bool m_dynamic;
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionList m_conditions;
 
 		private int m_runningIndex = -1;
 

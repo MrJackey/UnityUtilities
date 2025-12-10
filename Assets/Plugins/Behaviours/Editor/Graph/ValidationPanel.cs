@@ -233,7 +233,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 						return entry;
 					}))
 					.Concat(
-					TypeProvider.TypesToSearch(BehaviourConditionGroupPropertyDrawer.s_conditionTypes).Select(entry => {
+					TypeProvider.TypesToSearch(BehaviourConditionListPropertyDrawer.s_conditionTypes).Select(entry => {
 						entry.Path = $"Conditions/{entry.Path}";
 						return entry;
 					}));
@@ -253,7 +253,7 @@ namespace Jackey.Behaviours.Editor.Graph {
 						return entry;
 					}))
 					.Concat(
-					TypeProvider.TypesToSearch(BehaviourConditionGroupPropertyDrawer.s_conditionTypes).Select(entry => {
+					TypeProvider.TypesToSearch(BehaviourConditionListPropertyDrawer.s_conditionTypes).Select(entry => {
 						entry.Path = $"Conditions/{entry.Path}";
 						return entry;
 					}));

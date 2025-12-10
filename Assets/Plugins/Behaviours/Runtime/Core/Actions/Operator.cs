@@ -5,9 +5,9 @@ using UnityEngine;
 namespace Jackey.Behaviours.Actions {
 	[SearchPath("Utilities/Operator")]
 	public class Operator : BehaviourAction {
-		[SerializeField] private OperationList m_operations = new();
+		[SerializeField] private BehaviourOperationList m_operations = new();
 
-		internal OperationList Operations => m_operations;
+		internal BehaviourOperationList Operations => m_operations;
 
 #if UNITY_EDITOR
 		public override string Editor_Info => m_operations?.Editor_Info;

@@ -7,10 +7,10 @@ namespace Jackey.Behaviours.BT.Decorators {
 	[SearchPath("Decorators/EnterExit Operator")]
 	public class EnterExitOperator : Decorator {
 		[Header("On Enter")]
-		[SerializeField] private OperationList m_enterOperations;
+		[SerializeField] private BehaviourOperationList m_enterOperations;
 
 		[Header("On Exit")]
-		[SerializeField] private OperationList m_exitOperations;
+		[SerializeField] private BehaviourOperationList m_exitOperations;
 
 #if UNITY_EDITOR
 		public override string Editor_Info => $"{InfoUtilities.AlignCenter("<b>On Enter</b>")}\n" +

@@ -75,7 +75,7 @@ public class BehavioursSourceGenerator : IIncrementalGenerator {
 		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 		[Jackey.Behaviours.Attributes.DisplayName(""{0}"")]
 		[Jackey.Behaviours.Attributes.SearchPath(""Generated/{0}"")]
-		public sealed class {1} : Jackey.Behaviours.Operations.Operation<{2}> {{
+		public sealed class {1} : Jackey.Behaviours.Operations.BehaviourOperation<{2}> {{
 			protected override void OnExecute() {{
 				GetTarget().{3}();
 			}}
@@ -86,7 +86,7 @@ public class BehavioursSourceGenerator : IIncrementalGenerator {
 		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 		[Jackey.Behaviours.Attributes.DisplayName(""{0}"")]
 		[Jackey.Behaviours.Attributes.SearchPath(""Generated/{0}"")]
-		public sealed class {1} : Jackey.Behaviours.Operations.Operation<{2}> {{
+		public sealed class {1} : Jackey.Behaviours.Operations.BehaviourOperation<{2}> {{
 			[UnityEngine.SerializeField] private Jackey.Behaviours.Variables.BlackboardRef<{3}> m_args;
 			
 			protected override void OnExecute() {{

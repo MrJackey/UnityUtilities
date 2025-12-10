@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Jackey.Behaviours.Operations.Utilities {
 	[SearchPath("Utilities/Log Message")]
-	public class LogMessage : Operation {
+	public class LogMessage : BehaviourOperation {
 		[SerializeField] private LogType m_type;
 		[SerializeField] private BlackboardRef<string> m_message;
 

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Jackey.Behaviours.BT.Decorators {
 	[SearchPath("Decorators/Wait Until")]
 	public class WaitUntil : Decorator {
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionList m_conditions;
 
 		private bool m_isTicking;
 

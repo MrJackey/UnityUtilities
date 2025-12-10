@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace Jackey.Behaviours.Operations {
 	[Serializable]
-	public class OperationList {
-		[SerializeReference] private Operation[] m_operations = Array.Empty<Operation>();
+	public class BehaviourOperationList {
+		[SerializeReference] private BehaviourOperation[] m_operations = Array.Empty<BehaviourOperation>();
 
 #if UNITY_EDITOR
 		public string Editor_Info {
@@ -33,12 +33,12 @@ namespace Jackey.Behaviours.Operations {
 #endif
 
 		public void Execute(BehaviourOwner owner) {
-			foreach (Operation operation in m_operations) {
+			foreach (BehaviourOperation operation in m_operations) {
 				operation.Execute(owner);
 			}
 		}
 
-		internal void Add(Operation operation) {
+		internal void Add(BehaviourOperation operation) {
 			Array.Resize(ref m_operations, m_operations.Length + 1);
 			m_operations[^1] = operation;
 		}

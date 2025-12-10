@@ -16,7 +16,7 @@ namespace Jackey.Behaviours.BT.Decorators {
 		[SerializeField] private BehaviourResult m_result = BehaviourResult.Success;
 
 		[CustomShowIf(nameof(m_policy), IfAttribute.Comparison.Equal, (int)Policy.WhileConditions)]
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionList m_conditions;
 
 		private bool m_isTicking;
 

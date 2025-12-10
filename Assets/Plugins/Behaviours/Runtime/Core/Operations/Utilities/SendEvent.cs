@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Jackey.Behaviours.Operations.Utilities {
 	[SearchPath("Utilities/Send Event")]
-	public class SendEvent : Operation<BehaviourOwner> {
+	public class SendEvent : BehaviourOperation<BehaviourOwner> {
 		[SerializeField] private BehaviourEvent m_event;
 
 #if UNITY_EDITOR

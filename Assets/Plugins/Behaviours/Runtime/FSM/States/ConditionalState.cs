@@ -7,7 +7,7 @@ namespace Jackey.Behaviours.FSM.States {
 	[SearchPath("Conditional State")]
 	public class ConditionalState : BehaviourState {
 		[Header("Conditions")]
-		[SerializeField] private BehaviourConditionGroup m_conditions;
+		[SerializeField] private BehaviourConditionList m_conditions;
 
 #if UNITY_EDITOR
 		public override string Editor_Info => m_conditions.Editor_Info;

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Jackey.Behaviours.Operations.Utilities {
 	[SearchPath("Utilities/Get Owner")]
-	public class GetOwner : Operation {
+	public class GetOwner : BehaviourOperation {
 		[SerializeField] private BlackboardOnlyRef<BehaviourOwner> m_out;
 
 	#if UNITY_EDITOR

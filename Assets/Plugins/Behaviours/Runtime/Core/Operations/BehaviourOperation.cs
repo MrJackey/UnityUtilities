@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Jackey.Behaviours.Operations {
 	[Serializable]
-	public abstract class Operation {
+	public abstract class BehaviourOperation {
 		public virtual string Editor_Info => string.Empty;
 
 		internal virtual void Execute(BehaviourOwner owner) {
@@ -13,7 +13,7 @@ namespace Jackey.Behaviours.Operations {
 		protected abstract void OnExecute();
 	}
 
-	public abstract class Operation<T> : Operation {
+	public abstract class BehaviourOperation<T> : BehaviourOperation {
 		[SerializeField] private BlackboardRef<T> m_target;
 
 		protected string Editor_TargetInfo => m_target.IsVariable ? m_target.Editor_Info : "SELF";
@@ -22,7 +22,7 @@ namespace Jackey.Behaviours.Operations {
 
 		internal override void Execute(BehaviourOwner owner) {
 			if (!owner.SetTargetIfNeeded(ref m_target)) {
-				Debug.LogError($"{nameof(Operation)} is missing its {typeof(T).Name} target");
+				Debug.LogError($"{nameof(BehaviourOperation)} is missing its {typeof(T).Name} target");
 				return;
 			}
 

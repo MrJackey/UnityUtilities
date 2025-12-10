@@ -8,8 +8,8 @@ using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace Jackey.Behaviours.Editor.PropertyDrawers {
-	[CustomPropertyDrawer(typeof(BehaviourConditionGroup))]
-	public class BehaviourConditionGroupPropertyDrawer : PropertyDrawer {
+	[CustomPropertyDrawer(typeof(BehaviourConditionList))]
+	public class BehaviourConditionListPropertyDrawer : PropertyDrawer {
 		internal static readonly Type[] s_conditionTypes = TypeCache.GetTypesDerivedFrom<BehaviourCondition>().Where(type => !type.IsAbstract).ToArray();
 
 		public override VisualElement CreatePropertyGUI(SerializedProperty property) {

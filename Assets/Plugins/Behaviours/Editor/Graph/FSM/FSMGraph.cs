@@ -155,9 +155,9 @@ namespace Jackey.Behaviours.Editor.Graph.FSM {
 				actionState.SetAction((BehaviourAction)Activator.CreateInstance(type));
 				state = actionState;
 			}
-			else if (typeof(Operation).IsAssignableFrom(type)) {
+			else if (typeof(BehaviourOperation).IsAssignableFrom(type)) {
 				OperationState operationState = new OperationState();
-				operationState.Operations.Add((Operation)Activator.CreateInstance(type));
+				operationState.Operations.Add((BehaviourOperation)Activator.CreateInstance(type));
 				state = operationState;
 			}
 			else {

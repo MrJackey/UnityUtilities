@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Jackey.Behaviours.Conditions {
 	[Serializable]
-	public class BehaviourConditionGroup {
+	public class BehaviourConditionList {
 		[SerializeField] private Policy m_policy;
 		[SerializeReference] internal BehaviourCondition[] m_conditions = Array.Empty<BehaviourCondition>();
 		[SerializeField] private bool m_invert;
