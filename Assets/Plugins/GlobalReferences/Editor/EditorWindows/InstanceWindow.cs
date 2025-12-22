@@ -70,14 +70,14 @@ namespace Jackey.GlobalReferences.Editor.EditorWindows {
 			rootVisualElement.Add(m_searchField = new SearchField(OnSearchValueChanged));
 			rootVisualElement.Add(m_listView);
 
-			GlobalReferenceManager.ListUpdated += OnListUpdated;
+			GlobalReferenceManager.EditModeListUpdated += OnEditModeListUpdated;
 			GlobalObjectDatabase.AssetsLoaded += OnAssetsLoaded;
 
 			RefreshSearch(string.Empty);
 		}
 
 		private void OnDestroy() {
-			GlobalReferenceManager.ListUpdated -= OnListUpdated;
+			GlobalReferenceManager.EditModeListUpdated -= OnEditModeListUpdated;
 			GlobalObjectDatabase.AssetsLoaded -= OnAssetsLoaded;
 		}
 
@@ -125,7 +125,7 @@ namespace Jackey.GlobalReferences.Editor.EditorWindows {
 		private void RefreshSearch(string input) {
 			if (string.IsNullOrEmpty(input)) {
 				m_instances.Clear();
-				m_instances.AddRange(GlobalReferenceManager.InstanceList.Select(id => GlobalObjectDatabase.TryGetAsset(id.GUID, out GlobalObjectAsset asset) ? (asset, id) : (s_missingAsset, id)));
+				m_instances.AddRange(GlobalReferenceManager.EditMode_InstanceList.Select(id => GlobalObjectDatabase.TryGetAsset(id.GUID, out GlobalObjectAsset asset) ? (asset, id) : (s_missingAsset, id)));
 
 				m_listView.RefreshItems();
 				return;
@@ -133,7 +133,7 @@ namespace Jackey.GlobalReferences.Editor.EditorWindows {
 
 			if (SerializedGUID.TryParse(input, out SerializedGUID guid)) {
 				m_instances.Clear();
-				m_instances.AddRange(GlobalReferenceManager.InstanceList
+				m_instances.AddRange(GlobalReferenceManager.EditMode_InstanceList
 					.Where(id => id.GUID == guid)
 					.Select(id => GlobalObjectDatabase.TryGetAsset(id.GUID, out GlobalObjectAsset asset) ? (asset, id) : (s_missingAsset, id))
 				);
@@ -142,7 +142,7 @@ namespace Jackey.GlobalReferences.Editor.EditorWindows {
 				return;
 			}
 
-			List<GlobalObjectAsset> instanceAssets = GlobalReferenceManager.InstanceList.Select(id => GlobalObjectDatabase.TryGetAsset(id.GUID, out GlobalObjectAsset asset) ? asset : s_missingAsset).ToList();
+			List<GlobalObjectAsset> instanceAssets = GlobalReferenceManager.EditMode_InstanceList.Select(id => GlobalObjectDatabase.TryGetAsset(id.GUID, out GlobalObjectAsset asset) ? asset : s_missingAsset).ToList();
 			Search.Execute(
 				instanceAssets,
 				asset => asset.Name,
@@ -150,13 +150,13 @@ namespace Jackey.GlobalReferences.Editor.EditorWindows {
 				m_searchList
 			);
 			m_instances.Clear();
-			m_instances.AddRange(m_searchList.Select(index => (instanceAssets[index], GlobalReferenceManager.InstanceList[index])));
+			m_instances.AddRange(m_searchList.Select(index => (instanceAssets[index], GlobalReferenceManager.EditMode_InstanceList[index])));
 
 			m_listView.RefreshItems();
 		}
 
 		private void OnAssetsLoaded() => RefreshSearch(m_searchField.TextField.value);
-		private void OnListUpdated() => RefreshSearch(m_searchField.TextField.value);
+		private void OnEditModeListUpdated() => RefreshSearch(m_searchField.TextField.value);
 		private void OnPropertyChanged(SerializedProperty _) => RefreshSearch(m_searchField.TextField.value);
 	}
 }

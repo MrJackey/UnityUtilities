@@ -9,14 +9,16 @@ namespace Jackey.GlobalReferences {
 		private static readonly Dictionary<SerializedGUID, GlobalId> s_instances = new();
 
 #if UNITY_EDITOR
-		internal static List<GlobalId> InstanceList = new();
-		internal static event Action ListUpdated;
+		internal static List<GlobalId> EditMode_InstanceList = new();
+		internal static event Action EditModeListUpdated;
 #endif
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 		private static void Initialize() {
 			s_instances.Clear();
-			InstanceList.Clear();
+#if UNITY_EDITOR
+			EditMode_InstanceList.Clear();
+#endif
 		}
 
 		internal static void AddInstance(GlobalId instance) {
@@ -141,7 +143,7 @@ namespace Jackey.GlobalReferences {
 
 #if UNITY_EDITOR
 		private static bool TryEditModeResolve(SerializedGUID guid, out GlobalId instance) {
-			foreach (GlobalId id in InstanceList) {
+			foreach (GlobalId id in EditMode_InstanceList) {
 				if (id.GUID == guid) {
 					instance = id;
 					return true;
@@ -160,23 +162,23 @@ namespace Jackey.GlobalReferences {
 			s_instances.Remove(from);
 			s_instances.TryAdd(instance.GUID, instance);
 
-			InstanceList.Remove(instance);
+			EditMode_InstanceList.Remove(instance);
 			AddListInstance(instance);
 		}
 
 		private static void AddListInstance(GlobalId instance) {
-			int index = InstanceList.FindIndex(list => list.GUID == instance.GUID);
+			int index = EditMode_InstanceList.FindIndex(list => list.GUID == instance.GUID);
 			if (index == -1)
-				InstanceList.Add(instance);
+				EditMode_InstanceList.Add(instance);
 			else
-				InstanceList.Insert(index + 1, instance);
+				EditMode_InstanceList.Insert(index + 1, instance);
 
-			ListUpdated?.Invoke();
+			EditModeListUpdated?.Invoke();
 		}
 
 		private static void RemoveListInstance(GlobalId instance) {
-			InstanceList.Remove(instance);
-			ListUpdated?.Invoke();
+			EditMode_InstanceList.Remove(instance);
+			EditModeListUpdated?.Invoke();
 		}
 #endif
 	}
