@@ -40,11 +40,11 @@ namespace Jackey.GlobalReferences.Editor.PropertyDrawers {
 
 			rootVisualElement.RegisterCallback<AttachToPanelEvent, GlobalRefPropertyDrawer>((evt, self) => {
 				GlobalObjectDatabase.AssetsLoaded += self.OnAssetsLoaded;
-				GlobalReferenceManager.ListUpdated += self.RefreshInstanceCheck;
+				GlobalReferenceManager.EditModeListUpdated += self.RefreshInstanceCheck;
 			}, this);
 			rootVisualElement.RegisterCallback<DetachFromPanelEvent, GlobalRefPropertyDrawer>((evt, self) => {
 				GlobalObjectDatabase.AssetsLoaded -= self.OnAssetsLoaded;
-				GlobalReferenceManager.ListUpdated -= self.RefreshInstanceCheck;
+				GlobalReferenceManager.EditModeListUpdated -= self.RefreshInstanceCheck;
 			}, this);
 
 			m_guidProperty = property.FindPropertyRelative("m_guid");
