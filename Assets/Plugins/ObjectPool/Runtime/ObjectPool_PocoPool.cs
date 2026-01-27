@@ -31,7 +31,7 @@ namespace Jackey.ObjectPool {
 		/// <returns>
 		/// An instance of the class from the pool connected to the handle
 		/// </returns>
-		public static T New<T>(PoolHandle<T> handle) where T : class, new() {
+		public static T New<T>(IPool<T> handle) where T : class, new() {
 			if (typeof(MonoBehaviour).IsAssignableFrom(typeof(T)))
 				throw new InvalidOperationException("[ObjectPool] You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()");
 
@@ -59,7 +59,7 @@ namespace Jackey.ObjectPool {
 		/// </summary>
 		/// <param name="handle">The handle of the pool to return the instance to</param>
 		/// <param name="instance">The instance you wish to return to its pool</param>
-		public static void Delete<T>(PoolHandle<T> handle, T instance) where T : class, new() {
+		public static void Delete<T>(IPool<T> handle, T instance) where T : class, new() {
 			if (handle == null)
 				throw new ArgumentNullException(nameof(handle), "[ObjectPool] The handle to the pool of the instance you want to delete is null");
 
@@ -73,7 +73,7 @@ namespace Jackey.ObjectPool {
 		/// Get the handle of the pool of a class
 		/// </summary>
 		/// <returns>The handle connected to the pool of the class</returns>
-		public static PoolHandle<T> GetHandle<T>() where T : class, new() {
+		public static IPool<T> GetHandle<T>() where T : class, new() {
 			if (typeof(MonoBehaviour).IsAssignableFrom(typeof(T)))
 				throw new InvalidOperationException("[ObjectPool] You are retrieving a handle for a pool which uses the new keyword. This is not allowed on MonoBehaviours");
 
@@ -89,7 +89,7 @@ namespace Jackey.ObjectPool {
 		/// Note that methods requiring a handle do accept handles referencing private pools as well
 		/// </summary>
 		/// <returns>The handle connected to the pool of the original</returns>
-		public static PoolHandle<T> CreateLocal<T>() where T : class, new() {
+		public static IPool<T> CreateLocal<T>() where T : class, new() {
 			if (typeof(MonoBehaviour).IsAssignableFrom(typeof(T)))
 				throw new InvalidOperationException("[ObjectPool] You are creating a pool which uses the new keyword. This is not allowed on MonoBehaviours");
 
@@ -123,8 +123,6 @@ namespace Jackey.ObjectPool {
 		internal abstract class PocoPool { }
 
 		internal class PocoPool<T> : PocoPool, IPool<T> where T : class, new() {
-			private readonly PoolHandle<T> m_handle;
-
 			// [active, ..., free]
 			private readonly List<T> m_objects = new();
 			private int m_activeCount;
@@ -133,7 +131,7 @@ namespace Jackey.ObjectPool {
 			private Predicate<T> m_autoReturnPredicate;
 			private int m_lastAutoReturnFrame = -1;
 
-			public PoolHandle<T> Handle => m_handle;
+			public IPool<T> Handle => this;
 
 			public int Count => m_objects.Count;
 
@@ -160,10 +158,6 @@ namespace Jackey.ObjectPool {
 			public event Action<T> ObjectCreated;
 			public event Action<T> ObjectSetup;
 			public event Action<T> ObjectReturned;
-
-			public PocoPool() {
-				m_handle = new PoolHandle<T>(this);
-			}
 
 			public T GetObject() {
 				if (m_doAutoReturns && m_lastAutoReturnFrame != Time.frameCount)

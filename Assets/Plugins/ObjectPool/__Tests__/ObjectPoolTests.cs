@@ -12,7 +12,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 		public bool InterfaceCreate { get; private set; }
 		public bool InterfaceActive { get; private set; }
 
-		void IPoolCallbackReceiver<TestComponent>.PoolCreate(PoolHandle<TestComponent> handle) => InterfacePoolSetup = true;
+		void IPoolCallbackReceiver<TestComponent>.PoolCreate(IPool<TestComponent> handle) => InterfacePoolSetup = true;
 
 		void IPoolObjectCallbackReceiver.Create() => InterfaceCreate = true;
 		void IPoolObjectCallbackReceiver.Setup() => InterfaceActive = true;
@@ -72,14 +72,14 @@ namespace Jackey.ObjectPool.__Tests__ {
 		[Test]
 		public void GameObjectHandlesCanRetrieveObjects() {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
-			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+			IPool<TestComponent> handle = ObjectPool.GetHandle(original);
 
 			Assert.IsNotNull(ObjectPool.Instantiate(handle));
 		}
 
 		[Test]
 		public void PocoHandlesCanRetrieveObjects() {
-			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
+			IPool<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
 
 			Assert.IsNotNull(ObjectPool.New(handle));
 		}
@@ -87,14 +87,14 @@ namespace Jackey.ObjectPool.__Tests__ {
 		[Test]
 		public void GameObjectHandlesCanReturnObjects() {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
-			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+			IPool<TestComponent> handle = ObjectPool.GetHandle(original);
 
 			Assert.IsNotNull(ObjectPool.Instantiate(handle));
 		}
 
 		[Test]
 		public void PocoHandlesCanReturnObjects() {
-			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
+			IPool<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
 
 			Assert.IsNotNull(ObjectPool.New(handle));
 		}
@@ -104,7 +104,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
 			TestComponent @object = ObjectPool.Instantiate(original);
 
-			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+			IPool<TestComponent> handle = ObjectPool.GetHandle(original);
 
 			ObjectPool.FindAndDestroy(@object);
 
@@ -115,7 +115,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 		[Test]
 		public void ReturningFreeGameObjectsThrows() {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
-			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+			IPool<TestComponent> handle = ObjectPool.GetHandle(original);
 			TestComponent @object = ObjectPool.Instantiate(handle);
 
 			ObjectPool.Destroy(handle, @object);
@@ -124,7 +124,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 
 		[Test]
 		public void ReturningFreePocosThrows() {
-			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
+			IPool<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
 			TestPOCO instance = ObjectPool.New(handle);
 
 			ObjectPool.Delete(handle, instance);
@@ -135,7 +135,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 		public void AutomaticGameObjectReturnsAreReused() {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
 
-			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+			IPool<TestComponent> handle = ObjectPool.GetHandle(original);
 			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
 
 			TestComponent @object = ObjectPool.Instantiate(original);
@@ -149,7 +149,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 
 		[Test]
 		public void AutomaticPocoReturnsAreReused() {
-			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
+			IPool<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
 			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
 
 			TestPOCO @object = ObjectPool.New(handle);
@@ -222,7 +222,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
 			TestComponent callbackProvidedObject = null;
 
-			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+			IPool<TestComponent> handle = ObjectPool.GetHandle(original);
 			handle.ObjectCreated += @object => callbackProvidedObject = @object;
 
 			TestComponent @object = ObjectPool.Instantiate(handle);
@@ -234,7 +234,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 		public void PocoPoolCreateCallbackIsInvoked() {
 			TestPOCO callbackProvidedObject = null;
 
-			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
+			IPool<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
 			handle.ObjectCreated += @object => callbackProvidedObject = @object;
 
 			TestPOCO @object = ObjectPool.New(handle);
@@ -247,7 +247,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
 			TestComponent callbackProvidedObject = null;
 
-			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+			IPool<TestComponent> handle = ObjectPool.GetHandle(original);
 			handle.ObjectSetup += @object => callbackProvidedObject = @object;
 
 			TestComponent @object = ObjectPool.Instantiate(handle);
@@ -259,7 +259,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 		public void PocoPoolSetupCallbackIsInvoked() {
 			TestPOCO callbackProvidedObject = null;
 
-			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
+			IPool<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
 			handle.ObjectSetup += @object => callbackProvidedObject = @object;
 
 			TestPOCO @object = ObjectPool.New(handle);
@@ -272,7 +272,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
 			TestComponent callbackProvidedObject = null;
 
-			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+			IPool<TestComponent> handle = ObjectPool.GetHandle(original);
 			handle.ObjectReturned += @object => callbackProvidedObject = @object;
 
 			TestComponent @object = ObjectPool.Instantiate(handle);
@@ -285,7 +285,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 		public void PocoPoolReturnCallbackIsInvokedWhenReturnedManually() {
 			TestPOCO callbackProvidedObject = null;
 
-			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
+			IPool<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
 			handle.ObjectReturned += @object => callbackProvidedObject = @object;
 
 			TestPOCO @object = ObjectPool.New(handle);
@@ -299,7 +299,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
 			TestComponent callbackProvidedObject = null;
 
-			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+			IPool<TestComponent> handle = ObjectPool.GetHandle(original);
 			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
 			handle.ObjectReturned += @object => callbackProvidedObject = @object;
 
@@ -314,7 +314,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 		public void PocoPoolReturnCallbackIsInvokedWhenAutomaticallyReturned() {
 			TestPOCO callbackProvidedObject = null;
 
-			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
+			IPool<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
 			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
 			handle.ObjectReturned += @object => callbackProvidedObject = @object;
 
@@ -329,7 +329,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 		public void GameObjectAutoReturnedObjectsCanBeImmediatelyReusedViaPoolReturnCallback() {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
 
-			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+			IPool<TestComponent> handle = ObjectPool.GetHandle(original);
 			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
 
 			List<TestComponent> objects = new();
@@ -355,7 +355,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 
 		[Test]
 		public void PocoAutoReturnedObjectsCanBeImmediatelyReusedViaPoolReturnCallback() {
-			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
+			IPool<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
 			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
 
 			List<TestPOCO> objects = new();
@@ -388,7 +388,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 		[TestCase(20, 10, 7, 3)]
 		public void DestroyedGameObjectsCanBeRemovedFromTheirPool(int initialObjects, int expectedCount, int expectedActive, int expectedFree) {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
-			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+			IPool<TestComponent> handle = ObjectPool.GetHandle(original);
 
 			List<TestComponent> objects = new();
 

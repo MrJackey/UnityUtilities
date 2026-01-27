@@ -33,7 +33,7 @@ namespace Jackey.ObjectPool {
 		/// <returns>
 		/// A clone from the handle's pool
 		/// </returns>
-		public static T Instantiate<T>(PoolHandle<T> handle) where T : Object {
+		public static T Instantiate<T>(IPool<T> handle) where T : Object {
 			T @object = handle.GetObject();
 
 			return @object;
@@ -83,7 +83,7 @@ namespace Jackey.ObjectPool {
 		/// <returns>
 		/// A clone from the handle's pool
 		/// </returns>
-		public static T Instantiate<T>(PoolHandle<T> handle, Transform parent) where T : Object => Instantiate(handle, parent, false);
+		public static T Instantiate<T>(IPool<T> handle, Transform parent) where T : Object => Instantiate(handle, parent, false);
 
 		/// <summary>
 		/// Get a pooled clone of an object from the pool connected to the handle
@@ -94,8 +94,8 @@ namespace Jackey.ObjectPool {
 		/// <returns>
 		/// A clone from the handle's pool
 		/// </returns>
-		public static T Instantiate<T>(PoolHandle<T> handle, Transform parent, bool instantiateInWorldSpace) where T : Object {
-			GameObjectPool<T> pool = (GameObjectPool<T>)handle.Pool;
+		public static T Instantiate<T>(IPool<T> handle, Transform parent, bool instantiateInWorldSpace) where T : Object {
+			GameObjectPool<T> pool = (GameObjectPool<T>)handle;
 			T original = pool.Original;
 
 			if (original is not (GameObject or Component))
@@ -155,7 +155,7 @@ namespace Jackey.ObjectPool {
 		/// <returns>
 		/// A clone from the handle's pool
 		/// </returns>
-		public static T Instantiate<T>(PoolHandle<T> handle, Vector3 position) where T : Object => Instantiate(handle, position, Quaternion.identity);
+		public static T Instantiate<T>(IPool<T> handle, Vector3 position) where T : Object => Instantiate(handle, position, Quaternion.identity);
 
 		/// <summary>
 		/// Get a pooled clone of an object from the pool connected to the handle
@@ -166,8 +166,8 @@ namespace Jackey.ObjectPool {
 		/// <returns>
 		/// A clone from the handle's pool
 		/// </returns>
-		public static T Instantiate<T>(PoolHandle<T> handle, Vector3 position, Quaternion rotation) where T : Object {
-			GameObjectPool<T> pool = (GameObjectPool<T>)handle.Pool;
+		public static T Instantiate<T>(IPool<T> handle, Vector3 position, Quaternion rotation) where T : Object {
+			GameObjectPool<T> pool = (GameObjectPool<T>)handle;
 
 			if (pool.Original is not (GameObject or Component))
 				throw new ArgumentException("[ObjectPool] Cannot instantiate an asset with a position and rotation");
@@ -220,8 +220,8 @@ namespace Jackey.ObjectPool {
 		/// <returns>
 		/// A clone from the handle's pool
 		/// </returns>
-		public static T Instantiate<T>(PoolHandle<T> handle, Vector3 position, Quaternion rotation, Transform parent) where T : Object {
-			GameObjectPool<T> pool = (GameObjectPool<T>)handle.Pool;
+		public static T Instantiate<T>(IPool<T> handle, Vector3 position, Quaternion rotation, Transform parent) where T : Object {
+			GameObjectPool<T> pool = (GameObjectPool<T>)handle;
 			T @object = pool.GetObject(new GameObjectTransform() {
 				Position = position,
 				Rotation = rotation,
@@ -253,7 +253,7 @@ namespace Jackey.ObjectPool {
 		/// </summary>
 		/// <param name="handle">The handle connected to the pool the object is part of</param>
 		/// <param name="object">The object you wish to return to its pool</param>
-		public static void Destroy<T>(PoolHandle<T> handle, T @object) where T : Object {
+		public static void Destroy<T>(IPool<T> handle, T @object) where T : Object {
 			if (handle == null)
 				throw new ArgumentNullException(nameof(handle), "[ObjectPool] The handle of the pool of the object you want to destroy is null");
 
@@ -271,7 +271,7 @@ namespace Jackey.ObjectPool {
 		/// <para>
 		/// This method is not fast and should be avoided unless really necessary.
 		/// It looks through all existing pools to find which pool the object is part of.
-		/// Prefer using <see cref="ObjectPool.Destroy{T}(T, T)"/> or <see cref="ObjectPool.Destroy{T}(PoolHandle{T}, T)"/> instead
+		/// Prefer using <see cref="ObjectPool.Destroy{T}(T, T)"/> or <see cref="ObjectPool.Destroy{T}(IPool{T}, T)"/> instead
 		/// </para>
 		/// </summary>
 		/// <param name="object">The object you wish to return to its pool</param>
@@ -290,7 +290,7 @@ namespace Jackey.ObjectPool {
 		/// </summary>
 		/// <param name="original">The original to the pool</param>
 		/// <returns>The handle connected to the pool of the original</returns>
-		public static PoolHandle<T> GetHandle<T>(T original) where T : Object {
+		public static IPool<T> GetHandle<T>(T original) where T : Object {
 			if (!original)
 				throw new ArgumentNullException(nameof(original), "[ObjectPool] The original of the pool whose handle is being retrieved is null");
 
@@ -304,7 +304,7 @@ namespace Jackey.ObjectPool {
 		/// </summary>
 		/// <param name="original">The original to the pool</param>
 		/// <returns>The handle connected to the pool of the original</returns>
-		public static PoolHandle<T> CreateLocal<T>(T original) where T : Object {
+		public static IPool<T> CreateLocal<T>(T original) where T : Object {
 			if (!original)
 				throw new ArgumentNullException(nameof(original), "[ObjectPool] The original you want to pool is null");
 
@@ -369,7 +369,6 @@ namespace Jackey.ObjectPool {
 
 		internal class GameObjectPool<T> : GameObjectPool, IPool<T> where T : Object {
 			private readonly T m_original;
-			private readonly PoolHandle<T> m_handle;
 
 			// [active, ..., free]
 			private readonly List<T> m_objects = new();
@@ -382,7 +381,7 @@ namespace Jackey.ObjectPool {
 			private Predicate<T> m_autoReturnPredicate;
 			private int m_lastAutoReturnFrame = -1;
 
-			public PoolHandle<T> Handle => m_handle;
+			public IPool<T> Handle => this;
 			public T Original => m_original;
 
 			public int Count => m_objects.Count;
@@ -413,7 +412,6 @@ namespace Jackey.ObjectPool {
 
 			public GameObjectPool(T original) {
 				m_original = original;
-				m_handle = new PoolHandle<T>(this);
 
 				switch (original) {
 					case GameObject:
@@ -427,7 +425,7 @@ namespace Jackey.ObjectPool {
 				}
 
 				if (m_original is IPoolCallbackReceiver<T> callbackReceiver) {
-					callbackReceiver.PoolCreate(m_handle);
+					callbackReceiver.PoolCreate(this);
 				}
 			}
 
