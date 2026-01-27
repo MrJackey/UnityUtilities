@@ -66,20 +66,24 @@ namespace Jackey.Utilities.Attributes {
 
 				Object propertyValue = property.objectReferenceValue;
 
-				if (propertyValue == null) {
+				if (propertyValue == null)
 					return;
-				}
 
+				const float FOLDOUT_X_OFFSET = 2f;
+				position.xMin -= FOLDOUT_X_OFFSET;
 				property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, GUIContent.none, true);
+				position.xMin += FOLDOUT_X_OFFSET;
 
 				if (property.isExpanded) {
 					if (m_exposedSerializedObject == null || m_exposedSerializedObject.targetObject != propertyValue)
 						m_exposedSerializedObject = new SerializedObject(propertyValue);
 
-					const float FOLDOUT_X_OFFSET = 7f;
+					const float GUIDE_X_OFFSET = FOLDOUT_X_OFFSET + 7f;
 
-					Rect foldGuideRect = position;
-					foldGuideRect.x -= FOLDOUT_X_OFFSET;
+          Rect indentedRect = EditorGUI.IndentedRect(position);
+
+					Rect foldGuideRect = indentedRect;
+					foldGuideRect.x -= GUIDE_X_OFFSET;
 					foldGuideRect.y += EditorGUIUtility.singleLineHeight;
 					foldGuideRect.width = 1f;
 					foldGuideRect.height = m_propertyHeight - EditorGUIUtility.singleLineHeight;
@@ -88,7 +92,7 @@ namespace Jackey.Utilities.Attributes {
 					EditorGUI.indentLevel++;
 					EditorGUI.BeginDisabledGroup(!GUI.enabled);
 
-					Rect helpRect = EditorGUI.IndentedRect(position);
+					Rect helpRect = indentedRect;
 					helpRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 					helpRect.height *= 2f;
 
@@ -117,9 +121,8 @@ namespace Jackey.Utilities.Attributes {
 					EditorGUI.PropertyField(position, iterator, true);
 					position.y += position.height - EditorGUIUtility.singleLineHeight;
 
-					if (iterator.name == "m_Script") {
+					if (iterator.name == "m_Script")
 						EditorGUI.EndDisabledGroup();
-					}
 				}
 
 				m_exposedSerializedObject.ApplyModifiedProperties();
