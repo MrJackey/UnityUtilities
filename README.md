@@ -90,7 +90,7 @@ It also comes with an editor window to display all global pools and their object
 
 ## Hierarchy Organizer | [Link](Assets/Plugins/HierarchyOrganizer/)
 
-Hierarhy Organizer is a collection of tools to let you improve the structure of your scene hierarchies. It lets you create folders that you can organize game objects under. These folders may only exist as scene root game objects or children of another folder. 
+Hierarchy Organizer is a collection of tools to let you improve the structure of your scene hierarchies. It lets you create folders that you can organize game objects under. These folders may only exist as scene root game objects or children of another folder. 
 
 > Folders are not meant to be in prefabs. If you attempt to add a folder to a prefab or create a new prefab with folders, an error message will be shown and the prefab won't be saved.
 
@@ -98,7 +98,7 @@ These folders will by default be removed from builds, thus removing any overhead
 
 ![](.github/Resources/Images/HierarchyFolders.png)
 
-This package also has settings to enable drawing indent guides in the hierarchy window making it easier to at a glance visualize the hierarchal relationship of game objects. 
+This package also has settings to enable drawing indent guides in the hierarchy window making it easier to at a glance visualize the hierarchical relationship of game objects. 
 
 ![](.github/Resources/Images/HierarchyIndentGuides.png)
 
