@@ -284,7 +284,17 @@ namespace Jackey.Utilities.Attributes {
 				if (EvaluateCondition(property, (IfAttribute)attribute))
 					return EditorGUI.GetPropertyHeight(property, label);
 
-				return 0f;
+				float height = 0f;
+
+				// Negate spacing. Even if this method returns zero height, property decorators can add height to it afterwards.
+				// This makes EditorGUI.GetPropertyHeight() give the "wrong" height. Only downside is that it removes the
+				// spacing if there are other visible properties
+				foreach (object customAttribute in fieldInfo.GetCustomAttributes(false)) {
+					if (customAttribute is SpaceAttribute spaceAttribute)
+						height -= spaceAttribute.height;
+				}
+
+				return height;
 			}
 
 			public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
