@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace Jackey.ObjectPool {
-	public interface IPool {
+	internal interface IPool {
 		/// <summary>
 		/// The total amount of objects currently in the pool
 		/// </summary>
@@ -23,7 +23,7 @@ namespace Jackey.ObjectPool {
 		void Clear();
 	}
 
-	public interface IPool<T> : IPool {
+	internal interface IPool<T> : IPool {
 		/// <summary>
 		/// Does the pool automatically return objects when they are no longer active
 		/// </summary>
