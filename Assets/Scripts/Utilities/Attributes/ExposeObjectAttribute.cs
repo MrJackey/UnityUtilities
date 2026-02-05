@@ -41,11 +41,13 @@ namespace Jackey.Utilities.Attributes {
 					SerializedProperty iterator = m_exposedSerializedObject.GetIterator();
 
 					for (bool enterChildren = true; iterator.NextVisible(enterChildren); enterChildren = false) {
-						totalHeight += EditorGUI.GetPropertyHeight(iterator, true);
+						float propertyHeight = EditorGUI.GetPropertyHeight(iterator, true);
+						if (propertyHeight > 0f)
+							totalHeight += propertyHeight + EditorGUIUtility.standardVerticalSpacing;
 					}
 
 					// Extra Padding
-					totalHeight += 4f * EditorGUIUtility.standardVerticalSpacing;
+					totalHeight += 2f * EditorGUIUtility.standardVerticalSpacing;
 				}
 
 				m_propertyHeight = totalHeight;
