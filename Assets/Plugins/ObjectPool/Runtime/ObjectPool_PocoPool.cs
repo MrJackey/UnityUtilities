@@ -21,7 +21,10 @@ namespace Jackey.ObjectPool {
 			if (typeof(ScriptableObject).IsAssignableFrom(typeof(T)))
 				throw new InvalidOperationException("[ObjectPool] ScriptableObjects must be instantiated using the ScriptableObject.CreateInstance method instead of with the new keyword");
 
-			return GetPocoObject<T>();
+			PocoPool<T> pool = GetPocoPool_Internal<T>();
+			T instance = pool.GetObject();
+
+			return instance;
 		}
 
 		/// <summary>
@@ -38,8 +41,10 @@ namespace Jackey.ObjectPool {
 			if (typeof(ScriptableObject).IsAssignableFrom(typeof(T)))
 				throw new InvalidOperationException("[ObjectPool] ScriptableObjects must be instantiated using the ScriptableObject.CreateInstance method instead of with the new keyword");
 
-			T @object = handle.GetObject();
-			return @object;
+			PocoPool<T> pool = GetPocoPool_Internal(handle);
+			T instance = pool.GetObject();
+
+			return instance;
 		}
 
 		/// <summary>
@@ -50,7 +55,7 @@ namespace Jackey.ObjectPool {
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance), "[ObjectPool] The instance you want to delete is null");
 
-			PocoPool<T> pool = GetPocoPool<T>();
+			PocoPool<T> pool = GetPocoPool_Internal<T>();
 			pool.ReturnObject(instance);
 		}
 
@@ -66,7 +71,8 @@ namespace Jackey.ObjectPool {
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance), "[ObjectPool] The instance you want to delete is null");
 
-			handle.ReturnObject(instance);
+			PocoPool<T> pool = GetPocoPool_Internal(handle);
+			pool.ReturnObject(instance);
 		}
 
 		/// <summary>
@@ -80,9 +86,22 @@ namespace Jackey.ObjectPool {
 			if (typeof(ScriptableObject).IsAssignableFrom(typeof(T)))
 				throw new InvalidOperationException("[ObjectPool] You are retrieving a handle for a pool which uses the new keyword. This is not allowed on ScriptableObjects");
 
-			PocoPool<T> pool = GetPocoPool<T>();
+			PocoPool<T> pool = GetPocoPool_Internal<T>();
 			return pool.Handle;
 		}
+
+		/// <summary>
+		/// Get the global pool of a class
+		/// </summary>
+		/// <returns>The global pool of the class. This value should not be saved (e.g. in a field) and reused later</returns>
+		public static IPool<T> GetPocoPool<T>() where T : class, new() => GetPocoPool_Internal<T>();
+
+		/// <summary>
+		/// Get the pool referenced by a handle
+		/// </summary>
+		/// <param name="handle">The handle referencing a pool</param>
+		/// <returns>The pool referenced by the handle. This value should not be saved (e.g. in a field) and reused later</returns>
+		public static IPool<T> GetPocoPool<T>(PoolHandle<T> handle) where T : class, new() => GetPocoPool_Internal(handle);
 
 		/// <summary>
 		/// Get the handle of a pool of a class. This pool is not accessible except for via the returned handle.
@@ -104,12 +123,7 @@ namespace Jackey.ObjectPool {
 
 		#endregion
 
-		private static T GetPocoObject<T>() where T : class, new() {
-			PocoPool<T> pool = GetPocoPool<T>();
-			return pool.GetObject();
-		}
-
-		private static PocoPool<T> GetPocoPool<T>() where T : class, new() {
+		private static PocoPool<T> GetPocoPool_Internal<T>() where T : class, new() {
 			if (!s_pocoPools.TryGetValue(typeof(T), out IPool pool)) {
 				pool = new PocoPool<T>();
 				s_pocoPools.Add(typeof(T), pool);
@@ -118,6 +132,16 @@ namespace Jackey.ObjectPool {
 			}
 
 			return (PocoPool<T>)pool;
+		}
+
+		private static PocoPool<T> GetPocoPool_Internal<T>(PoolHandle<T> handle) where T : class, new() {
+			if (handle.IsValid)
+				return (PocoPool<T>)handle.Pool;
+
+			PocoPool<T> pool = GetPocoPool_Internal<T>();
+			handle.Pool = pool;
+			handle.IsValid = true;
+			return pool;
 		}
 
 		internal abstract class PocoPool { }
