@@ -12,7 +12,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 		public bool InterfaceCreate { get; private set; }
 		public bool InterfaceActive { get; private set; }
 
-		void IPoolCallbackReceiver<TestComponent>.PoolCreate(PoolHandle<TestComponent> handle) => InterfacePoolSetup = true;
+		void IPoolCallbackReceiver<TestComponent>.PoolCreate(IPool<TestComponent> pool) => InterfacePoolSetup = true;
 
 		void IPoolObjectCallbackReceiver.Create() => InterfaceCreate = true;
 		void IPoolObjectCallbackReceiver.Setup() => InterfaceActive = true;
@@ -413,11 +413,11 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
 			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
 
-			Assert.IsTrue(handle.IsValid);
+			Assert.IsTrue(handle.Pool.IsValid);
 
 			ObjectPool.CleanGameObjects();
 
-			Assert.IsFalse(handle.IsValid);
+			Assert.IsFalse(handle.Pool.IsValid);
 		}
 
 		[TestCase(1)]

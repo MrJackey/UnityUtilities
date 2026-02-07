@@ -41,7 +41,7 @@ namespace Jackey.ObjectPool {
 			if (typeof(ScriptableObject).IsAssignableFrom(typeof(T)))
 				throw new InvalidOperationException("[ObjectPool] ScriptableObjects must be instantiated using the ScriptableObject.CreateInstance method instead of with the new keyword");
 
-			PocoPool<T> pool = GetPocoPool_Internal(handle);
+			PocoPool<T> pool = (PocoPool<T>)handle.Pool;
 			T instance = pool.GetObject();
 
 			return instance;
@@ -71,7 +71,7 @@ namespace Jackey.ObjectPool {
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance), "[ObjectPool] The instance you want to delete is null");
 
-			PocoPool<T> pool = GetPocoPool_Internal(handle);
+			PocoPool<T> pool = (PocoPool<T>)handle.Pool;
 			pool.ReturnObject(instance);
 		}
 
@@ -101,7 +101,23 @@ namespace Jackey.ObjectPool {
 		/// </summary>
 		/// <param name="handle">The handle referencing a pool</param>
 		/// <returns>The pool referenced by the handle. This value should not be saved (e.g. in a field) and reused later</returns>
-		public static IPool<T> GetPocoPool<T>(PoolHandle<T> handle) where T : class, new() => GetPocoPool_Internal(handle);
+		public static IPool<T> GetPocoPool<T>(PoolHandle<T> handle) where T : class, new() => (PocoPool<T>)handle.Pool;
+
+		/// <summary>
+		/// Get the global pool of a class and its handle at the same time. This is faster than retrieving them separately.
+		/// </summary>
+		/// <returns>The pool of the class and the handle connected to it. The returned pool should not be saved (e.g.) in a field and reused later</returns>
+		public static (PoolHandle<T> handle, IPool<T> pool) GetHandleAndPool<T>() where T : class, new() {
+			if (typeof(MonoBehaviour).IsAssignableFrom(typeof(T)))
+				throw new InvalidOperationException("[ObjectPool] You are retrieving a handle for a pool which uses the new keyword. This is not allowed on MonoBehaviours");
+
+			if (typeof(ScriptableObject).IsAssignableFrom(typeof(T)))
+				throw new InvalidOperationException("[ObjectPool] You are retrieving a handle for a pool which uses the new keyword. This is not allowed on ScriptableObjects");
+
+			IPool<T> pool = GetPocoPool_Internal<T>();
+			PoolHandle<T> handle = ((PocoPool<T>)pool).Handle;
+			return (handle, pool);
+		}
 
 		/// <summary>
 		/// Get the handle of a pool of a class. This pool is not accessible except for via the returned handle.
@@ -134,16 +150,6 @@ namespace Jackey.ObjectPool {
 			return (PocoPool<T>)pool;
 		}
 
-		private static PocoPool<T> GetPocoPool_Internal<T>(PoolHandle<T> handle) where T : class, new() {
-			if (handle.IsValid)
-				return (PocoPool<T>)handle.Pool;
-
-			PocoPool<T> pool = GetPocoPool_Internal<T>();
-			handle.Pool = pool;
-			handle.IsValid = true;
-			return pool;
-		}
-
 		internal abstract class PocoPool { }
 
 		internal class PocoPool<T> : PocoPool, IPool<T> where T : class, new() {
@@ -158,6 +164,8 @@ namespace Jackey.ObjectPool {
 			private int m_lastAutoReturnFrame = -1;
 
 			public PoolHandle<T> Handle => m_handle;
+
+			bool IPool.IsValid { get; set; } = true;
 
 			public int Count => m_objects.Count;
 

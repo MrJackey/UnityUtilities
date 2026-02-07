@@ -2,6 +2,8 @@
 
 namespace Jackey.ObjectPool {
 	public interface IPool {
+		internal bool IsValid { get; set; }
+
 		/// <summary>
 		/// The total amount of objects currently in the pool
 		/// </summary>

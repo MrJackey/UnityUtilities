@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -315,6 +316,21 @@ namespace Jackey.ObjectPool {
 		public static IPool<T> GetGameObjectPool<T>(PoolHandle<T> handle) where T : Object => GetGameObjectPool_Internal(handle);
 
 		/// <summary>
+		/// Get the global pool and its handle of an original object at the same time. This is faster than retrieving them separately.
+		/// </summary>
+		/// <param name="original">The original of the pool</param>
+		/// <returns>The pool of the original and the handle connected to it. The returned pool should not be saved (e.g.) in a field and reused later</returns>
+		public static (PoolHandle<T> handle, IPool<T> pool) GetHandleAndPool<T>(T original) where T : Object {
+			if (!original)
+				throw new ArgumentNullException(nameof(original), "[ObjectPool] The original of the pool whose handle is being retrieved is null");
+
+			IPool<T> pool = GetGameObjectPool_Internal(original);
+			PoolHandle<T> handle = ((GameObjectPool<T>)pool).Handle;
+
+			return (handle, pool);
+		}
+
+		/// <summary>
 		/// Get the handle of a new pool of an original object. This pool is not accessible except for via the returned handle.
 		/// Note that methods requiring a handle accept handles referencing private pools as well
 		/// </summary>
@@ -342,15 +358,14 @@ namespace Jackey.ObjectPool {
 			return (GameObjectPool<T>)pool;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static GameObjectPool<T> GetGameObjectPool_Internal<T>(PoolHandle<T> handle) where T : Object {
-			if (handle.IsValid)
-				return (GameObjectPool<T>)handle.Pool;
+			IPool<T> handlePool = handle.Pool;
+			if (handlePool.IsValid)
+				return (GameObjectPool<T>)handlePool;
 
-			GameObjectPool<T> pool = GetGameObjectPool_Internal(handle.Original);
-			pool.AddLooseHandle(handle);
-
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(((GameObjectPool<T>)handlePool).Original);
 			handle.Pool = pool;
-			handle.IsValid = true;
 
 			return pool;
 		}
@@ -388,7 +403,7 @@ namespace Jackey.ObjectPool {
 
 			if (poolsToRemove != null) {
 				foreach ((Object original, IPool pool) in poolsToRemove) {
-					((GameObjectPool)pool).InvalidateHandle();
+					pool.IsValid = false;
 					s_gameObjectPools.Remove(original);
 					PoolRemoved?.Invoke(pool);
 				}
@@ -397,13 +412,11 @@ namespace Jackey.ObjectPool {
 
 		internal abstract class GameObjectPool {
 			internal abstract void RemoveDestroyedObjects();
-			internal abstract void InvalidateHandle();
 		}
 
 		internal class GameObjectPool<T> : GameObjectPool, IPool<T> where T : Object {
 			private readonly T m_original;
 			private readonly PoolHandle<T> m_handle;
-			private List<PoolHandle<T>> m_looseHandles;
 
 			// [active, ..., free]
 			private readonly List<T> m_objects = new();
@@ -418,6 +431,8 @@ namespace Jackey.ObjectPool {
 
 			public PoolHandle<T> Handle => m_handle;
 			public T Original => m_original;
+
+			bool IPool.IsValid { get; set; } = true;
 
 			public int Count => m_objects.Count;
 
@@ -447,7 +462,7 @@ namespace Jackey.ObjectPool {
 
 			public GameObjectPool(T original) {
 				m_original = original;
-				m_handle = new PoolHandle<T>(original, this);
+				m_handle = new PoolHandle<T>(this);
 
 				switch (original) {
 					case GameObject:
@@ -460,9 +475,8 @@ namespace Jackey.ObjectPool {
 						break;
 				}
 
-				if (m_original is IPoolCallbackReceiver<T> callbackReceiver) {
-					callbackReceiver.PoolCreate(m_handle);
-				}
+				if (m_original is IPoolCallbackReceiver<T> callbackReceiver)
+					callbackReceiver.PoolCreate(this);
 			}
 
 			public T GetObject() => GetObject(GetOriginalTransform(m_original));
@@ -580,23 +594,6 @@ namespace Jackey.ObjectPool {
 				}
 
 				PoolReset?.Invoke(this);
-			}
-
-			internal void AddLooseHandle(PoolHandle<T> handle) {
-				m_looseHandles ??= new List<PoolHandle<T>>(1);
-				m_looseHandles.Add(handle);
-			}
-
-			internal override void InvalidateHandle() {
-				m_handle.IsValid = false;
-				m_handle.Pool = null;
-
-				if (m_looseHandles != null) {
-					foreach (PoolHandle<T> handle in m_looseHandles) {
-						handle.IsValid = false;
-						handle.Pool = null;
-					}
-				}
 			}
 
 			private T CreateObject(GameObjectTransform instantiation) {
