@@ -12,7 +12,7 @@ namespace Jackey.ObjectPool {
 		/// Invoked when a pool of this object is created.
 		/// Note that the method is invoked on the original object e.g its prefab.
 		/// </summary>
-		/// <param name="handle">The handle connected to the created pool</param>
-		void PoolCreate(PoolHandle<T> handle);
+		/// <param name="pool">The pool created with this as the original</param>
+		void PoolCreate(IPool<T> pool);
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -20,7 +21,7 @@ namespace Jackey.ObjectPool {
 			if (!original)
 				throw new ArgumentNullException(nameof(original), "[ObjectPool] The object you want to instantiate is null");
 
-			GameObjectPool<T> pool = GetGameObjectPool(original);
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(original);
 			T @object = pool.GetObject();
 
 			return @object;
@@ -34,7 +35,8 @@ namespace Jackey.ObjectPool {
 		/// A clone from the handle's pool
 		/// </returns>
 		public static T Instantiate<T>(PoolHandle<T> handle) where T : Object {
-			T @object = handle.GetObject();
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(handle);
+			T @object = pool.GetObject();
 
 			return @object;
 		}
@@ -65,7 +67,7 @@ namespace Jackey.ObjectPool {
 			if (original is not (GameObject or Component))
 				throw new ArgumentException("[ObjectPool] Cannot instantiate an asset with a parent");
 
-			GameObjectPool<T> pool = GetGameObjectPool(original);
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(original);
 			GameObjectTransform transform = GetOriginalTransform(original);
 			transform.Parent = parent;
 			transform.WorldSpace = instantiateInWorldSpace;
@@ -95,7 +97,7 @@ namespace Jackey.ObjectPool {
 		/// A clone from the handle's pool
 		/// </returns>
 		public static T Instantiate<T>(PoolHandle<T> handle, Transform parent, bool instantiateInWorldSpace) where T : Object {
-			GameObjectPool<T> pool = (GameObjectPool<T>)handle.Pool;
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(handle);
 			T original = pool.Original;
 
 			if (original is not (GameObject or Component))
@@ -136,7 +138,7 @@ namespace Jackey.ObjectPool {
 			if (original is not (GameObject or Component))
 				throw new ArgumentException("[ObjectPool] Cannot instantiate an asset with a position and rotation");
 
-			GameObjectPool<T> pool = GetGameObjectPool(original);
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(original);
 			T @object = pool.GetObject(new GameObjectTransform() {
 				Position = position,
 				Rotation = rotation,
@@ -167,7 +169,7 @@ namespace Jackey.ObjectPool {
 		/// A clone from the handle's pool
 		/// </returns>
 		public static T Instantiate<T>(PoolHandle<T> handle, Vector3 position, Quaternion rotation) where T : Object {
-			GameObjectPool<T> pool = (GameObjectPool<T>)handle.Pool;
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(handle);
 
 			if (pool.Original is not (GameObject or Component))
 				throw new ArgumentException("[ObjectPool] Cannot instantiate an asset with a position and rotation");
@@ -199,7 +201,7 @@ namespace Jackey.ObjectPool {
 			if (original is not (GameObject or Component))
 				throw new ArgumentException("[ObjectPool] Cannot instantiate an asset with a position, rotation and parent");
 
-			GameObjectPool<T> pool = GetGameObjectPool(original);
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(original);
 			T @object = pool.GetObject(new GameObjectTransform() {
 				Position = position,
 				Rotation = rotation,
@@ -221,7 +223,7 @@ namespace Jackey.ObjectPool {
 		/// A clone from the handle's pool
 		/// </returns>
 		public static T Instantiate<T>(PoolHandle<T> handle, Vector3 position, Quaternion rotation, Transform parent) where T : Object {
-			GameObjectPool<T> pool = (GameObjectPool<T>)handle.Pool;
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(handle);
 			T @object = pool.GetObject(new GameObjectTransform() {
 				Position = position,
 				Rotation = rotation,
@@ -244,7 +246,7 @@ namespace Jackey.ObjectPool {
 			if (!@object)
 				throw new ArgumentNullException(nameof(@object), "[ObjectPool] The object you want to destroy is null");
 
-			GameObjectPool<T> pool = GetGameObjectPool(original);
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(original);
 			pool.ReturnObject(@object);
 		}
 
@@ -260,7 +262,8 @@ namespace Jackey.ObjectPool {
 			if (!@object)
 				throw new ArgumentNullException(nameof(@object), "[ObjectPool] The object you want to destroy is null");
 
-			handle.ReturnObject(@object);
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(handle);
+			pool.ReturnObject(@object);
 		}
 
 		/// <summary>
@@ -294,8 +297,37 @@ namespace Jackey.ObjectPool {
 			if (!original)
 				throw new ArgumentNullException(nameof(original), "[ObjectPool] The original of the pool whose handle is being retrieved is null");
 
-			GameObjectPool<T> pool = GetGameObjectPool(original);
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(original);
 			return pool.Handle;
+		}
+
+		/// <summary>
+		/// Get the global pool of an original object
+		/// </summary>
+		/// <param name="original">The original to the pool</param>
+		/// <returns>The global pool of the original. This value should not be saved (e.g. in a field) and reused later</returns>
+		public static IPool<T> GetGameObjectPool<T>(T original) where T : Object => GetGameObjectPool_Internal(original);
+
+		/// <summary>
+		/// Get the pool referenced by a handle
+		/// </summary>
+		/// <param name="handle">The handle referencing a pool</param>
+		/// <returns>The pool referenced by the handle. This value should not be saved (e.g. in a field) and reused later</returns>
+		public static IPool<T> GetGameObjectPool<T>(PoolHandle<T> handle) where T : Object => GetGameObjectPool_Internal(handle);
+
+		/// <summary>
+		/// Get the global pool and its handle of an original object at the same time. This is faster than retrieving them separately.
+		/// </summary>
+		/// <param name="original">The original of the pool</param>
+		/// <returns>The pool of the original and the handle connected to it. The returned pool should not be saved (e.g.) in a field and reused later</returns>
+		public static (PoolHandle<T> handle, IPool<T> pool) GetHandleAndPool<T>(T original) where T : Object {
+			if (!original)
+				throw new ArgumentNullException(nameof(original), "[ObjectPool] The original of the pool whose handle is being retrieved is null");
+
+			IPool<T> pool = GetGameObjectPool_Internal(original);
+			PoolHandle<T> handle = ((GameObjectPool<T>)pool).Handle;
+
+			return (handle, pool);
 		}
 
 		/// <summary>
@@ -315,7 +347,7 @@ namespace Jackey.ObjectPool {
 
 		#endregion
 
-		private static GameObjectPool<T> GetGameObjectPool<T>(T original) where T : Object {
+		private static GameObjectPool<T> GetGameObjectPool_Internal<T>(T original) where T : Object {
 			if (!s_gameObjectPools.TryGetValue(original, out IPool pool)) {
 				pool = new GameObjectPool<T>(original);
 				s_gameObjectPools.Add(original, pool);
@@ -324,6 +356,18 @@ namespace Jackey.ObjectPool {
 			}
 
 			return (GameObjectPool<T>)pool;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static GameObjectPool<T> GetGameObjectPool_Internal<T>(PoolHandle<T> handle) where T : Object {
+			IPool<T> handlePool = handle.Pool;
+			if (handlePool.IsValid)
+				return (GameObjectPool<T>)handlePool;
+
+			GameObjectPool<T> pool = GetGameObjectPool_Internal(((GameObjectPool<T>)handlePool).Original);
+			handle.Pool = pool;
+
+			return pool;
 		}
 
 		private static GameObjectTransform GetOriginalTransform(Object original) {
@@ -335,16 +379,34 @@ namespace Jackey.ObjectPool {
 
 			Debug.Assert(originalTransform, "[ObjectPool] Tried to base a transformation on an object without a transform");
 
+			originalTransform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
+
 			return new GameObjectTransform() {
-				Position = originalTransform.position,
-				Rotation = originalTransform.rotation,
+				Position = position,
+				Rotation = rotation,
 				InheritPosition = true,
 			};
 		}
 
-		internal static void RemoveDestroyedGameObjects() {
-			foreach (GameObjectPool pool in s_gameObjectPools.Values) {
-				pool.RemoveDestroyedObjects();
+		internal static void CleanGameObjects() {
+			List<(Object, IPool)> poolsToRemove = null;
+
+			foreach ((Object original, IPool pool) in s_gameObjectPools) {
+				GameObjectPool objectPool = (GameObjectPool)pool;
+				objectPool.RemoveDestroyedObjects();
+
+				if (pool.Count == 0) {
+					poolsToRemove ??= new List<(Object, IPool)>();
+					poolsToRemove.Add((original, pool));
+				}
+			}
+
+			if (poolsToRemove != null) {
+				foreach ((Object original, IPool pool) in poolsToRemove) {
+					pool.IsValid = false;
+					s_gameObjectPools.Remove(original);
+					PoolRemoved?.Invoke(pool);
+				}
 			}
 		}
 
@@ -369,6 +431,8 @@ namespace Jackey.ObjectPool {
 
 			public PoolHandle<T> Handle => m_handle;
 			public T Original => m_original;
+
+			bool IPool.IsValid { get; set; } = true;
 
 			public int Count => m_objects.Count;
 
@@ -411,9 +475,8 @@ namespace Jackey.ObjectPool {
 						break;
 				}
 
-				if (m_original is IPoolCallbackReceiver<T> callbackReceiver) {
-					callbackReceiver.PoolCreate(m_handle);
-				}
+				if (m_original is IPoolCallbackReceiver<T> callbackReceiver)
+					callbackReceiver.PoolCreate(this);
 			}
 
 			public T GetObject() => GetObject(GetOriginalTransform(m_original));

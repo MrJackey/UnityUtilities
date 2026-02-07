@@ -19,6 +19,7 @@ namespace Jackey.ObjectPool {
 	public static partial class ObjectPool {
 		internal static event Action<IPool> PoolCreated;
 		internal static event Action<IPool> PoolReset;
+		internal static event Action<IPool> PoolRemoved;
 		internal static event Action Cleared;
 
 		internal static event Action<IPool, object> AnyObjectSetup;
@@ -52,7 +53,7 @@ namespace Jackey.ObjectPool {
 		}
 
 		private static void OnSceneUnloaded(Scene _) {
-			RemoveDestroyedGameObjects();
+			CleanGameObjects();
 		}
 	}
 }

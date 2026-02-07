@@ -12,7 +12,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 		public bool InterfaceCreate { get; private set; }
 		public bool InterfaceActive { get; private set; }
 
-		void IPoolCallbackReceiver<TestComponent>.PoolCreate(PoolHandle<TestComponent> handle) => InterfacePoolSetup = true;
+		void IPoolCallbackReceiver<TestComponent>.PoolCreate(IPool<TestComponent> pool) => InterfacePoolSetup = true;
 
 		void IPoolObjectCallbackReceiver.Create() => InterfaceCreate = true;
 		void IPoolObjectCallbackReceiver.Setup() => InterfaceActive = true;
@@ -108,8 +108,8 @@ namespace Jackey.ObjectPool.__Tests__ {
 
 			ObjectPool.FindAndDestroy(@object);
 
-			Assert.AreEqual(1, handle.FreeCount);
-			Assert.AreEqual(0, handle.ActiveCount);
+			Assert.AreEqual(1, handle.Pool.FreeCount);
+			Assert.AreEqual(0, handle.Pool.ActiveCount);
 		}
 
 		[Test]
@@ -136,12 +136,12 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
 
 			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
-			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
+			handle.Pool.EnableAutomaticReturns(@object => !@object.ManualActive);
 
 			TestComponent @object = ObjectPool.Instantiate(original);
 			@object.ManualActive = false;
 
-			handle.CheckAutomaticReturns();
+			handle.Pool.CheckAutomaticReturns();
 
 			TestComponent object2 = ObjectPool.Instantiate(handle);
 			Assert.AreSame(@object, object2);
@@ -150,12 +150,12 @@ namespace Jackey.ObjectPool.__Tests__ {
 		[Test]
 		public void AutomaticPocoReturnsAreReused() {
 			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
-			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
+			handle.Pool.EnableAutomaticReturns(@object => !@object.ManualActive);
 
 			TestPOCO @object = ObjectPool.New(handle);
 			@object.ManualActive = false;
 
-			handle.CheckAutomaticReturns();
+			handle.Pool.CheckAutomaticReturns();
 
 			TestPOCO object2 = ObjectPool.New(handle);
 			Assert.AreSame(@object, object2);
@@ -223,7 +223,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent callbackProvidedObject = null;
 
 			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
-			handle.ObjectCreated += @object => callbackProvidedObject = @object;
+			handle.Pool.ObjectCreated += @object => callbackProvidedObject = @object;
 
 			TestComponent @object = ObjectPool.Instantiate(handle);
 
@@ -235,7 +235,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestPOCO callbackProvidedObject = null;
 
 			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
-			handle.ObjectCreated += @object => callbackProvidedObject = @object;
+			handle.Pool.ObjectCreated += @object => callbackProvidedObject = @object;
 
 			TestPOCO @object = ObjectPool.New(handle);
 
@@ -248,7 +248,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent callbackProvidedObject = null;
 
 			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
-			handle.ObjectSetup += @object => callbackProvidedObject = @object;
+			handle.Pool.ObjectSetup += @object => callbackProvidedObject = @object;
 
 			TestComponent @object = ObjectPool.Instantiate(handle);
 
@@ -260,7 +260,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestPOCO callbackProvidedObject = null;
 
 			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
-			handle.ObjectSetup += @object => callbackProvidedObject = @object;
+			handle.Pool.ObjectSetup += @object => callbackProvidedObject = @object;
 
 			TestPOCO @object = ObjectPool.New(handle);
 
@@ -273,7 +273,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent callbackProvidedObject = null;
 
 			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
-			handle.ObjectReturned += @object => callbackProvidedObject = @object;
+			handle.Pool.ObjectReturned += @object => callbackProvidedObject = @object;
 
 			TestComponent @object = ObjectPool.Instantiate(handle);
 			ObjectPool.Destroy(handle, @object);
@@ -286,7 +286,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestPOCO callbackProvidedObject = null;
 
 			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
-			handle.ObjectReturned += @object => callbackProvidedObject = @object;
+			handle.Pool.ObjectReturned += @object => callbackProvidedObject = @object;
 
 			TestPOCO @object = ObjectPool.New(handle);
 			ObjectPool.Delete(handle, @object);
@@ -300,12 +300,12 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent callbackProvidedObject = null;
 
 			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
-			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
-			handle.ObjectReturned += @object => callbackProvidedObject = @object;
+			handle.Pool.EnableAutomaticReturns(@object => !@object.ManualActive);
+			handle.Pool.ObjectReturned += @object => callbackProvidedObject = @object;
 
 			TestComponent @object = ObjectPool.Instantiate(handle);
 			@object.ManualActive = false;
-			handle.CheckAutomaticReturns();
+			handle.Pool.CheckAutomaticReturns();
 
 			Assert.AreSame(@object, callbackProvidedObject);
 		}
@@ -315,12 +315,12 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestPOCO callbackProvidedObject = null;
 
 			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
-			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
-			handle.ObjectReturned += @object => callbackProvidedObject = @object;
+			handle.Pool.EnableAutomaticReturns(@object => !@object.ManualActive);
+			handle.Pool.ObjectReturned += @object => callbackProvidedObject = @object;
 
 			TestPOCO @object = ObjectPool.New(handle);
 			@object.ManualActive = false;
-			handle.CheckAutomaticReturns();
+			handle.Pool.CheckAutomaticReturns();
 
 			Assert.AreSame(@object, callbackProvidedObject);
 		}
@@ -330,7 +330,7 @@ namespace Jackey.ObjectPool.__Tests__ {
 			TestComponent original = new GameObject().AddComponent<TestComponent>();
 
 			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
-			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
+			handle.Pool.EnableAutomaticReturns(@object => !@object.ManualActive);
 
 			List<TestComponent> objects = new();
 
@@ -341,22 +341,22 @@ namespace Jackey.ObjectPool.__Tests__ {
 				objects.Add(@object);
 			}
 
-			handle.ObjectReturned += _ => ObjectPool.Instantiate(original);
+			handle.Pool.ObjectReturned += _ => ObjectPool.Instantiate(original);
 
 			for (int i = 0; i < 4; i++) {
 				objects[i].ManualActive = false;
 			}
 
-			handle.CheckAutomaticReturns();
+			handle.Pool.CheckAutomaticReturns();
 
-			Assert.AreEqual(4, handle.ActiveCount);
-			Assert.AreEqual(0, handle.FreeCount);
+			Assert.AreEqual(4, handle.Pool.ActiveCount);
+			Assert.AreEqual(0, handle.Pool.FreeCount);
 		}
 
 		[Test]
 		public void PocoAutoReturnedObjectsCanBeImmediatelyReusedViaPoolReturnCallback() {
 			PoolHandle<TestPOCO> handle = ObjectPool.GetHandle<TestPOCO>();
-			handle.EnableAutomaticReturns(@object => !@object.ManualActive);
+			handle.Pool.EnableAutomaticReturns(@object => !@object.ManualActive);
 
 			List<TestPOCO> objects = new();
 
@@ -367,16 +367,16 @@ namespace Jackey.ObjectPool.__Tests__ {
 				objects.Add(@object);
 			}
 
-			handle.ObjectReturned += _ => ObjectPool.New<TestPOCO>();
+			handle.Pool.ObjectReturned += _ => ObjectPool.New<TestPOCO>();
 
 			for (int i = 0; i < 4; i++) {
 				objects[i].ManualActive = false;
 			}
 
-			handle.CheckAutomaticReturns();
+			handle.Pool.CheckAutomaticReturns();
 
-			Assert.AreEqual(4, handle.ActiveCount);
-			Assert.AreEqual(0, handle.FreeCount);
+			Assert.AreEqual(4, handle.Pool.ActiveCount);
+			Assert.AreEqual(0, handle.Pool.FreeCount);
 		}
 
 		// 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
@@ -401,11 +401,42 @@ namespace Jackey.ObjectPool.__Tests__ {
 			for (int i = 0; i < initialObjects; i += 2)
 				Object.DestroyImmediate(objects[i]);
 
-			ObjectPool.RemoveDestroyedGameObjects();
+			ObjectPool.CleanGameObjects();
 
-			Assert.AreEqual(expectedCount, handle.Count);
-			Assert.AreEqual(expectedActive, handle.ActiveCount);
-			Assert.AreEqual(expectedFree, handle.FreeCount);
+			Assert.AreEqual(expectedCount, handle.Pool.Count);
+			Assert.AreEqual(expectedActive, handle.Pool.ActiveCount);
+			Assert.AreEqual(expectedFree, handle.Pool.FreeCount);
+		}
+
+		[Test]
+		public void GlobalGameObjectPoolHandlesBecomeInvalidOnClean() {
+			TestComponent original = new GameObject().AddComponent<TestComponent>();
+			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+
+			Assert.IsTrue(handle.Pool.IsValid);
+
+			ObjectPool.CleanGameObjects();
+
+			Assert.IsFalse(handle.Pool.IsValid);
+		}
+
+		[TestCase(1)]
+		[TestCase(0)]
+		[TestCase(2)]
+		[TestCase(4)]
+		public void GlobalGameObjectPoolHandlesCanBeUsedAfterClean(int cleans) {
+			TestComponent original = new GameObject().AddComponent<TestComponent>();
+			PoolHandle<TestComponent> handle = ObjectPool.GetHandle(original);
+
+			for (int i = 0; i < cleans; i++) {
+				TestComponent @object = ObjectPool.Instantiate(handle);
+				ObjectPool.Destroy(handle, @object);
+				Object.DestroyImmediate(@object.gameObject);
+
+				ObjectPool.CleanGameObjects();
+			}
+
+			Assert.DoesNotThrow(() => Assert.IsTrue(ObjectPool.Instantiate(handle) != null));
 		}
 	}
 }
