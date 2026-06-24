@@ -4,6 +4,7 @@ namespace Jackey.SelectionHistory.Editor {
 	[Flags]
 	public enum SelectionTypes {
 		Assets = 1 << 0,
-		SceneObjects = 1 << 1,
+		Folders = 1 << 1,
+		SceneObjects = 1 << 2,
 	}
 }

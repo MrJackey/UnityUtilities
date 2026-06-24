@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Jackey.SelectionHistory.Utilities;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -117,6 +118,10 @@ namespace Jackey.SelectionHistory.Editor {
 			if (selectedObject == null)
 				return;
 
+			// Don't add the last selection twice
+			if (s_history.Count > 0 && s_history[s_historyIndex] == selectedObject)
+				return;
+
 			// Ignore Animator objects
 			if (IsPartOfAnimator(selectedObject))
 				return;
@@ -127,16 +132,20 @@ namespace Jackey.SelectionHistory.Editor {
 
 			bool selectedAsset = AssetDatabase.Contains(selectedObject);
 
-			// Selected Asset
-			if ((s_allowedSelections & SelectionTypes.Assets) == 0 && selectedAsset)
-				return;
+			if (selectedAsset) {
+				bool selectedFolder = Directory.Exists(AssetDatabase.GetAssetPath(selectedObject));
+
+				// Selected Folder
+				if ((s_allowedSelections & SelectionTypes.Folders) == 0 && selectedFolder)
+					return;
+
+				// Selected Asset
+				if ((s_allowedSelections & SelectionTypes.Assets) == 0 && !selectedFolder)
+					return;
+			}
 
 			// Selected Non-Asset
 			if ((s_allowedSelections & SelectionTypes.SceneObjects) == 0 && !selectedAsset)
-				return;
-
-			// Don't add the current selection twice
-			if (s_history.Count > 0 && s_history[s_historyIndex] == selectedObject)
 				return;
 
 			// Remove any future history when branching
