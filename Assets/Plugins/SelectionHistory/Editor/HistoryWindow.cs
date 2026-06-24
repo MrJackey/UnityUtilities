@@ -49,15 +49,12 @@ namespace Jackey.SelectionHistory.Editor {
 				bindItem = BindListItem,
 				reorderable = false,
 				showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
-				selectionType = SelectionType.Single,
-				selectedIndex = SelectionManager.HistoryIndex,
+				selectionType = SelectionType.None,
 				style = {
 					flexGrow = 1f,
 					visibility = Visibility.Hidden,
 				},
 			};
-
-			m_historyListView.selectedIndicesChanged += OnListSelectionChange;
 
 			return m_historyListView;
 		}
@@ -72,6 +69,9 @@ namespace Jackey.SelectionHistory.Editor {
 					paddingRight = 5f,
 				},
 			};
+
+			// Use a custom manipulator for clicking and drag 'n drop to avoid callbacks conflicting with each other
+			itemRoot.AddManipulator(new ItemManipulator());
 
 			itemRoot.Add(new Image() {
 				style = {
@@ -97,6 +97,7 @@ namespace Jackey.SelectionHistory.Editor {
 
 		private void BindListItem(VisualElement element, int index) {
 			Object @object = m_historyList[index];
+			element.userData = index;
 
 			element.style.opacity = index > SelectionManager.HistoryIndex ? 0.5f : 1f;
 			element.style.borderBottomWidth = index == SelectionManager.HistoryIndex ? 1f : 0f;
@@ -115,22 +116,6 @@ namespace Jackey.SelectionHistory.Editor {
 
 			element.Q<Label>().text = label;
 			element.tooltip = label;
-		}
-
-		private void OnListSelectionChange(IEnumerable<int> indices) {
-			List<int> indicesList = (List<int>)indices;
-
-			if (indicesList.Count == 0)
-				return;
-
-			int index = indicesList[0];
-
-			m_historyListView.ScrollToItem(index);
-
-			if (index == SelectionManager.HistoryIndex)
-				return;
-
-			SelectionManager.MoveToIndex(index);
 		}
 
 		private VisualElement CreateControlsGUI() {
@@ -174,7 +159,6 @@ namespace Jackey.SelectionHistory.Editor {
 			m_historyList.AddRange(SelectionManager.History);
 
 			m_historyListView.RefreshItems();
-			m_historyListView.selectedIndex = SelectionManager.HistoryIndex;
 
 			if (m_historyList.Count == 0) {
 				RefreshEmptyListLabel();
@@ -212,6 +196,68 @@ namespace Jackey.SelectionHistory.Editor {
 			m_historyListView.RefreshItems();
 
 			RefreshControlsEnabled();
+		}
+
+		private class ItemManipulator : Manipulator {
+			private bool m_isPointerDown;
+
+			protected override void RegisterCallbacksOnTarget() {
+				target.RegisterCallback<PointerDownEvent>(OnPointerDown);
+				target.RegisterCallback<PointerUpEvent>(OnPointerUp);
+				target.RegisterCallback<PointerLeaveEvent>(OnPointerLeave);
+			}
+
+			protected override void UnregisterCallbacksFromTarget() {
+				target.UnregisterCallback<PointerDownEvent>(OnPointerDown);
+				target.UnregisterCallback<PointerUpEvent>(OnPointerUp);
+				target.UnregisterCallback<PointerLeaveEvent>(OnPointerLeave);
+			}
+
+			private void OnPointerDown(PointerDownEvent evt) {
+				if (m_isPointerDown) return;
+
+				evt.StopImmediatePropagation();
+
+				m_isPointerDown = true;
+				target.CapturePointer(0);
+			}
+
+			private void OnPointerUp(PointerUpEvent evt) {
+				if (!m_isPointerDown) return;
+
+				evt.StopImmediatePropagation();
+
+				OnClick();
+
+				target.ReleasePointer(0);
+				m_isPointerDown = false;
+			}
+
+			private void OnPointerLeave(PointerLeaveEvent evt) {
+				if (!m_isPointerDown) return;
+
+				evt.StopImmediatePropagation();
+
+				OnDragStart();
+
+				target.ReleasePointer(0);
+				m_isPointerDown = false;
+			}
+
+			private void OnClick() {
+				int index = (int)target.userData;
+				SelectionManager.MoveToIndex(index);
+			}
+
+			private void OnDragStart() {
+				Object @object = SelectionManager.History[(int)target.userData];
+				if (@object == null)
+					return;
+
+				DragAndDrop.PrepareStartDrag();
+				DragAndDrop.objectReferences = new[] { @object };
+				DragAndDrop.StartDrag("Selection History Drag");
+			}
 		}
 	}
 }
