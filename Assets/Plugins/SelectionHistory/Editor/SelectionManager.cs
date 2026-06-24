@@ -13,7 +13,7 @@ namespace Jackey.SelectionHistory.Editor {
 		private const string SESSION_HISTORY_KEY = "SelectionHistory-SessionHistory";
 		private const string SESSION_HISTORY_INDEX_KEY = "SelectionHistory-HistoryIndex";
 
-		private static readonly RingBuffer<Object> s_history = new(10);
+		private static readonly RingBuffer<Object> s_history = new(25);
 		private static int s_historyIndex = -1;
 
 		private static SelectionTypes s_allowedSelections;
@@ -42,13 +42,26 @@ namespace Jackey.SelectionHistory.Editor {
 			AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
 		}
 
+		[Shortcut("Jackey/Selection History/Go Back")]
+		private static void ShortcutGoBack() {
+			if (!ValidateGoBack()) return;
+
+			GoBack();
+		}
+
+		[Shortcut("Jackey/Selection History/Go Forward")]
+		private static void ShortcutGoForward() {
+			if (!ValidateGoForward()) return;
+
+			GoForward();
+		}
+
 		[MenuItem("Tools/Jackey/Selection History/Go Back", true, 1000)]
 		internal static bool ValidateGoBack() {
 			return s_historyIndex >= 0;
 		}
 
 		[MenuItem("Tools/Jackey/Selection History/Go Back", false, 1000)]
-		[Shortcut("Selection History/Go Back")]
 		internal static void GoBack() {
 			while (s_historyIndex > 0) {
 				s_historyIndex--;
@@ -73,7 +86,6 @@ namespace Jackey.SelectionHistory.Editor {
 		}
 
 		[MenuItem("Tools/Jackey/Selection History/Go Forward", false, 1001)]
-		[Shortcut("Selection History/Go Forward")]
 		internal static void GoForward() {
 			if (s_history.Count == 0)
 				return;
