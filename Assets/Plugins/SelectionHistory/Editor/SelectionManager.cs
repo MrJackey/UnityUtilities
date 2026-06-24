@@ -143,6 +143,9 @@ namespace Jackey.SelectionHistory.Editor {
 			for (int i = s_history.Count - 1; i > s_historyIndex; i--)
 				s_history.RemoveAt(i);
 
+			// Remove a previous instance if any
+			s_history.Remove(selectedObject);
+
 			s_history.Add(selectedObject);
 			s_historyIndex = s_history.Count - 1;
 
