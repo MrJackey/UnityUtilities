@@ -3,7 +3,6 @@ using Jackey.SelectionHistory.Utilities;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.ShortcutManagement;
-using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace Jackey.SelectionHistory.Editor {
@@ -55,7 +54,7 @@ namespace Jackey.SelectionHistory.Editor {
 				Object @object = s_history[s_historyIndex];
 
 				if (@object != null) {
-					EditorGUIUtility.PingObject(@object);
+					Selection.activeObject = @object;
 					MovedInHistory?.Invoke(s_historyIndex);
 					break;
 				}
@@ -83,7 +82,7 @@ namespace Jackey.SelectionHistory.Editor {
 				Object @object = s_history[s_historyIndex];
 
 				if (@object != null) {
-					EditorGUIUtility.PingObject(@object);
+					Selection.activeObject = @object;
 					MovedInHistory?.Invoke(s_historyIndex);
 					break;
 				}
@@ -168,14 +167,16 @@ namespace Jackey.SelectionHistory.Editor {
 		}
 
 		internal static void MoveToIndex(int index) {
-			s_historyIndex = index;
-
-			Object @object = s_history[s_historyIndex];
+			Object @object = s_history[index];
 
 			if (@object != null) {
-				EditorGUIUtility.PingObject(@object);
+				Selection.activeObject = @object;
 			}
 
+			if (s_historyIndex == index)
+				return;
+
+			s_historyIndex = index;
 			MovedInHistory?.Invoke(s_historyIndex);
 		}
 
@@ -186,7 +187,7 @@ namespace Jackey.SelectionHistory.Editor {
 
 			for (int i = 0; i < s_history.Count; i++) {
 				Object @object = s_history[i];
-				historyIDs[i] = (@object ? @object.GetInstanceID() : default);
+				historyIDs[i] = @object ? @object.GetInstanceID() : default;
 			}
 
 			if (historyIDs.Length > 0) {

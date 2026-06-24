@@ -66,7 +66,6 @@ namespace Jackey.SelectionHistory.Editor {
 					alignItems = Align.Center,
 					borderBottomColor = Color.white,
 					paddingLeft = 5f,
-					paddingRight = 5f,
 				},
 			};
 
@@ -91,6 +90,26 @@ namespace Jackey.SelectionHistory.Editor {
 					marginLeft = 5f,
 				},
 			});
+
+			Button pingButton = new Button(() => {
+				int index = (int)itemRoot.userData;
+				Object @object = m_historyList[index];
+
+				if (@object != null)
+					EditorGUIUtility.PingObject(@object);
+			}) {
+				focusable = false,
+				style = {
+					width = 30f,
+					height = 18f,
+					paddingBottom = 0f, paddingLeft = 0f, paddingRight = 0f, paddingTop = 0f,
+					alignItems = Align.Center,
+				},
+			};
+			pingButton.Add(new Image() {
+				image = EditorGUIUtility.IconContent("d_Search Icon").image,
+			});
+			itemRoot.Add(pingButton);
 
 			return itemRoot;
 		}
